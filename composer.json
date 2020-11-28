@@ -1,12 +1,12 @@
 {
     "name": "teamones/framework",
-    "description": "The ThinkPHP Framework.",
+    "description": "The Teamones Framework. Extend from Tp6",
     "keywords": [
         "framework",
-        "thinkphp",
+        "teamones",
         "ORM"
     ],
-    "homepage": "http://thinkphp.cn/",
+    "homepage": "http://www.teamones.cn/",
     "license": "Apache-2.0",
     "authors": [
         {
@@ -16,6 +16,10 @@
         {
             "name": "yunwuxin",
             "email": "448901948@qq.com"
+        },
+        {
+            "name": "weijer",
+            "email": "weiwei163@foxmail.com"
         }
     ],
     "require": {
@@ -27,7 +31,7 @@
         "psr/log": "~1.0",
         "psr/container": "~1.0",
         "psr/simple-cache": "^1.0",
-        "topthink/think-orm": "^2.0",
+        "teamones/orm": "dev-main",
         "topthink/think-helper": "^3.1.1"
     },
     "require-dev": {
