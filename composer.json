@@ -1,58 +1,27 @@
 {
     "name": "teamones/framework",
-    "description": "The Teamones Framework. Extend from Tp6",
-    "keywords": [
-        "framework",
-        "teamones",
-        "ORM"
-    ],
-    "homepage": "http://www.teamones.cn/",
-    "license": "Apache-2.0",
+    "description": "The Teamones Framework. Extend from Tp3.2 。Based on workerman",
+    "type": "library",
+    "license": "MIT",
     "authors": [
         {
-            "name": "liu21st",
-            "email": "liu21st@gmail.com"
-        },
-        {
-            "name": "yunwuxin",
-            "email": "448901948@qq.com"
-        },
-        {
-            "name": "weijer",
+            "name": "Weijer",
             "email": "weiwei163@foxmail.com"
         }
     ],
     "require": {
-        "php": ">=7.1.0",
-        "ext-json": "*",
-        "ext-mbstring": "*",
-        "league/flysystem": "^1.0",
-        "league/flysystem-cached-adapter": "^1.0",
-        "psr/log": "~1.0",
-        "psr/container": "~1.0",
-        "psr/simple-cache": "^1.0",
-        "teamones/orm": "dev-master",
-        "topthink/think-helper": "^3.1.1"
-    },
-    "require-dev": {
-        "mikey179/vfsstream": "^1.6",
-        "mockery/mockery": "^1.2",
-        "phpunit/phpunit": "^7.0"
+        "php": ">=7.2",
+        "workerman/workerman": "^4.0.4",
+        "psr/container": "^1.0",
+        "webpatser/laravel-uuid": "^3.0.1"
     },
     "autoload": {
-        "files": [],
+        "files": [
+            "helper.php"
+        ],
         "psr-4": {
-            "think\\": "src/think/"
+            "think\\": "src/think/",
+            "behavior\\": "src/behavior/"
         }
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "think\\tests\\": "tests/"
-        }
-    },
-    "minimum-stability": "dev",
-    "prefer-stable": true,
-    "config": {
-        "sort-packages": true
     }
 }

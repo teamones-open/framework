@@ -2,13 +2,12 @@
 // +----------------------------------------------------------------------
 // | ThinkPHP [ WE CAN DO IT JUST THINK ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2006~2020 http://thinkphp.cn All rights reserved.
+// | Copyright (c) 2006~2015 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
 // | Author: yunwuxin <448901948@qq.com>
 // +----------------------------------------------------------------------
-declare (strict_types = 1);
 
 namespace think\console;
 
@@ -21,7 +20,6 @@ use think\console\output\driver\Nothing;
 use think\console\output\Question;
 use think\console\output\question\Choice;
 use think\console\output\question\Confirmation;
-use Throwable;
 
 /**
  * Class Output
@@ -42,22 +40,16 @@ use Throwable;
  */
 class Output
 {
-    // 不显示信息(静默)
-    const VERBOSITY_QUIET        = 0;
-    // 正常信息
-    const VERBOSITY_NORMAL       = 1;
-    // 详细信息
-    const VERBOSITY_VERBOSE      = 2;
-    // 非常详细的信息
+    const VERBOSITY_QUIET = 0;
+    const VERBOSITY_NORMAL = 1;
+    const VERBOSITY_VERBOSE = 2;
     const VERBOSITY_VERY_VERBOSE = 3;
-    // 调试信息
-    const VERBOSITY_DEBUG        = 4;
+    const VERBOSITY_DEBUG = 4;
 
     const OUTPUT_NORMAL = 0;
-    const OUTPUT_RAW    = 1;
-    const OUTPUT_PLAIN  = 2;
+    const OUTPUT_RAW = 1;
+    const OUTPUT_PLAIN = 2;
 
-    // 输出信息级别
     private $verbosity = self::VERBOSITY_NORMAL;
 
     /** @var Buffer|Console|Nothing */
@@ -69,7 +61,7 @@ class Output
         'comment',
         'question',
         'highlight',
-        'warning',
+        'warning'
     ];
 
     public function __construct($driver = 'console')
@@ -108,7 +100,7 @@ class Output
     public function choice(Input $input, $question, array $choices, $default = null)
     {
         if (null !== $default) {
-            $values  = array_flip($choices);
+            $values = array_flip($choices);
             $default = $values[$default];
         }
 
@@ -117,7 +109,7 @@ class Output
 
     protected function askQuestion(Input $input, Question $question)
     {
-        $ask    = new Ask($input, $this, $question);
+        $ask = new Ask($input, $this, $question);
         $answer = $ask->run();
 
         if ($input->isInteractive()) {
@@ -127,7 +119,7 @@ class Output
         return $answer;
     }
 
-    protected function block(string $style, string $message): void
+    protected function block($style, $message)
     {
         $this->writeln("<{$style}>{$message}</$style>");
     }
@@ -136,7 +128,7 @@ class Output
      * 输出空行
      * @param int $count
      */
-    public function newLine(int $count = 1): void
+    public function newLine($count = 1)
     {
         $this->write(str_repeat(PHP_EOL, $count));
     }
@@ -144,9 +136,9 @@ class Output
     /**
      * 输出信息并换行
      * @param string $messages
-     * @param int    $type
+     * @param int $type
      */
-    public function writeln(string $messages, int $type = 0): void
+    public function writeln($messages, $type = self::OUTPUT_NORMAL)
     {
         $this->write($messages, true, $type);
     }
@@ -154,61 +146,59 @@ class Output
     /**
      * 输出信息
      * @param string $messages
-     * @param bool   $newline
-     * @param int    $type
+     * @param bool $newline
+     * @param int $type
      */
-    public function write(string $messages, bool $newline = false, int $type = 0): void
+    public function write($messages, $newline = false, $type = self::OUTPUT_NORMAL)
     {
         $this->handle->write($messages, $newline, $type);
     }
 
-    public function renderException(Throwable $e): void
+    public function renderException(\Exception $e)
     {
         $this->handle->renderException($e);
     }
 
     /**
-     * 设置输出信息级别
-     * @param int $level 输出信息级别
+     * {@inheritdoc}
      */
-    public function setVerbosity(int $level)
+    public function setVerbosity($level)
     {
-        $this->verbosity = $level;
+        $this->verbosity = (int)$level;
     }
 
     /**
-     * 获取输出信息级别
-     * @return int
+     * {@inheritdoc}
      */
-    public function getVerbosity(): int
+    public function getVerbosity()
     {
         return $this->verbosity;
     }
 
-    public function isQuiet(): bool
+    public function isQuiet()
     {
         return self::VERBOSITY_QUIET === $this->verbosity;
     }
 
-    public function isVerbose(): bool
+    public function isVerbose()
     {
         return self::VERBOSITY_VERBOSE <= $this->verbosity;
     }
 
-    public function isVeryVerbose(): bool
+    public function isVeryVerbose()
     {
         return self::VERBOSITY_VERY_VERBOSE <= $this->verbosity;
     }
 
-    public function isDebug(): bool
+    public function isDebug()
     {
         return self::VERBOSITY_DEBUG <= $this->verbosity;
     }
 
-    public function describe($object, array $options = []): void
+    public function describe($object, array $options = [])
     {
         $descriptor = new Descriptor();
-        $options    = array_merge([
+        $options = array_merge([
             'raw_text' => false,
         ], $options);
 
@@ -228,4 +218,5 @@ class Output
             throw new Exception('method not exists:' . __CLASS__ . '->' . $method);
         }
     }
+
 }

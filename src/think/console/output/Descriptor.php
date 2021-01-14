@@ -11,7 +11,7 @@
 
 namespace think\console\output;
 
-use think\Console;
+use think\console;
 use think\console\Command;
 use think\console\input\Argument as InputArgument;
 use think\console\input\Definition as InputDefinition;
@@ -82,7 +82,7 @@ class Descriptor
             $default = '';
         }
 
-        $totalWidth   = $options['total_width'] ?? strlen($argument->getName());
+        $totalWidth   = isset($options['total_width']) ? $options['total_width'] : strlen($argument->getName());
         $spacingWidth = $totalWidth - strlen($argument->getName()) + 2;
 
         $this->writeText(sprintf("  <info>%s</info>%s%s%s", $argument->getName(), str_repeat(' ', $spacingWidth), // + 17 = 2 spaces + <info> + </info> + 2 spaces
@@ -115,7 +115,7 @@ class Descriptor
             }
         }
 
-        $totalWidth = $options['total_width'] ?? $this->calculateTotalWidthForOptions([$option]);
+        $totalWidth = isset($options['total_width']) ? $options['total_width'] : $this->calculateTotalWidthForOptions([$option]);
         $synopsis   = sprintf('%s%s', $option->getShortcut() ? sprintf('-%s, ', $option->getShortcut()) : '    ', sprintf('--%s%s', $option->getName(), $value));
 
         $spacingWidth = $totalWidth - strlen($synopsis) + 2;
@@ -216,7 +216,7 @@ class Descriptor
         $description        = new ConsoleDescription($console, $describedNamespace);
 
         if (isset($options['raw_text']) && $options['raw_text']) {
-            $width = $this->getColumnWidth($description->getNamespaces());
+            $width = $this->getColumnWidth($description->getCommands());
 
             foreach ($description->getCommands() as $command) {
                 $this->writeText(sprintf("%-${width}s %s", $command->getName(), $command->getDescription()), $options);
@@ -235,7 +235,7 @@ class Descriptor
             $this->writeText("\n");
             $this->writeText("\n");
 
-            $width = $this->getColumnWidth($description->getNamespaces());
+            $width = $this->getColumnWidth($description->getCommands());
 
             if ($describedNamespace) {
                 $this->writeText(sprintf('<comment>Available commands for the "%s" namespace:</comment>', $describedNamespace), $options);
@@ -282,18 +282,14 @@ class Descriptor
     }
 
     /**
-     * @param Namespaces[] $namespaces
+     * @param Command[] $commands
      * @return int
      */
-    private function getColumnWidth(array $namespaces)
+    private function getColumnWidth(array $commands)
     {
         $width = 0;
-        foreach ($namespaces as $namespace) {
-            foreach ($namespace['commands'] as $name) {
-                if (strlen($name) > $width) {
-                    $width = strlen($name);
-                }
-            }
+        foreach ($commands as $command) {
+            $width = strlen($command->getName()) > $width ? strlen($command->getName()) : $width;
         }
 
         return $width + 2;

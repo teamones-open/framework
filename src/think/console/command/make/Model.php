@@ -1,12 +1,12 @@
 <?php
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK IT ]
+// | ThinkPHP [ WE CAN DO IT JUST THINK ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2006-2018 http://thinkphp.cn All rights reserved.
+// | Copyright (c) 2016 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
-// | Author: liu21st <liu21st@gmail.com>
+// | Author: 刘志淳 <chun@engineer.com>
 // +----------------------------------------------------------------------
 
 namespace think\console\command\make;
@@ -24,13 +24,13 @@ class Model extends Make
             ->setDescription('Create a new model class');
     }
 
-    protected function getStub(): string
+    protected function getStub()
     {
-        return __DIR__ . DIRECTORY_SEPARATOR . 'stubs' . DIRECTORY_SEPARATOR . 'model.stub';
+        return __DIR__ . '/stubs/model.stub';
     }
 
-    protected function getNamespace(string $app): string
+    protected function getNamespace($appNamespace, $module)
     {
-        return parent::getNamespace($app) . '\\model';
+        return parent::getNamespace($appNamespace, $module) . '\Model';
     }
 }

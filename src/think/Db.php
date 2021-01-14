@@ -1,117 +1,172 @@
 <?php
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK ]
+// | ThinkPHP [ WE CAN DO IT JUST THINK IT ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2006~2019 http://thinkphp.cn All rights reserved.
+// | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
 // | Author: liu21st <liu21st@gmail.com>
 // +----------------------------------------------------------------------
-declare (strict_types = 1);
 
 namespace think;
 
 /**
- * 数据库管理类
+ * Class Db
  * @package think
- * @property Config $config
+ * @method mixed select(mixed $data = null) static 查询多个记录
+ * @method integer insert(array $data, boolean $replace = false, boolean $getLastInsID = false, string $sequence = null) static 插入一条记录
+ * @method integer insertAll(array $dataSet) static 插入多条记录
+ * @method integer update(array $data) static 更新记录
+ * @method integer delete(mixed $data = null) static 删除记录
+ * @method mixed query(string $sql, array $bind = [], boolean $master = false, bool $pdo = false) static SQL查询
+ * @method integer execute(string $sql, array $bind = [], boolean $fetch = false, boolean $getLastInsID = false, string $sequence = null) static SQL执行
+ * @method void startTrans() static 启动事务
+ * @method void commit() static 用于非自动提交状态下面的查询提交
+ * @method void rollback() static 事务回滚
+ * @method string getLastInsID($sequence = null) static 获取最近插入的ID
  */
-class Db extends DbManager
+class Db
 {
+
+    private static $instance = array(); //  数据库连接实例
+    private static $_instance = null; //  当前数据库连接实例
+
     /**
-     * @param Event  $event
-     * @param Config $config
-     * @param Log    $log
-     * @param Cache  $cache
-     * @return Db
-     * @codeCoverageIgnore
+     * 取得数据库类实例
+     * @static
+     * @access public
+     * @param mixed $config 连接配置
+     * @return Object 返回数据库驱动类
+     * @throws Exception
      */
-    public static function __make(Event $event, Config $config, Log $log, Cache $cache)
+    public static function getInstance($config = array())
     {
-        $db = new static();
-        $db->setConfig($config);
-        $db->setEvent($event);
-        $db->setLog($log);
+        $md5 = md5(serialize($config));
+        if (!isset(self::$instance[$md5])) {
+            // 解析连接参数 支持数组和字符串
+            $options = self::parseConfig($config);
+            // 兼容mysqli
+            if ('mysqli' == $options['type']) {
+                $options['type'] = 'mysql';
+            }
 
-        $store = $db->getConfig('cache_store');
-        $db->setCache($cache->store($store));
-        $db->triggerSql();
-
-        return $db;
+            // 如果采用lite方式 仅支持原生SQL 包括query和execute方法
+            $class = 'think\\db\\driver\\' . ucwords(strtolower($options['type']));
+            if (class_exists($class)) {
+                self::$instance[$md5] = new $class($options);
+            } else {
+                // 类没有定义
+                StrackE(L('_NO_DB_DRIVER_') . ': ' . $class);
+            }
+        }
+        self::$_instance = self::$instance[$md5];
+        return self::$_instance;
     }
 
     /**
-     * 注入模型对象
+     * 初始化配置参数
      * @access public
+     * @param array $config 连接配置
      * @return void
      */
-    protected function modelMaker()
+    public static function setInstance(): void
     {
+        // 解析连接参数 支持数组和字符串
+        self::getInstance();
     }
 
     /**
-     * 设置配置对象
-     * @access public
-     * @param Config $config 配置对象
-     * @return void
+     * 数据库连接参数解析
+     * @static
+     * @access private
+     * @param mixed $config
+     * @return array
      */
-    public function setConfig($config): void
+    private static function parseConfig($config = [])
     {
-        $this->config = $config;
-    }
-
-    /**
-     * 获取配置参数
-     * @access public
-     * @param string $name    配置参数
-     * @param mixed  $default 默认值
-     * @return mixed
-     */
-    public function getConfig(string $name = '', $default = null)
-    {
-        if ('' !== $name) {
-            return $this->config->get('database.' . $name, $default);
+        if (!empty($config)) {
+            if (is_string($config)) {
+                return self::parseDsn($config);
+            }
+            $config = array_change_key_case($config);
+            $config = array(
+                'type' => $config['db_type'],
+                'username' => $config['db_user'],
+                'password' => $config['db_pwd'],
+                'hostname' => $config['db_host'],
+                'hostport' => $config['db_port'],
+                'database' => $config['db_name'],
+                'dsn' => isset($config['db_dsn']) ? $config['db_dsn'] : null,
+                'params' => isset($config['db_params']) ? $config['db_params'] : null,
+                'charset' => isset($config['db_charset']) ? $config['db_charset'] : 'utf8',
+                'deploy' => isset($config['db_deploy_type']) ? $config['db_deploy_type'] : 0,
+                'rw_separate' => isset($config['db_rw_separate']) ? $config['db_rw_separate'] : false,
+                'master_num' => isset($config['db_master_num']) ? $config['db_master_num'] : 1,
+                'slave_no' => isset($config['db_slave_no']) ? $config['db_slave_no'] : '',
+                'debug' => isset($config['db_debug']) ? $config['db_debug'] : APP_DEBUG,
+                'lite' => isset($config['db_lite']) ? $config['db_lite'] : false,
+            );
+        } else {
+            $config = array(
+                'type' => C('DB_TYPE'),
+                'username' => C('DB_USER'),
+                'password' => C('DB_PWD'),
+                'hostname' => C('DB_HOST'),
+                'hostport' => C('DB_PORT'),
+                'database' => C('DB_NAME'),
+                'dsn' => C('DB_DSN'),
+                'params' => C('DB_PARAMS'),
+                'charset' => C('DB_CHARSET'),
+                'deploy' => C('DB_DEPLOY_TYPE'),
+                'rw_separate' => C('DB_RW_SEPARATE'),
+                'master_num' => C('DB_MASTER_NUM'),
+                'slave_no' => C('DB_SLAVE_NO'),
+                'debug' => C('DB_DEBUG', null, APP_DEBUG),
+                'lite' => C('DB_LITE'),
+            );
         }
-
-        return $this->config->get('database', []);
+        return $config;
     }
 
     /**
-     * 设置Event对象
-     * @param Event $event
+     * DSN解析
+     * 格式： mysql://username:passwd@localhost:3306/DbName?param1=val1&param2=val2#utf8
+     * @static
+     * @access private
+     * @param string $dsnStr
+     * @return array|bool
      */
-    public function setEvent(Event $event): void
+    private static function parseDsn($dsnStr)
     {
-        $this->event = $event;
-    }
-
-    /**
-     * 注册回调方法
-     * @access public
-     * @param string   $event    事件名
-     * @param callable $callback 回调方法
-     * @return void
-     */
-    public function event(string $event, callable $callback): void
-    {
-        if ($this->event) {
-            $this->event->listen('db.' . $event, $callback);
+        if (empty($dsnStr)) {
+            return false;
         }
+        $info = parse_url($dsnStr);
+        if (!$info) {
+            return false;
+        }
+        $dsn = array(
+            'type' => $info['scheme'],
+            'username' => isset($info['user']) ? $info['user'] : '',
+            'password' => isset($info['pass']) ? $info['pass'] : '',
+            'hostname' => isset($info['host']) ? $info['host'] : '',
+            'hostport' => isset($info['port']) ? $info['port'] : '',
+            'database' => isset($info['path']) ? substr($info['path'], 1) : '',
+            'charset' => isset($info['fragment']) ? $info['fragment'] : 'utf8',
+        );
+
+        if (isset($info['query'])) {
+            parse_str($info['query'], $dsn['params']);
+        } else {
+            $dsn['params'] = array();
+        }
+        return $dsn;
     }
 
-    /**
-     * 触发事件
-     * @access public
-     * @param string $event  事件名
-     * @param mixed  $params 传入参数
-     * @param bool   $once
-     * @return mixed
-     */
-    public function trigger(string $event, $params = null, bool $once = false)
+    // 调用驱动类的方法
+    public static function __callStatic($method, $params)
     {
-        if ($this->event) {
-            return $this->event->trigger('db.' . $event, $params, $once);
-        }
+        return call_user_func_array(array(self::getInstance(), $method), $params);
     }
 }

@@ -21,12 +21,12 @@ class Nothing
         // do nothing
     }
 
-    public function write($messages, bool $newline = false, int $options = 0)
+    public function write($messages, $newline = false, $options = Output::OUTPUT_NORMAL)
     {
         // do nothing
     }
 
-    public function renderException(\Throwable $e)
+    public function renderException(\Exception $e)
     {
         // do nothing
     }

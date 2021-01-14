@@ -2,27 +2,24 @@
 // +----------------------------------------------------------------------
 // | ThinkPHP [ WE CAN DO IT JUST THINK ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2006~2019 http://thinkphp.cn All rights reserved.
+// | Copyright (c) 2006~2018 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
 // | Author: liu21st <liu21st@gmail.com>
 // +----------------------------------------------------------------------
-declare (strict_types = 1);
 
 namespace think;
 
-/**
- * 响应输出基础类
- * @package think
- */
-abstract class Response
+class Response
 {
+
     /**
      * 原始数据
      * @var mixed
      */
     protected $data;
+
 
     /**
      * 当前contentType
@@ -66,58 +63,52 @@ abstract class Response
      */
     protected $content = null;
 
-    /**
-     * Cookie对象
-     * @var Cookie
-     */
-    protected $cookie;
 
     /**
-     * Session对象
-     * @var Session
+     * 架构函数
+     * @access public
+     * @param mixed $data 输出数据
+     * @param int $code
+     * @param array $header
+     * @param array $options 输出参数
      */
-    protected $session;
-
-    /**
-     * 初始化
-     * @access protected
-     * @param  mixed  $data 输出数据
-     * @param  int    $code 状态码
-     */
-    protected function init($data = '', int $code = 200)
+    public function __construct($data = '', $code = 200, array $header = [], $options = [])
     {
         $this->data($data);
-        $this->code = $code;
+
+        if (!empty($options)) {
+            $this->options = array_merge($this->options, $options);
+        }
 
         $this->contentType($this->contentType, $this->charset);
+
+        $this->code = $code;
+        $this->header = array_merge($this->header, $header);
     }
 
     /**
      * 创建Response对象
      * @access public
-     * @param  mixed  $data 输出数据
-     * @param  string $type 输出类型
-     * @param  int    $code 状态码
+     * @param mixed $data 输出数据
+     * @param string $type 输出类型
+     * @param int $code
+     * @param array $header
+     * @param array $options 输出参数
      * @return Response
      */
-    public static function create($data = '', string $type = 'html', int $code = 200): Response
+    public static function create($data = '', $type = '', $code = 200, array $header = [], $options = [])
     {
         $class = false !== strpos($type, '\\') ? $type : '\\think\\response\\' . ucfirst(strtolower($type));
 
-        return Container::getInstance()->invokeClass($class, [$data, $code]);
+        if (class_exists($class)) {
+            $response = new $class($data, $code, $header, $options);
+        } else {
+            $response = new static($data, $code, $header, $options);
+        }
+
+        return $response;
     }
 
-    /**
-     * 设置Session对象
-     * @access public
-     * @param  Session $session Session对象
-     * @return $this
-     */
-    public function setSession(Session $session)
-    {
-        $this->session = $session;
-        return $this;
-    }
 
     /**
      * 发送数据到客户端
@@ -125,7 +116,7 @@ abstract class Response
      * @return void
      * @throws \InvalidArgumentException
      */
-    public function send(): void
+    public function send()
     {
         // 处理输出数据
         $data = $this->getContent();
@@ -138,9 +129,6 @@ abstract class Response
                 header($name . (!is_null($val) ? ':' . $val : ''));
             }
         }
-        if ($this->cookie) {
-            $this->cookie->save();
-        }
 
         $this->sendData($data);
 
@@ -151,9 +139,20 @@ abstract class Response
     }
 
     /**
+     * 渲染输出数据
+     */
+    public function renderWorkermanData()
+    {
+        // 处理输出数据
+        $data = $this->getContent();
+        return new \Workerman\Protocols\Http\Response($this->code, $this->header, $data);
+    }
+
+
+    /**
      * 处理数据
      * @access protected
-     * @param  mixed $data 要处理的数据
+     * @param mixed $data 要处理的数据
      * @return mixed
      */
     protected function output($data)
@@ -167,7 +166,7 @@ abstract class Response
      * @param string $data 要处理的数据
      * @return void
      */
-    protected function sendData(string $data): void
+    protected function sendData($data)
     {
         echo $data;
     }
@@ -175,10 +174,10 @@ abstract class Response
     /**
      * 输出的参数
      * @access public
-     * @param  mixed $options 输出参数
+     * @param mixed $options 输出参数
      * @return $this
      */
-    public function options(array $options = [])
+    public function options($options = [])
     {
         $this->options = array_merge($this->options, $options);
 
@@ -188,7 +187,7 @@ abstract class Response
     /**
      * 输出数据设置
      * @access public
-     * @param  mixed $data 输出数据
+     * @param mixed $data 输出数据
      * @return $this
      */
     public function data($data)
@@ -201,10 +200,10 @@ abstract class Response
     /**
      * 是否允许请求缓存
      * @access public
-     * @param  bool $cache 允许请求缓存
+     * @param bool $cache 允许请求缓存
      * @return $this
      */
-    public function allowCache(bool $cache)
+    public function allowCache($cache)
     {
         $this->allowCache = $cache;
 
@@ -212,39 +211,19 @@ abstract class Response
     }
 
     /**
-     * 是否允许请求缓存
-     * @access public
-     * @return $this
-     */
-    public function isAllowCache()
-    {
-        return $this->allowCache;
-    }
-
-    /**
-     * 设置Cookie
-     * @access public
-     * @param  string $name  cookie名称
-     * @param  string $value cookie值
-     * @param  mixed  $option 可选参数
-     * @return $this
-     */
-    public function cookie(string $name, string $value, $option = null)
-    {
-        $this->cookie->set($name, $value, $option);
-
-        return $this;
-    }
-
-    /**
      * 设置响应头
      * @access public
-     * @param  array $header  参数
+     * @param string|array $name 参数名
+     * @param string $value 参数值
      * @return $this
      */
-    public function header(array $header = [])
+    public function header($name, $value = null)
     {
-        $this->header = array_merge($this->header, $header);
+        if (is_array($name)) {
+            $this->header = array_merge($this->header, $name);
+        } else {
+            $this->header[$name] = $value;
+        }
 
         return $this;
     }
@@ -252,20 +231,20 @@ abstract class Response
     /**
      * 设置页面输出内容
      * @access public
-     * @param  mixed $content
+     * @param mixed $content
      * @return $this
      */
     public function content($content)
     {
         if (null !== $content && !is_string($content) && !is_numeric($content) && !is_callable([
-            $content,
-            '__toString',
-        ])
+                $content,
+                '__toString',
+            ])
         ) {
             throw new \InvalidArgumentException(sprintf('variable type error： %s', gettype($content)));
         }
 
-        $this->content = (string) $content;
+        $this->content = (string)$content;
 
         return $this;
     }
@@ -273,10 +252,10 @@ abstract class Response
     /**
      * 发送HTTP状态
      * @access public
-     * @param  integer $code 状态码
+     * @param integer $code 状态码
      * @return $this
      */
-    public function code(int $code)
+    public function code($code)
     {
         $this->code = $code;
 
@@ -286,10 +265,10 @@ abstract class Response
     /**
      * LastModified
      * @access public
-     * @param  string $time
+     * @param string $time
      * @return $this
      */
-    public function lastModified(string $time)
+    public function lastModified($time)
     {
         $this->header['Last-Modified'] = $time;
 
@@ -299,10 +278,10 @@ abstract class Response
     /**
      * Expires
      * @access public
-     * @param  string $time
+     * @param string $time
      * @return $this
      */
-    public function expires(string $time)
+    public function expires($time)
     {
         $this->header['Expires'] = $time;
 
@@ -312,10 +291,10 @@ abstract class Response
     /**
      * ETag
      * @access public
-     * @param  string $eTag
+     * @param string $eTag
      * @return $this
      */
-    public function eTag(string $eTag)
+    public function eTag($eTag)
     {
         $this->header['ETag'] = $eTag;
 
@@ -325,10 +304,10 @@ abstract class Response
     /**
      * 页面缓存控制
      * @access public
-     * @param  string $cache 状态码
+     * @param string $cache 缓存设置
      * @return $this
      */
-    public function cacheControl(string $cache)
+    public function cacheControl($cache)
     {
         $this->header['Cache-control'] = $cache;
 
@@ -336,13 +315,26 @@ abstract class Response
     }
 
     /**
-     * 页面输出类型
+     * 设置页面不做任何缓存
      * @access public
-     * @param  string $contentType 输出类型
-     * @param  string $charset     输出编码
      * @return $this
      */
-    public function contentType(string $contentType, string $charset = 'utf-8')
+    public function noCache()
+    {
+        $this->header['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0';
+        $this->header['Pragma'] = 'no-cache';
+
+        return $this;
+    }
+
+    /**
+     * 页面输出类型
+     * @access public
+     * @param string $contentType 输出类型
+     * @param string $charset 输出编码
+     * @return $this
+     */
+    public function contentType($contentType, $charset = 'utf-8')
     {
         $this->header['Content-Type'] = $contentType . '; charset=' . $charset;
 
@@ -352,13 +344,13 @@ abstract class Response
     /**
      * 获取头部信息
      * @access public
-     * @param  string $name 头部名称
+     * @param string $name 头部名称
      * @return mixed
      */
-    public function getHeader(string $name = '')
+    public function getHeader($name = '')
     {
         if (!empty($name)) {
-            return $this->header[$name] ?? null;
+            return isset($this->header[$name]) ? $this->header[$name] : null;
         }
 
         return $this->header;
@@ -377,24 +369,23 @@ abstract class Response
     /**
      * 获取输出数据
      * @access public
-     * @return string
+     * @return mixed
      */
-    public function getContent(): string
+    public function getContent()
     {
-        if (null == $this->content) {
-            $content = $this->output($this->data);
 
-            if (null !== $content && !is_string($content) && !is_numeric($content) && !is_callable([
+        $content = $this->output($this->data);
+
+        if (null !== $content && !is_string($content) && !is_numeric($content) && !is_callable([
                 $content,
                 '__toString',
             ])
-            ) {
-                throw new \InvalidArgumentException(sprintf('variable type error： %s', gettype($content)));
-            }
-
-            $this->content = (string) $content;
+        ) {
+            throw new \InvalidArgumentException(sprintf('variable type error： %s', gettype($content)));
         }
 
+        $this->content = (string)$content;
+        
         return $this->content;
     }
 
@@ -403,7 +394,7 @@ abstract class Response
      * @access public
      * @return integer
      */
-    public function getCode(): int
+    public function getCode()
     {
         return $this->code;
     }

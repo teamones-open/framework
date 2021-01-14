@@ -8,26 +8,20 @@
 // +----------------------------------------------------------------------
 // | Author: yunwuxin <448901948@qq.com>
 // +----------------------------------------------------------------------
-declare (strict_types = 1);
 
 namespace think\console;
 
-use Exception;
-use InvalidArgumentException;
-use LogicException;
-use think\App;
-use think\Console;
+use think\console;
 use think\console\input\Argument;
 use think\console\input\Definition;
 use think\console\input\Option;
 
-abstract class Command
+class Command
 {
 
     /** @var  Console */
     private $console;
     private $name;
-    private $processTitle;
     private $aliases = [];
     private $definition;
     private $help;
@@ -35,8 +29,9 @@ abstract class Command
     private $ignoreValidationErrors          = false;
     private $consoleDefinitionMerged         = false;
     private $consoleDefinitionMergedWithArgs = false;
-    private $synopsis                        = [];
-    private $usages                          = [];
+    private $code;
+    private $synopsis = [];
+    private $usages   = [];
 
     /** @var  Input */
     protected $input;
@@ -44,29 +39,31 @@ abstract class Command
     /** @var  Output */
     protected $output;
 
-    /** @var App */
-    protected $app;
-
     /**
      * 构造方法
-     * @throws LogicException
+     * @param string|null $name 命令名称,如果没有设置则比如在 configure() 里设置
+     * @throws \LogicException
      * @api
      */
-    public function __construct()
+    public function __construct($name = null)
     {
         $this->definition = new Definition();
+
+        if (null !== $name) {
+            $this->setName($name);
+        }
 
         $this->configure();
 
         if (!$this->name) {
-            throw new LogicException(sprintf('The command defined in "%s" cannot have an empty name.', get_class($this)));
+            throw new \LogicException(sprintf('The command defined in "%s" cannot have an empty name.', get_class($this)));
         }
     }
 
     /**
      * 忽略验证错误
      */
-    public function ignoreValidationErrors(): void
+    public function ignoreValidationErrors()
     {
         $this->ignoreValidationErrors = true;
     }
@@ -75,7 +72,7 @@ abstract class Command
      * 设置控制台
      * @param Console $console
      */
-    public function setConsole(Console $console = null): void
+    public function setConsole(Console $console = null)
     {
         $this->console = $console;
     }
@@ -85,34 +82,16 @@ abstract class Command
      * @return Console
      * @api
      */
-    public function getConsole(): Console
+    public function getConsole()
     {
         return $this->console;
-    }
-
-    /**
-     * 设置app
-     * @param App $app
-     */
-    public function setApp(App $app)
-    {
-        $this->app = $app;
-    }
-
-    /**
-     * 获取app
-     * @return App
-     */
-    public function getApp()
-    {
-        return $this->app;
     }
 
     /**
      * 是否有效
      * @return bool
      */
-    public function isEnabled(): bool
+    public function isEnabled()
     {
         return true;
     }
@@ -129,12 +108,12 @@ abstract class Command
      * @param Input  $input
      * @param Output $output
      * @return null|int
-     * @throws LogicException
+     * @throws \LogicException
      * @see setCode()
      */
     protected function execute(Input $input, Output $output)
     {
-        return $this->app->invoke([$this, 'handle']);
+        throw new \LogicException('You must override the execute() method in the concrete command class.');
     }
 
     /**
@@ -160,11 +139,11 @@ abstract class Command
      * @param Input  $input
      * @param Output $output
      * @return int
-     * @throws Exception
+     * @throws \Exception
      * @see setCode()
      * @see execute()
      */
-    public function run(Input $input, Output $output): int
+    public function run(Input $input, Output $output)
     {
         $this->input  = $input;
         $this->output = $output;
@@ -176,7 +155,7 @@ abstract class Command
 
         try {
             $input->bind($this->definition);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             if (!$this->ignoreValidationErrors) {
                 throw $e;
             }
@@ -184,39 +163,51 @@ abstract class Command
 
         $this->initialize($input, $output);
 
-        if (null !== $this->processTitle) {
-            if (function_exists('cli_set_process_title')) {
-                if (false === @cli_set_process_title($this->processTitle)) {
-                    if ('Darwin' === PHP_OS) {
-                        $output->writeln('<comment>Running "cli_get_process_title" as an unprivileged user is not supported on MacOS.</comment>');
-                    } else {
-                        $error = error_get_last();
-                        trigger_error($error['message'], E_USER_WARNING);
-                    }
-                }
-            } elseif (function_exists('setproctitle')) {
-                setproctitle($this->processTitle);
-            } elseif (Output::VERBOSITY_VERY_VERBOSE === $output->getVerbosity()) {
-                $output->writeln('<comment>Install the proctitle PECL to be able to change the process title.</comment>');
-            }
-        }
-
         if ($input->isInteractive()) {
             $this->interact($input, $output);
         }
 
         $input->validate();
 
-        $statusCode = $this->execute($input, $output);
+        if ($this->code) {
+            $statusCode = call_user_func($this->code, $input, $output);
+        } else {
+            $statusCode = $this->execute($input, $output);
+        }
 
         return is_numeric($statusCode) ? (int) $statusCode : 0;
+    }
+
+    /**
+     * 设置执行代码
+     * @param callable $code callable(InputInterface $input, OutputInterface $output)
+     * @return Command
+     * @throws \InvalidArgumentException
+     * @see execute()
+     */
+    public function setCode(callable $code)
+    {
+        if (!is_callable($code)) {
+            throw new \InvalidArgumentException('Invalid callable provided to Command::setCode.');
+        }
+
+        if (PHP_VERSION_ID >= 50400 && $code instanceof \Closure) {
+            $r = new \ReflectionFunction($code);
+            if (null === $r->getClosureThis()) {
+                $code = \Closure::bind($code, $this);
+            }
+        }
+
+        $this->code = $code;
+
+        return $this;
     }
 
     /**
      * 合并参数定义
      * @param bool $mergeArgs
      */
-    public function mergeConsoleDefinition(bool $mergeArgs = true)
+    public function mergeConsoleDefinition($mergeArgs = true)
     {
         if (null === $this->console
             || (true === $this->consoleDefinitionMerged
@@ -263,7 +254,7 @@ abstract class Command
      * @return Definition
      * @api
      */
-    public function getDefinition(): Definition
+    public function getDefinition()
     {
         return $this->definition;
     }
@@ -272,7 +263,7 @@ abstract class Command
      * 获取当前指令的参数定义
      * @return Definition
      */
-    public function getNativeDefinition(): Definition
+    public function getNativeDefinition()
     {
         return $this->getDefinition();
     }
@@ -285,7 +276,7 @@ abstract class Command
      * @param mixed  $default     默认值
      * @return Command
      */
-    public function addArgument(string $name, int $mode = null, string $description = '', $default = null)
+    public function addArgument($name, $mode = null, $description = '', $default = null)
     {
         $this->definition->addArgument(new Argument($name, $mode, $description, $default));
 
@@ -301,7 +292,7 @@ abstract class Command
      * @param mixed  $default     默认值
      * @return Command
      */
-    public function addOption(string $name, string $shortcut = null, int $mode = null, string $description = '', $default = null)
+    public function addOption($name, $shortcut = null, $mode = null, $description = '', $default = null)
     {
         $this->definition->addOption(new Option($name, $shortcut, $mode, $description, $default));
 
@@ -312,9 +303,9 @@ abstract class Command
      * 设置指令名称
      * @param string $name
      * @return Command
-     * @throws InvalidArgumentException
+     * @throws \InvalidArgumentException
      */
-    public function setName(string $name)
+    public function setName($name)
     {
         $this->validateName($name);
 
@@ -324,28 +315,12 @@ abstract class Command
     }
 
     /**
-     * 设置进程名称
-     *
-     * PHP 5.5+ or the proctitle PECL library is required
-     *
-     * @param string $title The process title
-     *
-     * @return $this
-     */
-    public function setProcessTitle($title)
-    {
-        $this->processTitle = $title;
-
-        return $this;
-    }
-
-    /**
      * 获取指令名称
      * @return string
      */
-    public function getName(): string
+    public function getName()
     {
-        return $this->name ?: '';
+        return $this->name;
     }
 
     /**
@@ -353,7 +328,7 @@ abstract class Command
      * @param string $description
      * @return Command
      */
-    public function setDescription(string $description)
+    public function setDescription($description)
     {
         $this->description = $description;
 
@@ -364,9 +339,9 @@ abstract class Command
      *  获取描述
      * @return string
      */
-    public function getDescription(): string
+    public function getDescription()
     {
-        return $this->description ?: '';
+        return $this->description;
     }
 
     /**
@@ -374,7 +349,7 @@ abstract class Command
      * @param string $help
      * @return Command
      */
-    public function setHelp(string $help)
+    public function setHelp($help)
     {
         $this->help = $help;
 
@@ -385,16 +360,16 @@ abstract class Command
      * 获取帮助信息
      * @return string
      */
-    public function getHelp(): string
+    public function getHelp()
     {
-        return $this->help ?: '';
+        return $this->help;
     }
 
     /**
      * 描述信息
      * @return string
      */
-    public function getProcessedHelp(): string
+    public function getProcessedHelp()
     {
         $name = $this->name;
 
@@ -414,10 +389,14 @@ abstract class Command
      * 设置别名
      * @param string[] $aliases
      * @return Command
-     * @throws InvalidArgumentException
+     * @throws \InvalidArgumentException
      */
-    public function setAliases(iterable $aliases)
+    public function setAliases($aliases)
     {
+        if (!is_array($aliases) && !$aliases instanceof \Traversable) {
+            throw new \InvalidArgumentException('$aliases must be an array or an instance of \Traversable');
+        }
+
         foreach ($aliases as $alias) {
             $this->validateName($alias);
         }
@@ -431,7 +410,7 @@ abstract class Command
      * 获取别名
      * @return array
      */
-    public function getAliases(): array
+    public function getAliases()
     {
         return $this->aliases;
     }
@@ -441,7 +420,7 @@ abstract class Command
      * @param bool $short 是否简单的
      * @return string
      */
-    public function getSynopsis(bool $short = false): string
+    public function getSynopsis($short = false)
     {
         $key = $short ? 'short' : 'long';
 
@@ -457,7 +436,7 @@ abstract class Command
      * @param string $usage
      * @return $this
      */
-    public function addUsage(string $usage)
+    public function addUsage($usage)
     {
         if (0 !== strpos($usage, $this->name)) {
             $usage = sprintf('%s %s', $this->name, $usage);
@@ -472,7 +451,7 @@ abstract class Command
      * 获取用法介绍
      * @return array
      */
-    public function getUsages(): array
+    public function getUsages()
     {
         return $this->usages;
     }
@@ -480,25 +459,12 @@ abstract class Command
     /**
      * 验证指令名称
      * @param string $name
-     * @throws InvalidArgumentException
+     * @throws \InvalidArgumentException
      */
-    private function validateName(string $name)
+    private function validateName($name)
     {
         if (!preg_match('/^[^\:]++(\:[^\:]++)*$/', $name)) {
-            throw new InvalidArgumentException(sprintf('Command name "%s" is invalid.', $name));
+            throw new \InvalidArgumentException(sprintf('Command name "%s" is invalid.', $name));
         }
     }
-
-    /**
-     * 输出表格
-     * @param Table $table
-     * @return string
-     */
-    protected function table(Table $table): string
-    {
-        $content = $table->render();
-        $this->output->writeln($content);
-        return $content;
-    }
-
 }

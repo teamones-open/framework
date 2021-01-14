@@ -8,7 +8,6 @@
 // +----------------------------------------------------------------------
 // | Author: yunwuxin <448901948@qq.com>
 // +----------------------------------------------------------------------
-declare (strict_types = 1);
 
 namespace think\console;
 
@@ -61,7 +60,7 @@ class Input
      * 绑定实例
      * @param Definition $definition A InputDefinition instance
      */
-    public function bind(Definition $definition): void
+    public function bind(Definition $definition)
     {
         $this->arguments  = [];
         $this->options    = [];
@@ -73,7 +72,7 @@ class Input
     /**
      * 解析参数
      */
-    protected function parse(): void
+    protected function parse()
     {
         $parseOptions = true;
         $this->parsed = $this->tokens;
@@ -96,7 +95,7 @@ class Input
      * 解析短选项
      * @param string $token 当前的指令.
      */
-    private function parseShortOption(string $token): void
+    private function parseShortOption($token)
     {
         $name = substr($token, 1);
 
@@ -118,7 +117,7 @@ class Input
      * @param string $name 当前指令
      * @throws \RuntimeException
      */
-    private function parseShortOptionSet(string $name): void
+    private function parseShortOptionSet($name)
     {
         $len = strlen($name);
         for ($i = 0; $i < $len; ++$i) {
@@ -141,7 +140,7 @@ class Input
      * 解析完整选项
      * @param string $token 当前指令
      */
-    private function parseLongOption(string $token): void
+    private function parseLongOption($token)
     {
         $name = substr($token, 2);
 
@@ -157,7 +156,7 @@ class Input
      * @param string $token 当前指令
      * @throws \RuntimeException
      */
-    private function parseArgument(string $token): void
+    private function parseArgument($token)
     {
         $c = count($this->arguments);
 
@@ -181,7 +180,7 @@ class Input
      * @param mixed  $value    值
      * @throws \RuntimeException
      */
-    private function addShortOption(string $shortcut, $value): void
+    private function addShortOption($shortcut, $value)
     {
         if (!$this->definition->hasShortcut($shortcut)) {
             throw new \RuntimeException(sprintf('The "-%s" option does not exist.', $shortcut));
@@ -196,7 +195,7 @@ class Input
      * @param mixed  $value 值
      * @throws \RuntimeException
      */
-    private function addLongOption(string $name, $value): void
+    private function addLongOption($name, $value)
     {
         if (!$this->definition->hasOption($name)) {
             throw new \RuntimeException(sprintf('The "--%s" option does not exist.', $name));
@@ -261,7 +260,7 @@ class Input
      * @param string|array $values 需要检查的值
      * @return bool
      */
-    public function hasParameterOption($values): bool
+    public function hasParameterOption($values)
     {
         $values = (array) $values;
 
@@ -319,7 +318,7 @@ class Input
      * 检查输入是否是交互的
      * @return bool
      */
-    public function isInteractive(): bool
+    public function isInteractive()
     {
         return $this->interactive;
     }
@@ -328,16 +327,16 @@ class Input
      * 设置输入的交互
      * @param bool
      */
-    public function setInteractive(bool $interactive): void
+    public function setInteractive($interactive)
     {
-        $this->interactive = $interactive;
+        $this->interactive = (bool) $interactive;
     }
 
     /**
      * 获取所有的参数
      * @return Argument[]
      */
-    public function getArguments(): array
+    public function getArguments()
     {
         return array_merge($this->definition->getArgumentDefaults(), $this->arguments);
     }
@@ -348,13 +347,13 @@ class Input
      * @return mixed
      * @throws \InvalidArgumentException
      */
-    public function getArgument(string $name)
+    public function getArgument($name)
     {
         if (!$this->definition->hasArgument($name)) {
             throw new \InvalidArgumentException(sprintf('The "%s" argument does not exist.', $name));
         }
 
-        return $this->arguments[$name] ?? $this->definition->getArgument($name)
+        return isset($this->arguments[$name]) ? $this->arguments[$name] : $this->definition->getArgument($name)
             ->getDefault();
     }
 
@@ -364,7 +363,7 @@ class Input
      * @param string $value 值
      * @throws \InvalidArgumentException
      */
-    public function setArgument(string $name, $value)
+    public function setArgument($name, $value)
     {
         if (!$this->definition->hasArgument($name)) {
             throw new \InvalidArgumentException(sprintf('The "%s" argument does not exist.', $name));
@@ -378,7 +377,7 @@ class Input
      * @param string|int $name 参数名或位置
      * @return bool
      */
-    public function hasArgument($name): bool
+    public function hasArgument($name)
     {
         return $this->definition->hasArgument($name);
     }
@@ -387,7 +386,7 @@ class Input
      * 获取所有的选项
      * @return Option[]
      */
-    public function getOptions(): array
+    public function getOptions()
     {
         return array_merge($this->definition->getOptionDefaults(), $this->options);
     }
@@ -398,13 +397,13 @@ class Input
      * @return mixed
      * @throws \InvalidArgumentException
      */
-    public function getOption(string $name)
+    public function getOption($name)
     {
         if (!$this->definition->hasOption($name)) {
             throw new \InvalidArgumentException(sprintf('The "%s" option does not exist.', $name));
         }
 
-        return $this->options[$name] ?? $this->definition->getOption($name)->getDefault();
+        return isset($this->options[$name]) ? $this->options[$name] : $this->definition->getOption($name)->getDefault();
     }
 
     /**
@@ -413,7 +412,7 @@ class Input
      * @param string|bool $value 值
      * @throws \InvalidArgumentException
      */
-    public function setOption(string $name, $value): void
+    public function setOption($name, $value)
     {
         if (!$this->definition->hasOption($name)) {
             throw new \InvalidArgumentException(sprintf('The "%s" option does not exist.', $name));
@@ -427,7 +426,7 @@ class Input
      * @param string $name 选项名
      * @return bool
      */
-    public function hasOption(string $name): bool
+    public function hasOption($name)
     {
         return $this->definition->hasOption($name) && isset($this->options[$name]);
     }
@@ -437,7 +436,7 @@ class Input
      * @param string $token
      * @return string
      */
-    public function escapeToken(string $token): string
+    public function escapeToken($token)
     {
         return preg_match('{^[\w-]+$}', $token) ? $token : escapeshellarg($token);
     }

@@ -1,18 +1,18 @@
 <?php
-declare (strict_types = 1);
 
 namespace {%namespace%};
 
-use think\Request;
+use Think\Controller;
+use Think\Request;
 
-class {%className%}
+class {%className%} extends Controller
 {
     /**
      * 显示资源列表
      *
-     * @return \think\Response
+     * @return \Think\Response
      */
-    public function index{%actionSuffix%}()
+    public function index()
     {
         //
     }
@@ -20,9 +20,9 @@ class {%className%}
     /**
      * 显示创建资源表单页.
      *
-     * @return \think\Response
+     * @return \Think\Response
      */
-    public function create{%actionSuffix%}()
+    public function create()
     {
         //
     }
@@ -30,10 +30,10 @@ class {%className%}
     /**
      * 保存新建的资源
      *
-     * @param  \think\Request  $request
-     * @return \think\Response
+     * @param  \Think\Request  $request
+     * @return \Think\Response
      */
-    public function save{%actionSuffix%}(Request $request)
+    public function save(Request $request)
     {
         //
     }
@@ -42,9 +42,9 @@ class {%className%}
      * 显示指定的资源
      *
      * @param  int  $id
-     * @return \think\Response
+     * @return \Think\Response
      */
-    public function read{%actionSuffix%}($id)
+    public function read($id)
     {
         //
     }
@@ -53,9 +53,9 @@ class {%className%}
      * 显示编辑资源表单页.
      *
      * @param  int  $id
-     * @return \think\Response
+     * @return \Think\Response
      */
-    public function edit{%actionSuffix%}($id)
+    public function edit($id)
     {
         //
     }
@@ -63,11 +63,11 @@ class {%className%}
     /**
      * 保存更新的资源
      *
-     * @param  \think\Request  $request
+     * @param  \Think\Request  $request
      * @param  int  $id
-     * @return \think\Response
+     * @return \Think\Response
      */
-    public function update{%actionSuffix%}(Request $request, $id)
+    public function update(Request $request, $id)
     {
         //
     }
@@ -76,9 +76,9 @@ class {%className%}
      * 删除指定资源
      *
      * @param  int  $id
-     * @return \think\Response
+     * @return \Think\Response
      */
-    public function delete{%actionSuffix%}($id)
+    public function delete($id)
     {
         //
     }

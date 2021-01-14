@@ -12,7 +12,6 @@
 namespace think\console\output\descriptor;
 
 use think\Console as ThinkConsole;
-use think\console\Command;
 
 class Console
 {
@@ -58,7 +57,7 @@ class Console
     /**
      * @return array
      */
-    public function getNamespaces(): array
+    public function getNamespaces()
     {
         if (null === $this->namespaces) {
             $this->inspectConsole();
@@ -70,7 +69,7 @@ class Console
     /**
      * @return Command[]
      */
-    public function getCommands(): array
+    public function getCommands()
     {
         if (null === $this->commands) {
             $this->inspectConsole();
@@ -84,16 +83,16 @@ class Console
      * @return Command
      * @throws \InvalidArgumentException
      */
-    public function getCommand(string $name): Command
+    public function getCommand($name)
     {
         if (!isset($this->commands[$name]) && !isset($this->aliases[$name])) {
             throw new \InvalidArgumentException(sprintf('Command %s does not exist.', $name));
         }
 
-        return $this->commands[$name] ?? $this->aliases[$name];
+        return isset($this->commands[$name]) ? $this->commands[$name] : $this->aliases[$name];
     }
 
-    private function inspectConsole(): void
+    private function inspectConsole()
     {
         $this->commands   = [];
         $this->namespaces = [];
@@ -104,10 +103,6 @@ class Console
 
             /** @var Command $command */
             foreach ($commands as $name => $command) {
-                if (is_string($command)) {
-                    $command = new $command();
-                }
-
                 if (!$command->getName()) {
                     continue;
                 }
@@ -129,7 +124,7 @@ class Console
      * @param array $commands
      * @return array
      */
-    private function sortCommands(array $commands): array
+    private function sortCommands(array $commands)
     {
         $namespacedCommands = [];
         foreach ($commands as $name => $command) {

@@ -1,197 +1,264 @@
 <?php
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK ]
+// | ThinkPHP [ WE CAN DO IT JUST THINK IT ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2006~2019 http://thinkphp.cn All rights reserved.
+// | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
 // | Author: liu21st <liu21st@gmail.com>
 // +----------------------------------------------------------------------
-declare (strict_types = 1);
-
 namespace think;
 
-use Psr\SimpleCache\CacheInterface;
 use think\cache\Driver;
-use think\cache\TagSet;
 use think\exception\InvalidArgumentException;
-use think\helper\Arr;
 
 /**
  * 缓存管理类
- * @mixin Driver
- * @mixin \think\cache\driver\File
  */
-class Cache extends Manager implements CacheInterface
+class Cache
 {
 
-    protected $namespace = '\\think\\cache\\driver\\';
+    protected static $instance = [];
+    public static $readTimes = 0;
+    public static $writeTimes = 0;
 
     /**
-     * 默认驱动
-     * @return string|null
+     * 操作句柄
+     * @var object
+     * @access protected
      */
-    public function getDefaultDriver()
-    {
-        return $this->getConfig('default');
-    }
+    protected static $handler;
 
     /**
-     * 获取缓存配置
+     * 连接缓存
      * @access public
-     * @param null|string $name    名称
-     * @param mixed       $default 默认值
-     * @return mixed
-     */
-    public function getConfig(string $name = null, $default = null)
-    {
-        if (!is_null($name)) {
-            return $this->app->config->get('cache.' . $name, $default);
-        }
-
-        return $this->app->config->get('cache');
-    }
-
-    /**
-     * 获取驱动配置
-     * @param string $store
-     * @param string $name
-     * @param null   $default
-     * @return array
-     */
-    public function getStoreConfig(string $store, string $name = null, $default = null)
-    {
-        if ($config = $this->getConfig("stores.{$store}")) {
-            return Arr::get($config, $name, $default);
-        }
-
-        throw new \InvalidArgumentException("Store [$store] not found.");
-    }
-
-    protected function resolveType(string $name)
-    {
-        return $this->getStoreConfig($name, 'type', 'file');
-    }
-
-    protected function resolveConfig(string $name)
-    {
-        return $this->getStoreConfig($name);
-    }
-
-    /**
-     * 连接或者切换缓存
-     * @access public
-     * @param string $name 连接配置名
+     * @param array $options 配置数组
+     * @param bool|string $name 缓存连接标识 true 强制重新连接
      * @return Driver
      */
-    public function store(string $name = null)
+    public static function connect(array $options = [], $name = false)
     {
-        return $this->driver($name);
+        $type = !empty($options['type']) ? $options['type'] : 'File';
+        if (false === $name) {
+            $name = md5(serialize($options));
+        }
+
+        if (true === $name || !isset(self::$instance[$name])) {
+            $class = false !== strpos($type, '\\') ? $type : '\\think\\cache\\driver\\' . ucwords($type);
+
+            // 记录初始化信息
+            APP_DEBUG && Log::record('[ CACHE ] INIT ' . $type, 'info');
+
+            if (true === $name) {
+                return new $class($options);
+            } else {
+                self::$instance[$name] = new $class($options);
+            }
+        }
+        self::$handler = self::$instance[$name];
+        return self::$handler;
     }
 
     /**
-     * 清空缓冲池
+     * 自动初始化缓存
      * @access public
-     * @return bool
+     * @param array $options 配置数组
+     * @return void
      */
-    public function clear(): bool
+    public static function init(array $options = [])
     {
-        return $this->store()->clear();
+        if (is_null(self::$handler)) {
+            // 自动初始化缓存
+            if (!empty($options)) {
+                self::connect($options);
+            } elseif ('complex' == C('cache.type')) {
+                self::connect(C('cache.default'));
+            } else {
+                self::connect(C('cache'));
+            }
+        }
     }
 
     /**
-     * 读取缓存
+     * 切换缓存类型 需要配置 cache.type 为 complex
      * @access public
-     * @param string $key     缓存变量名
-     * @param mixed  $default 默认值
-     * @return mixed
+     * @param string $name 缓存标识
+     * @return Driver
      */
-    public function get($key, $default = null)
+    public static function store($name = '')
     {
-        return $this->store()->get($key, $default);
-    }
-
-    /**
-     * 写入缓存
-     * @access public
-     * @param string        $key   缓存变量名
-     * @param mixed         $value 存储数据
-     * @param int|\DateTime $ttl   有效时间 0为永久
-     * @return bool
-     */
-    public function set($key, $value, $ttl = null): bool
-    {
-        return $this->store()->set($key, $value, $ttl);
-    }
-
-    /**
-     * 删除缓存
-     * @access public
-     * @param string $key 缓存变量名
-     * @return bool
-     */
-    public function delete($key): bool
-    {
-        return $this->store()->delete($key);
-    }
-
-    /**
-     * 读取缓存
-     * @access public
-     * @param iterable $keys    缓存变量名
-     * @param mixed    $default 默认值
-     * @return iterable
-     * @throws InvalidArgumentException
-     */
-    public function getMultiple($keys, $default = null): iterable
-    {
-        return $this->store()->getMultiple($keys, $default);
-    }
-
-    /**
-     * 写入缓存
-     * @access public
-     * @param iterable               $values 缓存数据
-     * @param null|int|\DateInterval $ttl    有效时间 0为永久
-     * @return bool
-     */
-    public function setMultiple($values, $ttl = null): bool
-    {
-        return $this->store()->setMultiple($values, $ttl);
-    }
-
-    /**
-     * 删除缓存
-     * @access public
-     * @param iterable $keys 缓存变量名
-     * @return bool
-     * @throws InvalidArgumentException
-     */
-    public function deleteMultiple($keys): bool
-    {
-        return $this->store()->deleteMultiple($keys);
+        if ('' !== $name && 'complex' == C('cache.type')) {
+            self::connect(C('cache.' . $name), strtolower($name));
+        }
+        return self::$handler;
     }
 
     /**
      * 判断缓存是否存在
      * @access public
-     * @param string $key 缓存变量名
+     * @param string $name 缓存变量名
      * @return bool
      */
-    public function has($key): bool
+    public static function has($name)
     {
-        return $this->store()->has($key);
+        self::init();
+        self::$readTimes++;
+        return self::$handler->has($name);
+    }
+
+    /**
+     * 读取缓存
+     * @access public
+     * @param string $name 缓存标识
+     * @param mixed $default 默认值
+     * @return mixed
+     */
+    public static function get($name, $default = false)
+    {
+        self::init();
+        self::$readTimes++;
+        return self::$handler->get($name, $default);
+    }
+
+    /**
+     * 写入缓存
+     * @access public
+     * @param string $name 缓存标识
+     * @param mixed $value 存储数据
+     * @param int|null $expire 有效时间 0为永久
+     * @return boolean
+     */
+    public static function set($name, $value, $expire = null)
+    {
+        self::init();
+        self::$writeTimes++;
+        return self::$handler->set($name, $value, $expire);
+    }
+
+    /**
+     * 自增缓存（针对数值缓存）
+     * @access public
+     * @param string $name 缓存变量名
+     * @param int $step 步长
+     * @return false|int
+     */
+    public static function inc($name, $step = 1)
+    {
+        self::init();
+        self::$writeTimes++;
+        return self::$handler->inc($name, $step);
+    }
+
+    /**
+     * 自减缓存（针对数值缓存）
+     * @access public
+     * @param string $name 缓存变量名
+     * @param int $step 步长
+     * @return false|int
+     */
+    public static function dec($name, $step = 1)
+    {
+        self::init();
+        self::$writeTimes++;
+        return self::$handler->dec($name, $step);
+    }
+
+    /**
+     * 删除缓存
+     * @access public
+     * @param string $name 缓存标识
+     * @return boolean
+     */
+    public static function rm($name)
+    {
+        self::init();
+        self::$writeTimes++;
+        return self::$handler->rm($name);
+    }
+
+    /**
+     * 清除缓存
+     * @access public
+     * @param string $tag 标签名
+     * @return boolean
+     */
+    public static function clear($tag = null)
+    {
+        self::init();
+        self::$writeTimes++;
+        return self::$handler->clear($tag);
+    }
+
+    /**
+     * 读取缓存并删除
+     * @access public
+     * @param string $name 缓存变量名
+     * @return mixed
+     */
+    public static function pull($name)
+    {
+        self::init();
+        self::$readTimes++;
+        self::$writeTimes++;
+        return self::$handler->pull($name);
+    }
+
+    /**
+     * 追加（数组）缓存
+     * @access public
+     * @param string $name 缓存变量名
+     * @param mixed $value 存储数据
+     * @return void
+     */
+    public static function push(string $name, $value): void
+    {
+        if (!empty($value)) {
+            return;
+        }
+        $item = self::get($name, []);
+
+        if (!is_array($item)) {
+            throw new InvalidArgumentException('only array cache can be push');
+        }
+
+        $item[] = $value;
+
+        if (count($item) > 1000) {
+            array_shift($item);
+        }
+
+        $item = array_unique($item);
+
+        self::set($name, $item);
+    }
+
+    /**
+     * 如果不存在则写入缓存
+     * @access public
+     * @param string $name 缓存变量名
+     * @param mixed $value 存储数据
+     * @param int $expire 有效时间 0为永久
+     * @return mixed
+     */
+    public static function remember($name, $value, $expire = null)
+    {
+        self::init();
+        self::$readTimes++;
+        return self::$handler->remember($name, $value, $expire);
     }
 
     /**
      * 缓存标签
      * @access public
-     * @param string|array $name 标签名
-     * @return TagSet
+     * @param string $name 标签名
+     * @param string|array $keys 缓存标识
+     * @param bool $overlay 是否覆盖
+     * @return Driver
      */
-    public function tag($name): TagSet
+    public static function tag($name, $keys = null, $overlay = false)
     {
-        return $this->store()->tag($name);
+        self::init();
+        return self::$handler->tag($name, $keys, $overlay);
     }
 }

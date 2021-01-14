@@ -12,12 +12,13 @@
 namespace think\console\command;
 
 use think\console\Command;
-use think\console\Input;
-use think\console\input\Argument;
-use think\console\Output;
+use think\Console\Input;
+use think\Console\input\Argument;
+use think\Console\Output;
 
 abstract class Make extends Command
 {
+
     protected $type;
 
     abstract protected function getStub();
@@ -29,6 +30,7 @@ abstract class Make extends Command
 
     protected function execute(Input $input, Output $output)
     {
+
         $name = trim($input->getArgument('name'));
 
         $classname = $this->getClassName($name);
@@ -36,20 +38,21 @@ abstract class Make extends Command
         $pathname = $this->getPathName($classname);
 
         if (is_file($pathname)) {
-            $output->writeln('<error>' . $this->type . ':' . $classname . ' already exists!</error>');
+            $output->writeln('<error>' . $this->type . ' already exists!</error>');
             return false;
         }
 
         if (!is_dir(dirname($pathname))) {
-            mkdir(dirname($pathname), 0755, true);
+            mkdir(strtolower(dirname($pathname)), 0755, true);
         }
 
         file_put_contents($pathname, $this->buildClass($classname));
 
-        $output->writeln('<info>' . $this->type . ':' . $classname . ' created successfully.</info>');
+        $output->writeln('<info>' . $this->type . ' created successfully.</info>');
+
     }
 
-    protected function buildClass(string $name)
+    protected function buildClass($name)
     {
         $stub = file_get_contents($this->getStub());
 
@@ -57,43 +60,49 @@ abstract class Make extends Command
 
         $class = str_replace($namespace . '\\', '', $name);
 
-        return str_replace(['{%className%}', '{%actionSuffix%}', '{%namespace%}', '{%app_namespace%}'], [
+        return str_replace(['{%className%}', '{%namespace%}', '{%app_namespace%}'], [
             $class,
-            $this->app->config->get('route.action_suffix'),
             $namespace,
-            $this->app->getNamespace(),
+            C('APP_NAMESPACE')
         ], $stub);
+
     }
 
-    protected function getPathName(string $name): string
+    protected function getPathName($name)
     {
-        $name = str_replace('app\\', '', $name);
+        $name = str_replace(C('APP_NAMESPACE') . '\\', '', $name);
 
-        return $this->app->getBasePath() . ltrim(str_replace('\\', '/', $name), '/') . '.php';
+        return APP_PATH . str_replace('\\', '/', $name) . '.php';
     }
 
-    protected function getClassName(string $name): string
+    protected function getClassName($name)
     {
-        if (strpos($name, '\\') !== false) {
+        $appNamespace = C('APP_NAMESPACE');
+
+        if (strpos($name, $appNamespace . '\\') === 0) {
             return $name;
         }
 
-        if (strpos($name, '@')) {
-            [$app, $name] = explode('@', $name);
+        if (C('MULTI_MODULE')) {
+            if (strpos($name, '/')) {
+                list($module, $name) = explode('/', $name, 2);
+            } else {
+                $module = 'common';
+            }
         } else {
-            $app = '';
+            $module = null;
         }
 
         if (strpos($name, '/') !== false) {
             $name = str_replace('/', '\\', $name);
         }
 
-        return $this->getNamespace($app) . '\\' . $name;
+        return $this->getNamespace($appNamespace, $module) . '\\' . $name;
     }
 
-    protected function getNamespace(string $app): string
+    protected function getNamespace($appNamespace, $module)
     {
-        return 'app' . ($app ? '\\' . $app : '');
+        return $module ? ($appNamespace . '\\' . $module) : $appNamespace;
     }
 
 }

@@ -1,342 +1,132 @@
 <?php
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK ]
+// | ThinkPHP [ WE CAN DO IT JUST THINK IT ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2006~2019 http://thinkphp.cn All rights reserved.
+// | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
 // | Author: liu21st <liu21st@gmail.com>
 // +----------------------------------------------------------------------
-declare (strict_types = 1);
-
 namespace think;
 
-use InvalidArgumentException;
-use Psr\Log\LoggerInterface;
-use think\event\LogWrite;
-use think\helper\Arr;
-use think\log\Channel;
-use think\log\ChannelSet;
-
 /**
- * 日志管理类
- * @package think
- * @mixin Channel
+ * 日志处理类
  */
-class Log extends Manager implements LoggerInterface
+class Log
 {
-    const EMERGENCY = 'emergency';
-    const ALERT     = 'alert';
-    const CRITICAL  = 'critical';
-    const ERROR     = 'error';
-    const WARNING   = 'warning';
-    const NOTICE    = 'notice';
-    const INFO      = 'info';
-    const DEBUG     = 'debug';
-    const SQL       = 'sql';
 
-    protected $namespace = '\\think\\log\\driver\\';
+    // 日志级别 从上到下，由低到高
+    const EMERG = 'EMERG'; // 严重错误: 导致系统崩溃无法使用
+    const ALERT = 'ALERT'; // 警戒性错误: 必须被立即修改的错误
+    const CRIT = 'CRIT'; // 临界值错误: 超过临界值的错误，例如一天24小时，而输入的是25小时这样
+    const ERR = 'ERR'; // 一般错误: 一般性错误
+    const WARN = 'WARN'; // 警告性错误: 需要发出警告的错误
+    const NOTICE = 'NOTIC'; // 通知: 程序可以运行但是还不够完美的错误
+    const INFO = 'INFO'; // 信息: 程序输出信息
+    const DEBUG = 'DEBUG'; // 调试: 调试信息
+    const SQL = 'SQL'; // SQL：SQL语句 注意只在调试模式开启时有效
 
-    /**
-     * 默认驱动
-     * @return string|null
-     */
-    public function getDefaultDriver()
+    // 日志信息
+    protected static $log = array();
+
+    // 日志存储
+    protected static $storage = null;
+
+    // 日志初始化
+    public static function init($config = array())
     {
-        return $this->getConfig('default');
+        $type = isset($config['type']) ? $config['type'] : 'File';
+        $class = strpos($type, '\\') ? $type : 'think\\log\\driver\\' . ucwords(strtolower($type));
+        unset($config['type']);
+        if (IS_CLI) {
+            $config['log_path'] .= 'cli' . DS;
+        }
+        self::$storage = new $class($config);
     }
 
     /**
-     * 获取日志配置
+     * 记录日志 并且会过滤未经设置的级别
+     * @static
      * @access public
-     * @param null|string $name    名称
-     * @param mixed       $default 默认值
-     * @return mixed
+     * @param string $message 日志信息
+     * @param string $level 日志级别
+     * @param boolean $record 是否强制记录
+     * @return void
      */
-    public function getConfig(string $name = null, $default = null)
+    public static function record($message, $level = self::ERR, $record = false)
     {
-        if (!is_null($name)) {
-            return $this->app->config->get('log.' . $name, $default);
+        if ($record || in_array(strtoupper($level), explode(",", C('LOG_LEVEL')))) {
+            self::$log[] = "{$level}: {$message}\r\n";
         }
-
-        return $this->app->config->get('log');
     }
 
     /**
-     * 获取渠道配置
-     * @param string $channel
-     * @param null   $name
-     * @param null   $default
-     * @return array
-     */
-    public function getChannelConfig($channel, $name = null, $default = null)
-    {
-        if ($config = $this->getConfig("channels.{$channel}")) {
-            return Arr::get($config, $name, $default);
-        }
-
-        throw new InvalidArgumentException("Channel [$channel] not found.");
-    }
-
-    /**
-     * driver()的别名
-     * @param string|array $name 渠道名
-     * @return Channel|ChannelSet
-     */
-    public function channel($name = null)
-    {
-        if (is_array($name)) {
-            return new ChannelSet($this, $name);
-        }
-
-        return $this->driver($name);
-    }
-
-    protected function resolveType(string $name)
-    {
-        return $this->getChannelConfig($name, 'type', 'file');
-    }
-
-    public function createDriver(string $name)
-    {
-        $driver = parent::createDriver($name);
-
-        $lazy  = !$this->getChannelConfig($name, "realtime_write", false) && !$this->app->runningInConsole();
-        $allow = array_merge($this->getConfig("level", []), $this->getChannelConfig($name, "level", []));
-
-        return new Channel($name, $driver, $allow, $lazy, $this->app->event);
-    }
-
-    protected function resolveConfig(string $name)
-    {
-        return $this->getChannelConfig($name);
-    }
-
-    /**
-     * 清空日志信息
+     * 日志保存
+     * @static
      * @access public
-     * @param string|array $channel 日志通道名
-     * @return $this
+     * @param integer $type 日志记录方式
+     * @param string $destination 写入目标
+     * @return void
      */
-    public function clear($channel = '*')
+    public static function save($type = '', $destination = '')
     {
-        if ('*' == $channel) {
-            $channel = array_keys($this->drivers);
+        if (empty(self::$log)) {
+            return;
         }
 
-        $this->channel($channel)->clear();
-
-        return $this;
-    }
-
-    /**
-     * 关闭本次请求日志写入
-     * @access public
-     * @param string|array $channel 日志通道名
-     * @return $this
-     */
-    public function close($channel = '*')
-    {
-        if ('*' == $channel) {
-            $channel = array_keys($this->drivers);
+        if (empty($destination)) {
+            if (IS_CLI) {
+                $destination = LOG_PATH . 'cli' . DS . date('y_m_d') . '.log';
+            } else {
+                $destination = LOG_PATH . date('y_m_d') . '.log';
+            }
         }
-
-        $this->channel($channel)->close();
-
-        return $this;
+        if (!self::$storage) {
+            $type = $type ?: C('LOG_TYPE');
+            $class = 'think\\log\\driver\\' . ucwords($type);
+            self::$storage = new $class();
+        }
+        $message = implode('', self::$log);
+        self::$storage->write($message, $destination);
+        // 保存后清空日志缓存
+        self::$log = array();
     }
 
     /**
      * 获取日志信息
-     * @access public
-     * @param string $channel 日志通道名
+     * @param string $type 信息类型
      * @return array
      */
-    public function getLog(string $channel = null): array
+    public static function getLog($type = '')
     {
-        return $this->channel($channel)->getLog();
+        return $type ? self::$log[$type] : self::$log;
     }
 
     /**
-     * 保存日志信息
+     * 日志直接写入
+     * @static
      * @access public
-     * @return bool
+     * @param string $message 日志信息
+     * @param string $level 日志级别
+     * @param integer $type 日志记录方式
+     * @param string $destination 写入目标
+     * @return void
      */
-    public function save(): bool
+    public static function write($message, $level = self::ERR, $type = '', $destination = '')
     {
-        /** @var Channel $channel */
-        foreach ($this->drivers as $channel) {
-            $channel->save();
+        if (!self::$storage) {
+            $type = $type ?: C('LOG_TYPE');
+            $class = 'think\\log\\driver\\' . ucwords($type);
+            $config['log_path'] = LOG_PATH;
+            if (IS_CLI) {
+                $config['log_path'] .= 'cli' . DS;
+            }
+            self::$storage = new $class($config);
         }
-
-        return true;
-    }
-
-    /**
-     * 记录日志信息
-     * @access public
-     * @param mixed  $msg     日志信息
-     * @param string $type    日志级别
-     * @param array  $context 替换内容
-     * @param bool   $lazy
-     * @return $this
-     */
-    public function record($msg, string $type = 'info', array $context = [], bool $lazy = true)
-    {
-        $channel = $this->getConfig('type_channel.' . $type);
-
-        $this->channel($channel)->record($msg, $type, $context, $lazy);
-
-        return $this;
-    }
-
-    /**
-     * 实时写入日志信息
-     * @access public
-     * @param mixed  $msg     调试信息
-     * @param string $type    日志级别
-     * @param array  $context 替换内容
-     * @return $this
-     */
-    public function write($msg, string $type = 'info', array $context = [])
-    {
-        return $this->record($msg, $type, $context, false);
-    }
-
-    /**
-     * 注册日志写入事件监听
-     * @param $listener
-     * @return Event
-     */
-    public function listen($listener)
-    {
-        return $this->app->event->listen(LogWrite::class, $listener);
-    }
-
-    /**
-     * 记录日志信息
-     * @access public
-     * @param string $level   日志级别
-     * @param mixed  $message 日志信息
-     * @param array  $context 替换内容
-     * @return void
-     */
-    public function log($level, $message, array $context = []): void
-    {
-        $this->record($message, $level, $context);
-    }
-
-    /**
-     * 记录emergency信息
-     * @access public
-     * @param mixed $message 日志信息
-     * @param array $context 替换内容
-     * @return void
-     */
-    public function emergency($message, array $context = []): void
-    {
-        $this->log(__FUNCTION__, $message, $context);
-    }
-
-    /**
-     * 记录警报信息
-     * @access public
-     * @param mixed $message 日志信息
-     * @param array $context 替换内容
-     * @return void
-     */
-    public function alert($message, array $context = []): void
-    {
-        $this->log(__FUNCTION__, $message, $context);
-    }
-
-    /**
-     * 记录紧急情况
-     * @access public
-     * @param mixed $message 日志信息
-     * @param array $context 替换内容
-     * @return void
-     */
-    public function critical($message, array $context = []): void
-    {
-        $this->log(__FUNCTION__, $message, $context);
-    }
-
-    /**
-     * 记录错误信息
-     * @access public
-     * @param mixed $message 日志信息
-     * @param array $context 替换内容
-     * @return void
-     */
-    public function error($message, array $context = []): void
-    {
-        $this->log(__FUNCTION__, $message, $context);
-    }
-
-    /**
-     * 记录warning信息
-     * @access public
-     * @param mixed $message 日志信息
-     * @param array $context 替换内容
-     * @return void
-     */
-    public function warning($message, array $context = []): void
-    {
-        $this->log(__FUNCTION__, $message, $context);
-    }
-
-    /**
-     * 记录notice信息
-     * @access public
-     * @param mixed $message 日志信息
-     * @param array $context 替换内容
-     * @return void
-     */
-    public function notice($message, array $context = []): void
-    {
-        $this->log(__FUNCTION__, $message, $context);
-    }
-
-    /**
-     * 记录一般信息
-     * @access public
-     * @param mixed $message 日志信息
-     * @param array $context 替换内容
-     * @return void
-     */
-    public function info($message, array $context = []): void
-    {
-        $this->log(__FUNCTION__, $message, $context);
-    }
-
-    /**
-     * 记录调试信息
-     * @access public
-     * @param mixed $message 日志信息
-     * @param array $context 替换内容
-     * @return void
-     */
-    public function debug($message, array $context = []): void
-    {
-        $this->log(__FUNCTION__, $message, $context);
-    }
-
-    /**
-     * 记录sql信息
-     * @access public
-     * @param mixed $message 日志信息
-     * @param array $context 替换内容
-     * @return void
-     */
-    public function sql($message, array $context = []): void
-    {
-        $this->log(__FUNCTION__, $message, $context);
-    }
-
-    public function __call($method, $parameters)
-    {
-        $this->log($method, ...$parameters);
+        if (empty($destination)) {
+            $destination = LOG_PATH . date('y_m_d') . '.log';
+        }
+        self::$storage->write("{$level}: {$message}", $destination);
     }
 }

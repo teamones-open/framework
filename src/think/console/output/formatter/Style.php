@@ -13,7 +13,8 @@ namespace think\console\output\formatter;
 
 class Style
 {
-    protected static $availableForegroundColors = [
+
+    private static $availableForegroundColors = [
         'black'   => ['set' => 30, 'unset' => 39],
         'red'     => ['set' => 31, 'unset' => 39],
         'green'   => ['set' => 32, 'unset' => 39],
@@ -23,8 +24,7 @@ class Style
         'cyan'    => ['set' => 36, 'unset' => 39],
         'white'   => ['set' => 37, 'unset' => 39],
     ];
-
-    protected static $availableBackgroundColors = [
+    private static $availableBackgroundColors = [
         'black'   => ['set' => 40, 'unset' => 49],
         'red'     => ['set' => 41, 'unset' => 49],
         'green'   => ['set' => 42, 'unset' => 49],
@@ -34,8 +34,7 @@ class Style
         'cyan'    => ['set' => 46, 'unset' => 49],
         'white'   => ['set' => 47, 'unset' => 49],
     ];
-
-    protected static $availableOptions = [
+    private static $availableOptions = [
         'bold'       => ['set' => 1, 'unset' => 22],
         'underscore' => ['set' => 4, 'unset' => 24],
         'blink'      => ['set' => 5, 'unset' => 25],
@@ -115,7 +114,7 @@ class Style
      * @throws \InvalidArgumentException When the option name isn't defined
      * @api
      */
-    public function setOption(string $option): void
+    public function setOption($option)
     {
         if (!isset(static::$availableOptions[$option])) {
             throw new \InvalidArgumentException(sprintf('Invalid option specified: "%s". Expected one of (%s)', $option, implode(', ', array_keys(static::$availableOptions))));
@@ -131,7 +130,7 @@ class Style
      * @param string $option 格式名
      * @throws \InvalidArgumentException
      */
-    public function unsetOption(string $option): void
+    public function unsetOption($option)
     {
         if (!isset(static::$availableOptions[$option])) {
             throw new \InvalidArgumentException(sprintf('Invalid option specified: "%s". Expected one of (%s)', $option, implode(', ', array_keys(static::$availableOptions))));
@@ -161,7 +160,7 @@ class Style
      * @param string $text 文字
      * @return string
      */
-    public function apply(string $text): string
+    public function apply($text)
     {
         $setCodes   = [];
         $unsetCodes = [];

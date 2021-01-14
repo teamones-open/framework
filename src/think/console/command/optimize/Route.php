@@ -6,61 +6,65 @@
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
-// | Author: yunwuxin <448901948@qq.com>
+// | Author: liu21st <liu21st@gmail.com>
 // +----------------------------------------------------------------------
 namespace think\console\command\optimize;
 
 use think\console\Command;
 use think\console\Input;
-use think\console\input\Argument;
 use think\console\Output;
-use think\event\RouteLoaded;
 
 class Route extends Command
 {
+    /** @var  Output */
+    protected $output;
+
     protected function configure()
     {
         $this->setName('optimize:route')
-            ->addArgument('dir', Argument::OPTIONAL, 'dir name .')
-            ->setDescription('Build app route cache.');
+            ->setDescription('Build route cache.');
     }
 
     protected function execute(Input $input, Output $output)
     {
-        $dir = $input->getArgument('dir') ?: '';
-
-        $path = $this->app->getRootPath() . 'runtime' . DIRECTORY_SEPARATOR . ($dir ? $dir . DIRECTORY_SEPARATOR : '');
-
-        $filename = $path . 'route.php';
-        if (is_file($filename)) {
-            unlink($filename);
-        }
-
-        file_put_contents($filename, $this->buildRouteCache($dir));
+        file_put_contents(RUNTIME_PATH . 'route.php', $this->buildRouteCache());
         $output->writeln('<info>Succeed!</info>');
     }
 
-    protected function buildRouteCache(string $dir = null): string
+    protected function buildRouteCache()
     {
-        $this->app->route->clear();
-        $this->app->route->lazy(false);
-
-        // 路由检测
-        $path = $this->app->getRootPath() . ($dir ? 'app' . DIRECTORY_SEPARATOR . $dir . DIRECTORY_SEPARATOR : '') . 'route' . DIRECTORY_SEPARATOR;
-
-        $files = is_dir($path) ? scandir($path) : [];
-
+        $files = C('route_config_file');
         foreach ($files as $file) {
-            if (strpos($file, '.php')) {
-                include $path . $file;
+            if (is_file(CONF_PATH . $file . CONF_EXT)) {
+                $config = include CONF_PATH . $file . CONF_EXT;
+                if (is_array($config)) {
+                    \think\Route::import($config);
+                }
             }
         }
-
-        //触发路由载入完成事件
-        $this->app->event->trigger(RouteLoaded::class);
-        $rules = $this->app->route->getName();
-
-        return '<?php ' . PHP_EOL . 'return unserialize(\'' . serialize($rules) . '\');';
+        $rules = \think\Route::rules(true);
+        array_walk_recursive($rules, [$this, 'buildClosure']);
+        $content = '<?php ' . PHP_EOL . 'return ';
+        $content .= var_export($rules, true) . ';';
+        $content = str_replace(['\'[__start__', '__end__]\''], '', stripcslashes($content));
+        return $content;
     }
 
+    protected function buildClosure(&$value)
+    {
+        if ($value instanceof \Closure) {
+            $reflection = new \ReflectionFunction($value);
+            $startLine  = $reflection->getStartLine();
+            $endLine    = $reflection->getEndLine();
+            $file       = $reflection->getFileName();
+            $item       = file($file);
+            $content    = '';
+            for ($i = $startLine - 1; $i <= $endLine - 1; $i++) {
+                $content .= $item[$i];
+            }
+            $start = strpos($content, 'function');
+            $end   = strrpos($content, '}');
+            $value = '[__start__' . substr($content, $start, $end - $start + 1) . '__end__]';
+        }
+    }
 }

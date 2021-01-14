@@ -42,7 +42,7 @@ class Console
         $this->formatter->setDecorated($decorated);
     }
 
-    public function write($messages, bool $newline = false, int $type = 0, $stream = null)
+    public function write($messages, $newline = false, $type = Output::OUTPUT_NORMAL, $stream = null)
     {
         if (Output::VERBOSITY_QUIET === $this->output->getVerbosity()) {
             return;
@@ -68,7 +68,7 @@ class Console
         }
     }
 
-    public function renderException(\Throwable $e)
+    public function renderException(\Exception $e)
     {
         $stderr    = $this->openErrorStream();
         $decorated = $this->hasColorSupport($stderr);
@@ -162,13 +162,13 @@ class Console
      * 获取当前终端的尺寸
      * @return array
      */
-    public function getTerminalDimensions(): array
+    public function getTerminalDimensions()
     {
         if ($this->terminalDimensions) {
             return $this->terminalDimensions;
         }
 
-        if ('\\' === DIRECTORY_SEPARATOR) {
+        if ('\\' === DS) {
             if (preg_match('/^(\d+)x\d+ \(\d+x(\d+)\)$/', trim(getenv('ANSICON')), $matches)) {
                 return [(int) $matches[1], (int) $matches[2]];
             }
@@ -237,7 +237,7 @@ class Console
         return;
     }
 
-    private function stringWidth(string $string): int
+    private function stringWidth($string)
     {
         if (!function_exists('mb_strwidth')) {
             return strlen($string);
@@ -250,7 +250,7 @@ class Console
         return mb_strwidth($string, $encoding);
     }
 
-    private function splitStringByWidth(string $string, int $width): array
+    private function splitStringByWidth($string, $width)
     {
         if (!function_exists('mb_strwidth')) {
             return str_split($string, $width);
@@ -280,7 +280,7 @@ class Console
         return $lines;
     }
 
-    private function isRunningOS400(): bool
+    private function isRunningOS400()
     {
         $checks = [
             function_exists('php_uname') ? php_uname('s') : '',
@@ -295,7 +295,7 @@ class Console
      *
      * @return bool
      */
-    protected function hasStdoutSupport(): bool
+    protected function hasStdoutSupport()
     {
         return false === $this->isRunningOS400();
     }
@@ -305,7 +305,7 @@ class Console
      *
      * @return bool
      */
-    protected function hasStderrSupport(): bool
+    protected function hasStderrSupport()
     {
         return false === $this->isRunningOS400();
     }
@@ -352,7 +352,7 @@ class Console
      * @param $stream
      * @return bool
      */
-    protected function hasColorSupport($stream): bool
+    protected function hasColorSupport($stream)
     {
         if (DIRECTORY_SEPARATOR === '\\') {
             return

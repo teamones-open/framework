@@ -40,7 +40,7 @@ class Choice extends Question
      * 可选项
      * @return array
      */
-    public function getChoices(): array
+    public function getChoices()
     {
         return $this->choices;
     }
@@ -50,7 +50,7 @@ class Choice extends Question
      * @param bool $multiselect
      * @return self
      */
-    public function setMultiselect(bool $multiselect)
+    public function setMultiselect($multiselect)
     {
         $this->multiselect = $multiselect;
         $this->setValidator($this->getDefaultValidator());
@@ -58,7 +58,7 @@ class Choice extends Question
         return $this;
     }
 
-    public function isMultiselect(): bool
+    public function isMultiselect()
     {
         return $this->multiselect;
     }
@@ -67,7 +67,7 @@ class Choice extends Question
      * 获取提示
      * @return string
      */
-    public function getPrompt(): string
+    public function getPrompt()
     {
         return $this->prompt;
     }
@@ -77,7 +77,7 @@ class Choice extends Question
      * @param string $prompt
      * @return self
      */
-    public function setPrompt(string $prompt)
+    public function setPrompt($prompt)
     {
         $this->prompt = $prompt;
 
@@ -89,7 +89,7 @@ class Choice extends Question
      * @param string $errorMessage
      * @return self
      */
-    public function setErrorMessage(string $errorMessage)
+    public function setErrorMessage($errorMessage)
     {
         $this->errorMessage = $errorMessage;
         $this->setValidator($this->getDefaultValidator());
@@ -147,7 +147,7 @@ class Choice extends Question
                     $result = $value;
                 }
 
-                if (false === $result) {
+                if (empty($result)) {
                     throw new \InvalidArgumentException(sprintf($errorMessage, $value));
                 }
                 array_push($multiselectChoices, $result);

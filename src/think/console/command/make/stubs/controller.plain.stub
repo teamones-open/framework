@@ -1,9 +1,10 @@
 <?php
-declare (strict_types = 1);
 
 namespace {%namespace%};
 
-class {%className%}
+use Think\Controller;
+
+class {%className%} extends Controller
 {
     //
 }

@@ -1,608 +1,708 @@
 <?php
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK ]
+// | ThinkPHP [ WE CAN DO IT JUST THINK IT ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2006~2019 http://thinkphp.cn All rights reserved.
+// | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
 // | Author: liu21st <liu21st@gmail.com>
 // +----------------------------------------------------------------------
-declare (strict_types = 1);
-
 namespace think;
 
-use think\event\AppInit;
-use think\helper\Str;
-use think\initializer\BootService;
-use think\initializer\Error;
-use think\initializer\RegisterService;
+use think\Exception\ExceptionHandlerInterface;
+use think\Exception\ExceptionHandler;
+use think\exception\ClassNotFoundException;
+use Workerman\Worker;
+use Workerman\Timer;
+use Workerman\Connection\TcpConnection;
+use think\exception\HttpResponseException;
+use think\exception\HttpException;
+use Psr\Container\ContainerInterface;
+use Monolog\Logger;
 
-/**
- * App 基础类
- * @property Route      $route
- * @property Config     $config
- * @property Cache      $cache
- * @property Request    $request
- * @property Http       $http
- * @property Console    $console
- * @property Env        $env
- * @property Event      $event
- * @property Middleware $middleware
- * @property Log        $log
- * @property Lang       $lang
- * @property Db         $db
- * @property Cookie     $cookie
- * @property Session    $session
- * @property Validate   $validate
- * @property Filesystem $filesystem
- */
-class App extends Container
+class App
 {
-    const VERSION = '6.0.5';
+    /**
+     * @var bool 是否初始化过
+     */
+    protected static $init = false;
 
     /**
-     * 应用调试模式
+     * @var string 当前模块路径
+     */
+    public static $modulePath;
+
+    /**
+     * @var string 应用类库命名空间
+     */
+    public static $namespace = 'App';
+
+    /**
+     * @var bool 应用类库后缀
+     */
+    public static $suffix = false;
+
+    /**
+     * @var bool 应用路由检测
+     */
+    protected static $routeCheck;
+
+    /**
+     * @var bool 严格路由检测
+     */
+    protected static $routeMust;
+
+    /**
      * @var bool
      */
-    protected $appDebug = false;
+    protected static $_supportStaticFiles = true;
 
     /**
-     * 应用开始时间
-     * @var float
-     */
-    protected $beginTime;
-
-    /**
-     * 应用内存初始占用
-     * @var integer
-     */
-    protected $beginMem;
-
-    /**
-     * 当前应用类库命名空间
-     * @var string
-     */
-    protected $namespace = 'app';
-
-    /**
-     * 应用根目录
-     * @var string
-     */
-    protected $rootPath = '';
-
-    /**
-     * 框架目录
-     * @var string
-     */
-    protected $thinkPath = '';
-
-    /**
-     * 应用目录
-     * @var string
-     */
-    protected $appPath = '';
-
-    /**
-     * Runtime目录
-     * @var string
-     */
-    protected $runtimePath = '';
-
-    /**
-     * 路由定义目录
-     * @var string
-     */
-    protected $routePath = '';
-
-    /**
-     * 配置后缀
-     * @var string
-     */
-    protected $configExt = '.php';
-
-    /**
-     * 应用初始化器
-     * @var array
-     */
-    protected $initializers = [
-        Error::class,
-        RegisterService::class,
-        BootService::class,
-    ];
-
-    /**
-     * 注册的系统服务
-     * @var array
-     */
-    protected $services = [];
-
-    /**
-     * 初始化
      * @var bool
      */
-    protected $initialized = false;
+    protected static $_supportPHPFiles = false;
 
     /**
-     * 容器绑定标识
      * @var array
      */
-    protected $bind = [
-        'app'                     => App::class,
-        'cache'                   => Cache::class,
-        'config'                  => Config::class,
-        'console'                 => Console::class,
-        'cookie'                  => Cookie::class,
-        'db'                      => Db::class,
-        'env'                     => Env::class,
-        'event'                   => Event::class,
-        'http'                    => Http::class,
-        'lang'                    => Lang::class,
-        'log'                     => Log::class,
-        'middleware'              => Middleware::class,
-        'request'                 => Request::class,
-        'response'                => Response::class,
-        'route'                   => Route::class,
-        'session'                 => Session::class,
-        'validate'                => Validate::class,
-        'view'                    => View::class,
-        'filesystem'              => Filesystem::class,
-        'think\DbManager'         => Db::class,
-        'think\LogManager'        => Log::class,
-        'think\CacheManager'      => Cache::class,
-
-        // 接口依赖注入
-        'Psr\Log\LoggerInterface' => Log::class,
-    ];
+    protected static $_callbacks = [];
 
     /**
-     * 架构方法
-     * @access public
-     * @param string $rootPath 应用根目录
+     * @var Worker
      */
-    public function __construct(string $rootPath = '')
+    protected static $_worker = null;
+
+    /**
+     * @var ContainerInterface
+     */
+    protected static $_container = null;
+
+    /**
+     * @var Logger
+     */
+    protected static $_logger = null;
+
+    /**
+     * @var string
+     */
+    protected static $_publicPath = '';
+
+    /**
+     * @var string
+     */
+    protected static $_configPath = '';
+
+    /**
+     * @var TcpConnection
+     */
+    protected static $_connection = null;
+
+    /**
+     * @var Request
+     */
+    protected static $_request = null;
+
+    /**
+     * @var int
+     */
+    protected static $_maxRequestCount = 1000000;
+
+    /**
+     * @var int
+     */
+    protected static $_gracefulStopTimer = null;
+
+
+    /**
+     * App constructor.
+     * @param Worker $worker
+     * @param $container
+     * @param $logger
+     * @param $app_path
+     * @param $public_path
+     */
+    public function __construct(Worker $worker, $container, $logger, $app_path, $public_path)
     {
-        $this->thinkPath   = dirname(__DIR__) . DIRECTORY_SEPARATOR;
-        $this->rootPath    = $rootPath ? rtrim($rootPath, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR : $this->getDefaultRootPath();
-        $this->appPath     = $this->rootPath . 'app' . DIRECTORY_SEPARATOR;
-        $this->runtimePath = $this->rootPath . 'runtime' . DIRECTORY_SEPARATOR;
+        static::$_worker = $worker;
+        static::$_container = $container;
+        static::$_logger = $logger;
+        static::$_publicPath = $public_path;
+        static::loadController($app_path . C("DEFAULT_MODULE"));
 
-        if (is_file($this->appPath . 'provider.php')) {
-            $this->bind(include $this->appPath . 'provider.php');
+        $max_requst_count = (int)C('SERVER.max_request');
+        if ($max_requst_count > 0) {
+            static::$_maxRequestCount = $max_requst_count;
         }
-
-        static::setInstance($this);
-
-        $this->instance('app', $this);
-        $this->instance('think\Container', $this);
+        static::$_supportStaticFiles = true;
+        static::$_supportPHPFiles = false;
     }
 
+
     /**
-     * 注册服务
-     * @access public
-     * @param Service|string $service 服务
-     * @param bool           $force   强制重新注册
-     * @return Service|null
+     * 应用程序初始化
+     * @throws Exception
      */
-    public function register($service, bool $force = false)
+    public static function init()
     {
-        $registered = $this->getService($service);
+        // 日志目录转换为绝对路径 默认情况下存储到公共模块下面
+        C('LOG_PATH', realpath(LOG_PATH) . '/Common/');
 
-        if ($registered && !$force) {
-            return $registered;
+        // 定义当前请求的系统常量
+        if (!defined('NOW_TIME')) {
+            define('NOW_TIME', $_SERVER['REQUEST_TIME']);
         }
 
-        if (is_string($service)) {
-            $service = new $service($this);
-        }
+        // 加载动态应用公共文件和配置
+        load_ext_file(COMMON_PATH);
 
-        if (method_exists($service, 'register')) {
-            $service->register();
-        }
-
-        if (property_exists($service, 'bind')) {
-            $this->bind($service->bind);
-        }
-
-        $this->services[] = $service;
+        return;
     }
 
+
     /**
-     * 执行服务
-     * @access public
-     * @param Service $service 服务
+     * 初始化应用，并返回配置信息
      * @return mixed
+     * @throws Exception
      */
-    public function bootService($service)
+    public static function initCommon()
     {
-        if (method_exists($service, 'boot')) {
-            return $this->invoke([$service, 'boot']);
+        if (empty(self::$init)) {
+            self::init();
+
+            self::$init = true;
+        }
+
+        return C();
+    }
+
+    /**
+     * 执行模块
+     * @access public
+     * @param array $result 模块/控制器/操作
+     * @param array $config 配置参数
+     * @param bool $convert 是否自动转换控制器和操作名
+     * @return mixed
+     * @throws \ReflectionException
+     */
+    public static function module($result, $config, $convert = null)
+    {
+        if (is_string($result)) {
+            $result = explode('/', $result);
+        }
+
+        if ($config['MULTI_MODULE']) {
+            // 多模块部署
+            $module = strip_tags($result[0] ?: $config['DEFAULT_MODULE']);
+            $bind = Route::getBind('module');
+            $available = false;
+
+            if ($bind) {
+                // 绑定模块
+                list($bindModule) = explode('/', $bind);
+
+                if (empty($result[0])) {
+                    $module = $bindModule;
+                    $available = true;
+                } elseif ($module == $bindModule) {
+                    $available = true;
+                }
+            } elseif (!in_array($module, $config['MODULE_DENY_LIST']) && is_dir(APP_PATH . $module)) {
+                $available = true;
+            }
+
+            // 模块初始化
+            if ($module && $available) {
+
+                // 初始化模块
+                static::$_request->module($module);
+            } else {
+                throw new HttpException(404, 'module not exists:' . $module);
+            }
+        } else {
+            // 单一模块部署
+            $module = strip_tags($result[0] ?: $config['DEFAULT_MODULE']);
+            static::$_request->module($module);
+        }
+
+        // 当前模块路径
+        App::$modulePath = APP_PATH . ($module ? $module . DS : '');
+
+        // 是否自动转换控制器和操作名
+        $convert = is_bool($convert) ? $convert : $config['URL_CONVERT'];
+
+        // 获取控制器名
+        $controller = strip_tags($result[1] ?: $config['DEFAULT_CONTROLLER']);
+
+        if (!preg_match('/^[A-Za-z](\w|\.)*$/', $controller)) {
+            throw new HttpException(404, 'controller not exists:' . $controller);
+        }
+
+        $controller = $convert ? strtolower($controller) : $controller;
+
+        // 获取操作名
+        $actionName = strip_tags($result[2] ?: $config['DEFAULT_ACTION']);
+
+        // 获取当前操作名
+        $action = $actionName . $config['ACTION_SUFFIX'];
+
+        return [$module, $controller, $action];
+    }
+
+    /**
+     * URL路由检测（根据PATH_INFO)
+     * @param Request $request
+     * @param array $config
+     * @return array|bool|false
+     * @throws \Exception
+     */
+    public static function routeCheck(Request $request, array $config)
+    {
+        $path = $request->path();
+
+        $depr = $config['URL_PATHINFO_DEPR'];
+        $result = false;
+
+        // 路由检测
+        $check = !is_null(self::$routeCheck) ? self::$routeCheck : $config['URL_ROUTE_ON'];
+        if ($check) {
+            // 路由检测（根据路由定义返回不同的URL调度）
+            $result = Route::check($request, $path, $depr, $config['URL_DOMAIN_DEPLOY']);
+            $must = !is_null(self::$routeMust) ? self::$routeMust : $config['URL_ROUTE_MUST'];
+
+            if ($must && false === $result) {
+                // 路由无效
+                StrackE('Invalid route config.', -404);
+            }
+        }
+
+        // 路由无效 解析模块/控制器/操作/参数... 支持控制器自动搜索
+        if (false === $result) {
+            $result = Route::parseUrl($path, $depr, $config['CONTROLLER_AUTO_SEARCH']);
+        }
+
+        return $result;
+    }
+
+
+    /**
+     * 执行应用程序
+     * @param $dispatch
+     * @param $config
+     * @return mixed
+     * @throws \ReflectionException
+     */
+    public static function analysisModule($dispatch, $config)
+    {
+        if ($dispatch['type'] === 'module') {
+            // 模块/控制器/操作
+            return self::module(
+                $dispatch['module'],
+                $config,
+                isset($dispatch['convert']) ? $dispatch['convert'] : null
+            );
+        }
+
+        throw new \InvalidArgumentException('dispatch type not support');
+    }
+
+
+    /**
+     * 绑定参数
+     * @param $reflect
+     * @param array $vars
+     * @return array
+     * @throws \ReflectionException
+     */
+    private static function bindParams($reflect, $vars = [])
+    {
+        if (empty($vars)) {
+            // 自动获取请求变量
+            if (C('URL_PARAMS_BIND_TYPE')) {
+                $vars = \request()->route();
+            } else {
+                $vars = \request()->param();
+            }
+        }
+        $args = [];
+        // 判断数组类型 数字数组时按顺序绑定参数
+        reset($vars);
+        $type = key($vars) === 0 ? 1 : 0;
+        if ($reflect->getNumberOfParameters() > 0) {
+            $params = $reflect->getParameters();
+            foreach ($params as $param) {
+                $name = $param->getName();
+                $class = $param->getClass();
+                if ($class) {
+                    $className = $class->getName();
+                    $bind = \request()->$name;
+                    if ($bind instanceof $className) {
+                        $args[] = $bind;
+                    } else {
+                        if (method_exists($className, 'invoke')) {
+                            $method = new \ReflectionMethod($className, 'invoke');
+                            if ($method->isPublic() && $method->isStatic()) {
+                                $args[] = $className::invoke(\request());
+                                continue;
+                            }
+                        }
+                        $args[] = method_exists($className, 'instance') ? $className::instance() : new $className;
+                    }
+                } elseif (1 == $type && !empty($vars)) {
+                    $args[] = array_shift($vars);
+                } elseif (0 == $type && isset($vars[$name])) {
+                    $args[] = $vars[$name];
+                } elseif ($param->isDefaultValueAvailable()) {
+                    $args[] = $param->getDefaultValue();
+                } else {
+                    throw new \InvalidArgumentException('method param miss:' . $name);
+                }
+            }
+        }
+        return $args;
+    }
+
+
+    /**
+     * 调用反射执行类的实例化 支持依赖注入
+     * @access public
+     * @param string $class 类名
+     * @param array $vars 变量
+     * @return object
+     * @throws \ReflectionException
+     */
+    public static function invokeClass($class, $vars = [])
+    {
+        $reflect = new \ReflectionClass($class);
+
+        $constructor = $reflect->getConstructor();
+        if ($constructor) {
+            $args = self::bindParams($constructor, $vars);
+        } else {
+            $args = [];
+        }
+
+        return $reflect->newInstanceArgs($args);
+    }
+
+
+    /**
+     * 调用反射执行类的方法 支持参数绑定
+     * @access public
+     * @param string|array $method 方法
+     * @param array $vars 变量
+     * @return mixed
+     * @throws \ReflectionException
+     */
+    public static function invokeMethod($method, $vars = [])
+    {
+        if (is_array($method)) {
+            $class = is_object($method[0]) ? $method[0] : self::invokeClass($method[0]);
+            $reflect = new \ReflectionMethod($class, $method[1]);
+        } else {
+            // 静态方法
+            $reflect = new \ReflectionMethod($method);
+        }
+        $args = self::bindParams($reflect, $vars);
+
+        APP_DEBUG && Log::record('[ RUN ] ' . $reflect->class . '->' . $reflect->name . '[ ' . $reflect->getFileName() . ' ]', Log::INFO);
+        return $reflect->invokeArgs(isset($class) ? $class : null, $args);
+    }
+
+    /**
+     * @param TcpConnection $connection
+     * @param \think\Request $request
+     * @return null
+     */
+    public function onMessage(TcpConnection $connection, $request)
+    {
+        static $request_count = 0;
+
+        if (++$request_count > static::$_maxRequestCount) {
+            static::tryToGracefulExit();
+        }
+
+        // 应用初始化标签
+        Hook::listen('app_init');
+
+        // 赋值
+        static::$_request = $request;
+        static::$_connection = $connection;
+        $path = $request->path();
+        $key = $request->method() . $path;
+
+        // 请求开始HOOK
+        Hook::listen("request", $request);
+
+        // 设置参数过滤规则
+        $request->filter(C('DEFAULT_FILTER'));
+
+        // 获取配置
+        $config = C();
+
+        // 返回header参数
+        $header = [];
+
+        try {
+
+            // 应用开始标签
+            Hook::listen('app_begin');
+
+            // 处理跨域
+            $checkCorsResult = Cors::check($request);
+
+            // 进行 URL 路由检测
+            if ($checkCorsResult instanceof Response) {
+                // Options请求直接返回
+                $data = $checkCorsResult;
+            } else {
+                $header = $checkCorsResult;
+
+                if (isset(static::$_callbacks[$key]) && !empty(static::$_callbacks[$key])) {
+                    // 直接读取缓存对象
+                    list($callback, $request->app, $request->controller, $request->action) = static::$_callbacks[$key];
+
+                    // 执行路由方法
+                    $data = $callback($request);
+                } else {
+                    // 检测路由
+                    $dispatch = self::routeCheck($request, $config);
+
+                    // 执行路由方法
+                    $data = static::exec($key, $request, $dispatch, $config);
+                }
+
+                // 对象超过 1024 回收
+                if (\count(static::$_callbacks) > 1024) {
+                    static::clearCache();
+                }
+            }
+        } catch (HttpResponseException $exception) {
+            $data = $exception->getResponse();
+        } catch (\Throwable $e) {
+            $data = Response::create(["code" => $e->getCode(), "msg" => $e->getMessage()], "json");;
+        }
+
+
+        // 输出数据到客户端
+        if ($data instanceof Response) {
+            $response = $data->header($header);
+        } elseif (!is_null($data)) {
+            // 默认自动识别响应输出类型
+            $type = $request->isAjax() ?
+                $config['DEFAULT_AJAX_RETURN'] :
+                $config['DEFAULT_RETURN_TYPE'];
+
+            $response = Response::create($data, $type)->header($header);
+        } else {
+            $response = Response::create()->header($header);
+        }
+
+        // 应用结束标签
+        Hook::listen('app_end');
+
+        static::send($connection, $response->renderWorkermanData(), $request);
+
+        return null;
+    }
+
+    protected static function exceptionResponse(\Throwable $e, $request)
+    {
+        try {
+            /** @var ExceptionHandlerInterface $exception_handler */
+            $exception_handler = static::$_container->make(ExceptionHandler::class, [
+                'logger' => static::$_logger,
+                'debug' => APP_DEBUG
+            ]);
+            $exception_handler->report($e);
+            $response = $exception_handler->render($request, $e);
+            return $response;
+        } catch (\Throwable $e) {
+            return APP_DEBUG ? (string)$e : $e->getMessage();
         }
     }
 
     /**
-     * 获取服务
-     * @param string|Service $service
-     * @return Service|null
+     * @param $app
+     * @param $call
+     * @param null $args
+     * @param bool $withGlobalMiddleware
+     * @param RouteObject $route
+     * @return \Closure|mixed
      */
-    public function getService($service)
+    protected static function getCallback($app, $call, $args = null, $withGlobalMiddleware = true, $route = null)
     {
-        $name = is_string($service) ? $service : get_class($service);
-        return array_values(array_filter($this->services, function ($value) use ($name) {
-            return $value instanceof $name;
-        }, ARRAY_FILTER_USE_BOTH))[0] ?? null;
+        $args = $args === null ? null : \array_values($args);
+        $middleware = Middleware::getMiddleware($app, $withGlobalMiddleware);
+        if ($middleware) {
+            $callback = array_reduce($middleware, function ($carry, $pipe) {
+                return function ($request) use ($carry, $pipe) {
+                    return $pipe($request, $carry);
+                };
+            }, function ($request) use ($call, $args) {
+
+                try {
+                    if ($args === null) {
+                        $response = $call($request);
+                    } else {
+                        $response = $call($request, ...$args);
+                    }
+                } catch (\Throwable $e) {
+                    return static::exceptionResponse($e, $request);
+                }
+                if (\is_scalar($response) || null === $response) {
+                    $response = new Response($response, 200);
+                }
+                return $response;
+            });
+        } else {
+            if ($args === null) {
+                $callback = $call;
+            } else {
+                $callback = function ($request) use ($call, $args) {
+                    return $call($request, ...$args);
+                };
+            }
+        }
+        return $callback;
     }
 
     /**
-     * 开启应用调试模式
-     * @access public
-     * @param bool $debug 开启应用调试模式
-     * @return $this
+     * @return ContainerInterface
      */
-    public function debug(bool $debug = true)
+    public static function container()
     {
-        $this->appDebug = $debug;
-        return $this;
+        return static::$_container;
     }
 
     /**
-     * 是否为调试模式
-     * @access public
+     * @return Request
+     */
+    public static function request()
+    {
+        return static::$_request;
+    }
+
+    /**
+     * @return TcpConnection
+     */
+    public static function connection()
+    {
+        return static::$_connection;
+    }
+
+    /**
+     * @return Worker
+     */
+    public static function worker()
+    {
+        return static::$_worker;
+    }
+
+    /**
+     * @param $connection
+     * @param $path
+     * @param $key
+     * @param Request $request
+     * @param $dispatch
+     * @param $config
      * @return bool
+     * @throws \ReflectionException
      */
-    public function isDebug(): bool
+    protected static function exec($key, Request $request, $dispatch, $config)
     {
-        return $this->appDebug;
-    }
+        list($app, $controller, $action) = self::analysisModule($dispatch, $config);
 
-    /**
-     * 设置应用命名空间
-     * @access public
-     * @param string $namespace 应用命名空间
-     * @return $this
-     */
-    public function setNamespace(string $namespace)
-    {
-        $this->namespace = $namespace;
-        return $this;
-    }
+        // 设置当前请求的控制器、操作
+        $request->controller(Loader::parseName($controller, 1))->action($action);
 
-    /**
-     * 获取应用类库命名空间
-     * @access public
-     * @return string
-     */
-    public function getNamespace(): string
-    {
-        return $this->namespace;
-    }
-
-    /**
-     * 获取框架版本
-     * @access public
-     * @return string
-     */
-    public function version(): string
-    {
-        return static::VERSION;
-    }
-
-    /**
-     * 获取应用根目录
-     * @access public
-     * @return string
-     */
-    public function getRootPath(): string
-    {
-        return $this->rootPath;
-    }
-
-    /**
-     * 获取应用基础目录
-     * @access public
-     * @return string
-     */
-    public function getBasePath(): string
-    {
-        return $this->rootPath . 'app' . DIRECTORY_SEPARATOR;
-    }
-
-    /**
-     * 获取当前应用目录
-     * @access public
-     * @return string
-     */
-    public function getAppPath(): string
-    {
-        return $this->appPath;
-    }
-
-    /**
-     * 设置应用目录
-     * @param string $path 应用目录
-     */
-    public function setAppPath(string $path)
-    {
-        $this->appPath = $path;
-    }
-
-    /**
-     * 获取应用运行时目录
-     * @access public
-     * @return string
-     */
-    public function getRuntimePath(): string
-    {
-        return $this->runtimePath;
-    }
-
-    /**
-     * 设置runtime目录
-     * @param string $path 定义目录
-     */
-    public function setRuntimePath(string $path): void
-    {
-        $this->runtimePath = $path;
-    }
-
-    /**
-     * 获取核心框架目录
-     * @access public
-     * @return string
-     */
-    public function getThinkPath(): string
-    {
-        return $this->thinkPath;
-    }
-
-    /**
-     * 获取应用配置目录
-     * @access public
-     * @return string
-     */
-    public function getConfigPath(): string
-    {
-        return $this->rootPath . 'config' . DIRECTORY_SEPARATOR;
-    }
-
-    /**
-     * 获取配置后缀
-     * @access public
-     * @return string
-     */
-    public function getConfigExt(): string
-    {
-        return $this->configExt;
-    }
-
-    /**
-     * 获取应用开启时间
-     * @access public
-     * @return float
-     */
-    public function getBeginTime(): float
-    {
-        return $this->beginTime;
-    }
-
-    /**
-     * 获取应用初始内存占用
-     * @access public
-     * @return integer
-     */
-    public function getBeginMem(): int
-    {
-        return $this->beginMem;
-    }
-
-    /**
-     * 初始化应用
-     * @access public
-     * @return $this
-     */
-    public function initialize()
-    {
-        $this->initialized = true;
-
-        $this->beginTime = microtime(true);
-        $this->beginMem  = memory_get_usage();
-
-        // 加载环境变量
-        if (is_file($this->rootPath . '.env')) {
-            $this->env->load($this->rootPath . '.env');
+        try {
+            $controllerObj = Loader::controller(
+                $controller,
+                $config['URL_CONTROLLER_LAYER'],
+                $config['CONTROLLER_SUFFIX'],
+                $config['EMPTY_CONTROLLER']
+            );
+        } catch (ClassNotFoundException $e) {
+            throw new HttpException(-404, 'controller not exists:' . $e->getClass());
         }
 
-        $this->configExt = $this->env->get('config_ext', '.php');
-
-        $this->debugModeInit();
-
-        // 加载全局初始化文件
-        $this->load();
-
-        // 加载框架默认语言包
-        $langSet = $this->lang->defaultLangSet();
-
-        $this->lang->load($this->thinkPath . 'lang' . DIRECTORY_SEPARATOR . $langSet . '.php');
-
-        // 加载应用默认语言包
-        $this->loadLangPack($langSet);
-
-        // 监听AppInit
-        $this->event->trigger(AppInit::class);
-
-        date_default_timezone_set($this->config->get('app.default_timezone', 'Asia/Shanghai'));
-
-        // 初始化
-        foreach ($this->initializers as $initializer) {
-            $this->make($initializer)->init($this);
+        if (\is_callable([$controllerObj, $action])) {
+            $callback = static::getCallback($app, [$controllerObj, $action]);
+        } else {
+            throw new HttpException(-404, 'action not exists:' . $action);
         }
 
-        return $this;
+
+        static::$_callbacks[$key] = [$callback, $app, $controller, $action];
+        list($callback, $request->app, $request->controller, $request->action) = static::$_callbacks[$key];
+        return $callback($request);
     }
 
     /**
-     * 是否初始化过
-     * @return bool
+     * @param TcpConnection $connection
+     * @param $response
+     * @param Request $request
      */
-    public function initialized()
+    protected static function send(TcpConnection $connection, $response, Request $request)
     {
-        return $this->initialized;
-    }
-
-    /**
-     * 加载语言包
-     * @param string $langset 语言
-     * @return void
-     */
-    public function loadLangPack($langset)
-    {
-        if (empty($langset)) {
+        $keep_alive = $request->header('connection');
+        if (($keep_alive === null && $request->protocolVersion() === '1.1')
+            || $keep_alive === 'keep-alive' || $keep_alive === 'Keep-Alive'
+        ) {
+            $connection->send($response);
             return;
         }
-
-        // 加载系统语言包
-        $files = glob($this->appPath . 'lang' . DIRECTORY_SEPARATOR . $langset . '.*');
-        $this->lang->load($files);
-
-        // 加载扩展（自定义）语言包
-        $list = $this->config->get('lang.extend_list', []);
-
-        if (isset($list[$langset])) {
-            $this->lang->load($list[$langset]);
-        }
+        $connection->close($response);
     }
 
     /**
-     * 引导应用
-     * @access public
      * @return void
      */
-    public function boot(): void
+    public static function loadController($path)
     {
-        array_walk($this->services, function ($service) {
-            $this->bootService($service);
-        });
-    }
-
-    /**
-     * 加载应用文件和配置
-     * @access protected
-     * @return void
-     */
-    protected function load(): void
-    {
-        $appPath = $this->getAppPath();
-
-        if (is_file($appPath . 'common.php')) {
-            include_once $appPath . 'common.php';
-        }
-
-        include_once $this->thinkPath . 'helper.php';
-
-        $configPath = $this->getConfigPath();
-
-        $files = [];
-
-        if (is_dir($configPath)) {
-            $files = glob($configPath . '*' . $this->configExt);
-        }
-
-        foreach ($files as $file) {
-            $this->config->load($file, pathinfo($file, PATHINFO_FILENAME));
-        }
-
-        if (is_file($appPath . 'event.php')) {
-            $this->loadEvent(include $appPath . 'event.php');
-        }
-
-        if (is_file($appPath . 'service.php')) {
-            $services = include $appPath . 'service.php';
-            foreach ($services as $service) {
-                $this->register($service);
+        if (\strpos($path, 'phar://') === false) {
+            foreach (\glob($path . '/controller/*.php') as $file) {
+                require_once $file;
+            }
+            foreach (\glob($path . '/*/controller/*.php') as $file) {
+                require_once $file;
+            }
+        } else {
+            $dir_iterator = new \RecursiveDirectoryIterator($path);
+            $iterator = new \RecursiveIteratorIterator($dir_iterator);
+            foreach ($iterator as $file) {
+                if (is_dir($file)) {
+                    continue;
+                }
+                $fileinfo = new \SplFileInfo($file);
+                $ext = $fileinfo->getExtension();
+                if (\strpos($file, '/controller/') !== false && $ext === 'php') {
+                    require_once $file;
+                }
             }
         }
     }
 
     /**
-     * 调试模式设置
-     * @access protected
+     * Clear cache.
+     */
+    public static function clearCache()
+    {
+        static::$_callbacks = [];
+    }
+
+    /**
      * @return void
      */
-    protected function debugModeInit(): void
+    protected static function tryToGracefulExit()
     {
-        // 应用调试模式
-        if (!$this->appDebug) {
-            $this->appDebug = $this->env->get('app_debug') ? true : false;
-            ini_set('display_errors', 'Off');
-        }
-
-        if (!$this->runningInConsole()) {
-            //重新申请一块比较大的buffer
-            if (ob_get_level() > 0) {
-                $output = ob_get_clean();
-            }
-            ob_start();
-            if (!empty($output)) {
-                echo $output;
-            }
+        if (static::$_gracefulStopTimer === null) {
+            static::$_gracefulStopTimer = Timer::add(rand(1, 10), function () {
+                if (\count(static::$_worker->connections) === 0) {
+                    Worker::stopAll();
+                }
+            });
         }
     }
-
-    /**
-     * 注册应用事件
-     * @access protected
-     * @param array $event 事件数据
-     * @return void
-     */
-    public function loadEvent(array $event): void
-    {
-        if (isset($event['bind'])) {
-            $this->event->bind($event['bind']);
-        }
-
-        if (isset($event['listen'])) {
-            $this->event->listenEvents($event['listen']);
-        }
-
-        if (isset($event['subscribe'])) {
-            $this->event->subscribe($event['subscribe']);
-        }
-    }
-
-    /**
-     * 解析应用类的类名
-     * @access public
-     * @param string $layer 层名 controller model ...
-     * @param string $name  类名
-     * @return string
-     */
-    public function parseClass(string $layer, string $name): string
-    {
-        $name  = str_replace(['/', '.'], '\\', $name);
-        $array = explode('\\', $name);
-        $class = Str::studly(array_pop($array));
-        $path  = $array ? implode('\\', $array) . '\\' : '';
-
-        return $this->namespace . '\\' . $layer . '\\' . $path . $class;
-    }
-
-    /**
-     * 是否运行在命令行下
-     * @return bool
-     */
-    public function runningInConsole()
-    {
-        return php_sapi_name() === 'cli' || php_sapi_name() === 'phpdbg';
-    }
-
-    /**
-     * 获取应用根目录
-     * @access protected
-     * @return string
-     */
-    protected function getDefaultRootPath(): string
-    {
-        return dirname($this->thinkPath, 4) . DIRECTORY_SEPARATOR;
-    }
-
 }

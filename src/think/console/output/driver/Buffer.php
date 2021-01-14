@@ -32,7 +32,7 @@ class Buffer
         return $content;
     }
 
-    public function write($messages, bool $newline = false, int $options = 0)
+    public function write($messages, $newline = false, $options = Output::OUTPUT_NORMAL)
     {
         $messages = (array) $messages;
 
@@ -44,7 +44,7 @@ class Buffer
         }
     }
 
-    public function renderException(\Throwable $e)
+    public function renderException(\Exception $e)
     {
         // do nothing
     }
