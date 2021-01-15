@@ -2137,7 +2137,7 @@ class Model
      * @param boolean $force 强制重新连接
      * @return Model
      */
-    public function db($linkNum = '', $config = '', $force = false)
+    public function db($linkNum = 0, $config = [], $force = false)
     {
         if ('' === $linkNum && $this->db) {
             return $this->db;

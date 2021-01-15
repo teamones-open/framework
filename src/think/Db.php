@@ -42,10 +42,11 @@ class Db
      */
     public static function getInstance($config = array())
     {
-        $md5 = md5(serialize($config));
+        // 解析连接参数 支持数组和字符串
+        $options = self::parseConfig($config);
+        $md5 = md5(serialize($options));
+
         if (!isset(self::$instance[$md5])) {
-            // 解析连接参数 支持数组和字符串
-            $options = self::parseConfig($config);
             // 兼容mysqli
             if ('mysqli' == $options['type']) {
                 $options['type'] = 'mysql';
