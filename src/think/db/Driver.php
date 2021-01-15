@@ -11,30 +11,41 @@
 namespace think\db;
 
 use PDO;
+use think\exception\PDOException;
 
 abstract class Driver
 {
     // PDO操作实例
     protected $PDOStatement = null;
+
     // 当前操作所属的模型名
     protected $model = '_think_';
+
     // 当前SQL指令
     protected $queryStr = '';
     protected $modelSql = array();
+
     // 最后插入ID
     protected $lastInsID = null;
+
     // 返回或者影响记录数
     protected $numRows = 0;
+
     // 事物操作PDO实例
     protected $transPDO = null;
+
     // 事务指令数
     protected $transTimes = 0;
+
     // 错误信息
     protected $error = '';
+
     // 数据库连接ID 支持多个连接
     protected $linkID = array();
+
     // 当前连接ID
     protected $_linkID = null;
+
     // 数据库连接参数配置
     protected $config = array(
         'type' => '', // 数据库类型
@@ -54,14 +65,19 @@ abstract class Driver
         'slave_no' => '', // 指定从服务器序号
         'db_like_fields' => '',
     );
+
     // 数据库表达式
     protected $exp = array('eq' => '=', 'neq' => '<>', 'gt' => '>', 'egt' => '>=', 'lt' => '<', 'elt' => '<=', 'notlike' => 'NOT LIKE', 'like' => 'LIKE', 'in' => 'IN', 'notin' => 'NOT IN', 'not in' => 'NOT IN', 'between' => 'BETWEEN', 'not between' => 'NOT BETWEEN', 'notbetween' => 'NOT BETWEEN');
+
     // 查询表达式
     protected $selectSql = 'SELECT%DISTINCT% %FIELD% FROM %TABLE%%FORCE%%JOIN%%WHERE%%GROUP%%HAVING%%ORDER%%LIMIT% %UNION%%LOCK%%COMMENT%';
+
     // 查询次数
     protected $queryTimes = 0;
+
     // 执行次数
     protected $executeTimes = 0;
+
     // PDO连接参数
     protected $options = array(
         PDO::ATTR_CASE => PDO::CASE_LOWER,
@@ -70,6 +86,25 @@ abstract class Driver
         PDO::ATTR_STRINGIFY_FETCHES => false,
         PDO::ATTR_EMULATE_PREPARES => false,
     );
+
+    /**
+     * 服务器断线标识字符
+     * @var array
+     */
+    protected $breakMatchStr = [
+        'server has gone away',
+        'no connection to the server',
+        'Lost connection',
+        'is dead or not enabled',
+        'Error while sending',
+        'decryption failed or bad record mac',
+        'server closed the connection unexpectedly',
+        'SSL connection has been closed unexpectedly',
+        'Error writing data to the connection',
+        'Resource deadlock avoided',
+        'failed with errno',
+    ];
+
     protected $bind = array(); // 参数绑定
 
     /**
@@ -166,23 +201,24 @@ abstract class Driver
             $this->free();
         }
         $this->queryTimes++;
-        N('db_query', 1); // 兼容代码
-        // 调试开始
-        $this->debug(true);
-        $this->PDOStatement = $this->_linkID->prepare($str);
-        if (false === $this->PDOStatement) {
-            $this->error();
-            return false;
-        }
-        foreach ($this->bind as $key => $val) {
-            if (is_array($val)) {
-                $this->PDOStatement->bindValue($key, $val[0], $val[1]);
-            } else {
-                $this->PDOStatement->bindValue($key, $val);
-            }
-        }
-        $this->bind = array();
+
         try {
+            // 调试开始
+            $this->debug(true);
+            $this->PDOStatement = $this->_linkID->prepare($str);
+            if (false === $this->PDOStatement) {
+                $this->error();
+                return false;
+            }
+            foreach ($this->bind as $key => $val) {
+                if (is_array($val)) {
+                    $this->PDOStatement->bindValue($key, $val[0], $val[1]);
+                } else {
+                    $this->PDOStatement->bindValue($key, $val);
+                }
+            }
+            $this->bind = array();
+
             $result = $this->PDOStatement->execute();
             // 调试结束
             $this->debug(false);
@@ -193,8 +229,23 @@ abstract class Driver
                 return $this->getResult();
             }
         } catch (\PDOException $e) {
-            $this->error();
-            return false;
+            if ($this->isBreak($e)) {
+                return $this->close()->query($str, $fetchSql, $master);
+            }
+
+            throw new PDOException($e, $this->config, $this->getLastsql());
+        } catch (\Throwable $e) {
+            if ($this->isBreak($e)) {
+                return $this->close()->query($str, $fetchSql, $master);
+            }
+
+            throw $e;
+        } catch (\Exception $e) {
+            if ($this->isBreak($e)) {
+                return $this->close()->query($str, $fetchSql, $master);
+            }
+
+            throw $e;
         }
     }
 
@@ -226,23 +277,25 @@ abstract class Driver
             $this->free();
         }
         $this->executeTimes++;
-        N('db_write', 1); // 兼容代码
-        // 记录开始执行时间
-        $this->debug(true);
-        $this->PDOStatement = $this->_linkID->prepare($str);
-        if (false === $this->PDOStatement) {
-            $this->error();
-            return false;
-        }
-        foreach ($this->bind as $key => $val) {
-            if (is_array($val)) {
-                $this->PDOStatement->bindValue($key, $val[0], $val[1]);
-            } else {
-                $this->PDOStatement->bindValue($key, $val);
-            }
-        }
-        $this->bind = array();
+
         try {
+
+            // 记录开始执行时间
+            $this->debug(true);
+            $this->PDOStatement = $this->_linkID->prepare($str);
+            if (false === $this->PDOStatement) {
+                $this->error();
+                return false;
+            }
+            foreach ($this->bind as $key => $val) {
+                if (is_array($val)) {
+                    $this->PDOStatement->bindValue($key, $val[0], $val[1]);
+                } else {
+                    $this->PDOStatement->bindValue($key, $val);
+                }
+            }
+            $this->bind = array();
+
             $result = $this->PDOStatement->execute();
             // 调试结束
             $this->debug(false);
@@ -257,8 +310,23 @@ abstract class Driver
                 return $this->numRows;
             }
         } catch (\PDOException $e) {
-            $this->error();
-            return false;
+            if ($this->isBreak($e)) {
+                return $this->close()->execute($str, $fetchSql);
+            }
+
+            throw new PDOException($e, $this->config, $this->getLastsql());
+        } catch (\Throwable $e) {
+            if ($this->isBreak($e)) {
+                return $this->close()->execute($str, $fetchSql);
+            }
+
+            throw $e;
+        } catch (\Exception $e) {
+            if ($this->isBreak($e)) {
+                return $this->close()->execute($str, $fetchSql);
+            }
+
+            throw $e;
         }
     }
 
@@ -271,12 +339,24 @@ abstract class Driver
     {
         $this->transTimes++;
         $this->initConnect(true);
-        if ( !$this->_linkID ) return false;
-        //数据rollback 支持
-        if ($this->transTimes == 1) {
-            $this->_linkID->beginTransaction();
+
+        if (!$this->_linkID) return false;
+
+        try {
+            //数据rollback 支持
+            if ($this->transTimes == 1) {
+                $this->_linkID->beginTransaction();
+            }
+        } catch (\Exception $e) {
+            if ($this->isBreak($e)) {
+                --$this->transTimes;
+                return $this->close()->startTrans();
+            }
+            throw $e;
         }
-        return ;
+
+
+        return;
     }
 
     /**
@@ -289,7 +369,7 @@ abstract class Driver
         if ($this->transTimes == 1) {
             $result = $this->_linkID->commit();
             $this->transTimes = 0;
-            if(!$result){
+            if (!$result) {
                 $this->error();
                 return false;
             }
@@ -309,7 +389,7 @@ abstract class Driver
         if ($this->transTimes == 1) {
             $result = $this->_linkID->rollback();
             $this->transTimes = 0;
-            if(!$result){
+            if (!$result) {
                 $this->error();
                 return false;
             }
@@ -359,7 +439,30 @@ abstract class Driver
      */
     public function close()
     {
-        $this->_linkID = null;
+        $this->linkID = null;
+
+        // 释放查询
+        $this->free();
+
+        return $this;
+    }
+
+    /**
+     * 是否断线
+     * @access protected
+     * @param \PDOException|\Exception $e 异常对象
+     * @return bool
+     */
+    protected function isBreak($e)
+    {
+        $error = $e->getMessage();
+
+        foreach ($this->breakMatchStr as $msg) {
+            if (false !== stripos($error, $msg)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

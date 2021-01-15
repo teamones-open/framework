@@ -231,7 +231,7 @@ class Mysql extends Driver
             $this->free();
         }
         $this->queryTimes++;
-        N('db_query', 1); // 兼容代码
+       
         // 调试开始
         $this->debug(true);
         $this->PDOStatement = $this->_linkID->prepare($str);
