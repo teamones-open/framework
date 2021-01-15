@@ -547,6 +547,8 @@ class App
                     } else {
                         $response = $call($request, ...$args);
                     }
+                } catch (HttpResponseException $exception) {
+                    return $exception->getResponse();
                 } catch (\Throwable $e) {
                     return static::exceptionResponse($e, $request);
                 }

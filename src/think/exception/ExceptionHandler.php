@@ -79,10 +79,13 @@ class ExceptionHandler implements ExceptionHandlerInterface
         if ($request->expectsJson()) {
             $json = ['code' => $code ? $code : 500, 'msg' => $exception->getMessage()];
             $this->_debug && $json['traces'] = (string)$exception;
-            return new Response(json_encode($json, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES), 200, ['Content-Type' => 'application/json']);
+        } else {
+            $error = $this->_debug ? nl2br((string)$exception) : 'Server internal error';
+            $json = ['code' => $code ? $code : 500, 'msg' => $error];
         }
-        $error = $this->_debug ? nl2br((string)$exception) : 'Server internal error';
-        return new Response($error, 500, []);
+
+        return new Response(json_encode($json, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES), 200, ['Content-Type' => 'application/json']);
+
     }
 
     /**
