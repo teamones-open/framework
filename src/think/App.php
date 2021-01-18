@@ -444,39 +444,29 @@ class App
         $header = [];
 
         try {
-
             // 应用开始标签
             Hook::listen('app_begin');
 
-            // 处理跨域
-            $checkCorsResult = Cors::check($request);
-
             // 进行 URL 路由检测
-            if ($checkCorsResult instanceof Response) {
-                // Options请求直接返回
-                $data = $checkCorsResult;
+            if (isset(static::$_callbacks[$key]) && !empty(static::$_callbacks[$key])) {
+                // 直接读取缓存对象
+                list($callback, $request->app, $request->controller, $request->action) = static::$_callbacks[$key];
+
+                // 执行路由方法
+                $data = $callback($request);
             } else {
-                $header = $checkCorsResult;
+                // 检测路由
+                $dispatch = self::routeCheck($request, $config);
 
-                if (isset(static::$_callbacks[$key]) && !empty(static::$_callbacks[$key])) {
-                    // 直接读取缓存对象
-                    list($callback, $request->app, $request->controller, $request->action) = static::$_callbacks[$key];
-
-                    // 执行路由方法
-                    $data = $callback($request);
-                } else {
-                    // 检测路由
-                    $dispatch = self::routeCheck($request, $config);
-
-                    // 执行路由方法
-                    $data = static::exec($key, $request, $dispatch, $config);
-                }
-
-                // 对象超过 1024 回收
-                if (\count(static::$_callbacks) > 1024) {
-                    static::clearCache();
-                }
+                // 执行路由方法
+                $data = static::exec($key, $request, $dispatch, $config);
             }
+
+            // 对象超过 1024 回收
+            if (\count(static::$_callbacks) > 1024) {
+                static::clearCache();
+            }
+
         } catch (HttpResponseException $exception) {
             $data = $exception->getResponse();
         } catch (\Throwable $e) {
