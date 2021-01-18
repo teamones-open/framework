@@ -458,6 +458,9 @@ class App
                 // 检测路由
                 $dispatch = self::routeCheck($request, $config);
 
+                // 保存路由解析参数
+                $request->dispatch($dispatch);
+
                 // 执行路由方法
                 $data = static::exec($key, $request, $dispatch, $config);
             }
@@ -524,8 +527,15 @@ class App
     {
         $args = $args === null ? null : \array_values($args);
         $middleware = Middleware::getMiddleware($app, $withGlobalMiddleware);
+
+        $dispatch = \request()->dispatch();
+        if (!empty($dispatch['middlewares'])) {
+            // 判断是否存在路由中间件
+            $middleware = \array_merge($middleware, $dispatch['middlewares']);
+        }
+
         if ($middleware) {
-            $callback = array_reduce($middleware, function ($carry, $pipe) {
+            $callback = \array_reduce($middleware, function ($carry, $pipe) {
                 return function ($request) use ($carry, $pipe) {
                     return $pipe($request, $carry);
                 };

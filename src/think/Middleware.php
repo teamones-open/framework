@@ -56,6 +56,18 @@ class Middleware
     }
 
     /**
+     * @return array
+     */
+    public static function getRouteMiddleware($app_name)
+    {
+        if ($app_name === '') {
+            return [];
+        }
+        $app_middleware = static::$_instances[$app_name] ?? [];
+        return $app_middleware;
+    }
+
+    /**
      * @param $app_name
      * @return bool
      */

@@ -1378,6 +1378,20 @@ class Route
     }
 
     /**
+     * @param array $middlewares
+     * @return array
+     */
+    protected static function getMiddleware($middlewares = [])
+    {
+        $middleware = [];
+        foreach ($middlewares as $className) {
+            $tempMiddleware = Middleware::getRouteMiddleware($className);
+            $middleware = array_merge($middleware, $tempMiddleware);
+        }
+        return array_reverse($middleware);
+    }
+
+    /**
      * 解析规则路由
      * @access private
      * @param string $rule 路由规则
@@ -1491,7 +1505,7 @@ class Route
                 $result = call_user_func_array($option['after_behavior'], []);
             } else {
                 foreach ((array)$option['after_behavior'] as $behavior) {
-                    $result = Hook::exec($behavior, '', \request());
+                    $result = Hook::exec($behavior, '');
                     if (!is_null($result)) {
                         break;
                     }
@@ -1530,6 +1544,16 @@ class Route
             // 路由到模块/控制器/操作
             $result = self::parseModule($route, isset($option['convert']) ? $option['convert'] : false);
         }
+
+        // 加入返回路由中间件信息
+        if (!empty($option['middleware'])) {
+            if (is_array($option['middleware'])) {
+                $result['middlewares'] = self::getMiddleware($option['middleware']);
+            } else {
+                $result['middlewares'] = self::getMiddleware([$option['middleware']]);
+            }
+        }
+
         // 开启请求缓存
         if ($request->isGet() && isset($option['cache'])) {
             $cache = $option['cache'];
