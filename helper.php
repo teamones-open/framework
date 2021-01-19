@@ -1495,3 +1495,31 @@ if (!function_exists('request')) {
         return App::request();
     }
 }
+
+if (!function_exists('worker_bind')) {
+    /**
+     * @param $worker
+     * @param $class
+     */
+    function worker_bind($worker, $class)
+    {
+        $callback_map = [
+            'onConnect',
+            'onMessage',
+            'onClose',
+            'onError',
+            'onBufferFull',
+            'onBufferDrain',
+            'onWorkerStop',
+            'onWebSocketConnect'
+        ];
+        foreach ($callback_map as $name) {
+            if (method_exists($class, $name)) {
+                $worker->$name = [$class, $name];
+            }
+        }
+        if (method_exists($class, 'onWorkerStart')) {
+            call_user_func([$class, 'onWorkerStart'], $worker);
+        }
+    }
+}
