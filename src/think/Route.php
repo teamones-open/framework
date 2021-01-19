@@ -1505,7 +1505,7 @@ class Route
                 $result = call_user_func_array($option['after_behavior'], []);
             } else {
                 foreach ((array)$option['after_behavior'] as $behavior) {
-                    $result = Hook::exec($behavior, '');
+                    $result = Hook::exec($behavior, 'run');
                     if (!is_null($result)) {
                         break;
                     }
