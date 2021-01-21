@@ -96,6 +96,14 @@ class RelationModel extends Model
     }
 
     /**
+     * 清空复杂查询条件
+     */
+    public function emptyComplexFilterRelatedModule()
+    {
+        $this->complexFilterRelatedModule = [];
+    }
+
+    /**
      * 获取或者实例化模型对象
      * @param $table
      * @return  \think\Model object

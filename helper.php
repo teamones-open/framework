@@ -1523,3 +1523,18 @@ if (!function_exists('worker_bind')) {
         }
     }
 }
+
+if (!function_exists('to_under_score')) {
+    /**
+     * 驼峰命名转下划线命名
+     * @param $str
+     * @return string
+     */
+    function to_under_score($str)
+    {
+        $dstr = preg_replace_callback('/([A-Z]+)/', function ($matchs) {
+            return '_' . strtolower($matchs[0]);
+        }, $str);
+        return trim(preg_replace('/_{2,}/', '_', $dstr), '_');
+    }
+}
