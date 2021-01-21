@@ -105,6 +105,9 @@ class Request extends \Workerman\Protocols\Http\Request
     // 当前请求绑定的user_id
     public $userId = 0;
 
+    // 当前请求绑定的 union_user_id
+    public $unionUserId = 0;
+
     // 当前请求绑定的x-userinfo
     public $xuserinfo = "";
 
@@ -270,6 +273,20 @@ class Request extends \Workerman\Protocols\Http\Request
         }
         return $this->userId;
     }
+
+    /**
+     * 获取当前系统操作的全局用户ID
+     * @param int $unionUserId
+     * @return int|mixed|null
+     */
+    public function getUnionUserId($unionUserId = 0)
+    {
+        if (!empty($unionUserId)) {
+            $this->unionUserId = $unionUserId;
+        }
+        return $this->unionUserId;
+    }
+
 
     /**
      * 获取当前系统操作的用户UUID
