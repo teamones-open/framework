@@ -66,6 +66,16 @@ class Db
     }
 
     /**
+     * 清空初始化
+     */
+    public static function clearInstance(): void
+    {
+        // 解析连接参数 支持数组和字符串
+        self::$_instance = [];
+        self::$_instance = null;
+    }
+
+    /**
      * 初始化配置参数
      * @access public
      * @param array $config 连接配置
@@ -84,7 +94,7 @@ class Db
      * @param mixed $config
      * @return array
      */
-    private static function parseConfig($config = [])
+    public static function parseConfig($config = [])
     {
         if (!empty($config)) {
             if (is_string($config)) {
