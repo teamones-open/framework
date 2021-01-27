@@ -2607,6 +2607,9 @@ class RelationModel extends Model
     public function selectData($options = [], $needFormat = true)
     {
 
+        // 统计个数
+        $maxId = $this->max('id');
+
         $this->checkIsComplexFilter($options);
 
         if ($this->isComplexFilter) {
@@ -2621,9 +2624,12 @@ class RelationModel extends Model
             $this->where($filter);
         }
 
-        // 统计个数
-        $total = $this->count();
-
+        if ($maxId > 1000000) {
+            // 当单表数据量超过100万时候，不做count查询
+            $total = C("DB_MAX_SELECT_ROWS");
+        } else {
+            $total = $this->count();
+        }
 
         // 获取数据
         if ($total >= 0) {
