@@ -2723,8 +2723,6 @@ class RelationModel extends Model
     /**
      * 关联模型查询
      * @param array $param
-     * @param string $formatMode
-     * @return array
      */
     public function getRelationData($param = [])
     {
@@ -2745,6 +2743,7 @@ class RelationModel extends Model
     /**
      * 生成模块字段
      * @param $moduleCode
+     * @return mixed
      */
     private function generateQueryModuleFieldDict($moduleCode)
     {
