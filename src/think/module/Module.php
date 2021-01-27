@@ -99,7 +99,7 @@ class Module
                     'name' => self::camelize($tableItem["name"]),
                     'code' => $tableItem["name"],
                     'icon' => '',
-                    'uuid' => Webpatser\Uuid\Uuid::generate()->string
+                    'uuid' => \Webpatser\Uuid\Uuid::generate()->string
                 ];
 
                 // 组装当前模块字段配置数据
@@ -115,7 +115,7 @@ class Module
                     'table' => $tableName,
                     'module_id' => $insertId,
                     'config' => json_encode($tempConfig),
-                    'uuid' => Webpatser\Uuid\Uuid::generate()->string
+                    'uuid' => \Webpatser\Uuid\Uuid::generate()->string
                 ];
 
                 $insertId++;
