@@ -34,11 +34,9 @@ class Db
 
     /**
      * 取得数据库类实例
-     * @static
-     * @access public
-     * @param mixed $config 连接配置
-     * @return Object 返回数据库驱动类
-     * @throws Exception
+     * @param array $config
+     * @return mixed|null
+     * @throws \Exception
      */
     public static function getInstance($config = array())
     {
@@ -77,9 +75,7 @@ class Db
 
     /**
      * 初始化配置参数
-     * @access public
-     * @param array $config 连接配置
-     * @return void
+     * @throws \Exception
      */
     public static function setInstance(): void
     {
@@ -89,12 +85,12 @@ class Db
 
     /**
      * 数据库连接参数解析
-     * @static
-     * @access private
-     * @param mixed $config
-     * @return array
+     * @param array $config
+     * @param string $driver
+     * @return array|bool
+     * @throws \Exception
      */
-    public static function parseConfig($config = [])
+    public static function parseConfig($config = [], $driver = 'default')
     {
         if (!empty($config)) {
             if (is_string($config)) {
@@ -119,23 +115,29 @@ class Db
                 'lite' => isset($config['db_lite']) ? $config['db_lite'] : false,
             );
         } else {
-            $config = array(
-                'type' => C('DB_TYPE'),
-                'username' => C('DB_USER'),
-                'password' => C('DB_PWD'),
-                'hostname' => C('DB_HOST'),
-                'hostport' => C('DB_PORT'),
-                'database' => C('DB_NAME'),
-                'dsn' => C('DB_DSN'),
-                'params' => C('DB_PARAMS'),
-                'charset' => C('DB_CHARSET'),
-                'deploy' => C('DB_DEPLOY_TYPE'),
-                'rw_separate' => C('DB_RW_SEPARATE'),
-                'master_num' => C('DB_MASTER_NUM'),
-                'slave_no' => C('DB_SLAVE_NO'),
-                'debug' => C('DB_DEBUG', null, APP_DEBUG),
-                'lite' => C('DB_LITE'),
-            );
+            $databaseConfig = C('database');
+
+            if(!empty($databaseConfig)){
+                $config = array(
+                    'type' => $databaseConfig[$driver],
+                    'username' => $databaseConfig['connections'][$driver]['username'],
+                    'password' => $databaseConfig['connections'][$driver]['password'],
+                    'hostname' => $databaseConfig['connections'][$driver]['host'],
+                    'hostport' => $databaseConfig['connections'][$driver]['port'],
+                    'database' => $databaseConfig['connections'][$driver]['database'],
+                    'dsn' => '',
+                    'params' => C('DB_PARAMS'),
+                    'charset' => $databaseConfig['connections'][$driver]['charset'],
+                    'deploy' => C('DB_DEPLOY_TYPE'),
+                    'rw_separate' => C('DB_RW_SEPARATE'),
+                    'master_num' => C('DB_MASTER_NUM'),
+                    'slave_no' => C('DB_SLAVE_NO'),
+                    'debug' => $databaseConfig['connections'][$driver]['username'] ?? APP_DEBUG,
+                    'lite' => C('DB_LITE'),
+                );
+            }else{
+                StrackE('There is no database configuration.');
+            }
         }
         return $config;
     }

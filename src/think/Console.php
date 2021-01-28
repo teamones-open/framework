@@ -80,9 +80,9 @@ class Console
             }
 
             // 读取公共配置
-            if(!empty(C('COMMAND'))){
-                if (is_array(C('COMMAND'))) {
-                    foreach (C('COMMAND') as $command) {
+            if(!empty(C('command'))){
+                if (is_array(C('command'))) {
+                    foreach (C('command') as $command) {
                         if (class_exists($command) && is_subclass_of($command, "\\think\\console\\command")) {
                             // 注册指令
                             $console->add(new $command());

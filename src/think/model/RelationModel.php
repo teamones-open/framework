@@ -2626,7 +2626,7 @@ class RelationModel extends Model
 
         if ($maxId > 1000000) {
             // 当单表数据量超过100万时候，不做count查询
-            $total = C("DB_MAX_SELECT_ROWS");
+            $total = C("database.database_max_select_rows");
         } else {
             $total = $this->count();
         }
@@ -2653,14 +2653,14 @@ class RelationModel extends Model
 
             if (array_key_exists("page", $options)) {
                 // 有分页参数
-                $pageSize = $options["page"][1] > C("DB_MAX_SELECT_ROWS") ? C("DB_MAX_SELECT_ROWS") : $options["page"][1];
+                $pageSize = $options["page"][1] > C("database.database_max_select_rows") ? C("database.database_max_select_rows") : $options["page"][1];
                 $this->page($options["page"][0], $pageSize);
             } else {
-                if (array_key_exists("limit", $options) && $options["limit"] <= C("DB_MAX_SELECT_ROWS")) {
+                if (array_key_exists("limit", $options) && $options["limit"] <= C("database.database_max_select_rows")) {
                     // 有limit参数
                     $this->limit($options["limit"]);
                 } else {
-                    $this->limit(C("DB_MAX_SELECT_ROWS"));
+                    $this->limit(C("database.database_max_select_rows"));
                 }
             }
 
