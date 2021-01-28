@@ -11,50 +11,10 @@
 namespace think\cache\driver;
 
 use think\cache\Driver;
+use think\RedisHandler;
 
-/**
- * Redis缓存驱动
- * 要求安装phpredis扩展：https://github.com/nicolasff/phpredis
- */
 class Redis extends Driver
 {
-    protected $options = [
-        'host' => '127.0.0.1',
-        'port' => 6379,
-        'password' => '',
-        'select' => 0,
-        'timeout' => 0,
-        'expire' => 0,
-        'persistent' => true,
-        'prefix' => '',
-    ];
-
-    /**
-     * 构造函数
-     * @param array $options 缓存参数
-     * @access public
-     */
-    public function __construct($options = [])
-    {
-        if (!extension_loaded('redis')) {
-            throw new \BadFunctionCallException('not support: redis');
-        }
-        if (!empty($options)) {
-            $this->options = array_merge($this->options, $options);
-        }
-        $func = $this->options['persistent'] ? 'pconnect' : 'connect';
-        $this->handler = new \Redis;
-        $this->handler->$func($this->options['host'], $this->options['port'], $this->options['timeout']);
-
-        if ('' != $this->options['password']) {
-            $this->handler->auth($this->options['password']);
-        }
-
-        if (0 != $this->options['select']) {
-            $this->handler->select($this->options['select']);
-        }
-    }
-
     /**
      * 判断缓存
      * @access public
@@ -63,7 +23,7 @@ class Redis extends Driver
      */
     public function has($name)
     {
-        return $this->handler->get($this->getCacheKey($name)) ? true : false;
+        return RedisHandler::get($this->getCacheKey($name)) ? true : false;
     }
 
     /**
@@ -75,11 +35,12 @@ class Redis extends Driver
      */
     public function get($name, $default = false)
     {
-        $value = $this->handler->get($this->getCacheKey($name));
+        $value = RedisHandler::get($this->getCacheKey($name));
 
         if (is_null($value)) {
             return $default;
         }
+
         $jsonData = json_decode($value, true);
         // 检测是否为JSON数据 true 返回JSON解析数组, false返回源数据 byron sampson<xiaobo.sun@qq.com>
         return (null === $jsonData) ? $value : $jsonData;
@@ -105,10 +66,11 @@ class Redis extends Driver
         //对数组/对象数据进行缓存处理，保证数据完整性  byron sampson<xiaobo.sun@qq.com>
         $value = (is_object($value) || is_array($value)) ? json_encode($value) : $value;
         if (is_int($expire) && $expire) {
-            $result = $this->handler->setex($key, $expire, $value);
+            $result = RedisHandler::setEx($key, $expire, $value);
         } else {
-            $result = $this->handler->set($key, $value);
+            $result = RedisHandler::set($key, $value);
         }
+
         isset($first) && $this->setTagItem($key);
         return $result;
     }
@@ -123,7 +85,7 @@ class Redis extends Driver
     public function inc($name, $step = 1)
     {
         $key = $this->getCacheKey($name);
-        return $this->handler->incrby($key, $step);
+        return RedisHandler::incrBy($key, $step);
     }
 
     /**
@@ -136,7 +98,7 @@ class Redis extends Driver
     public function dec($name, $step = 1)
     {
         $key = $this->getCacheKey($name);
-        return $this->handler->decrby($key, $step);
+        return RedisHandler::decrBy($key, $step);
     }
 
     /**
@@ -147,7 +109,7 @@ class Redis extends Driver
      */
     public function rm($name)
     {
-        return $this->handler->del($this->getCacheKey($name));
+        return RedisHandler::del($this->getCacheKey($name));
     }
 
     /**
@@ -162,12 +124,12 @@ class Redis extends Driver
             // 指定标签清除
             $keys = $this->getTagItem($tag);
             foreach ($keys as $key) {
-                $this->handler->del($key);
+                RedisHandler::del($key);
             }
             $this->rm('tag_' . md5($tag));
             return true;
         }
-        return $this->handler->flushDB();
+        return RedisHandler::flushdb();
     }
 
 
@@ -180,6 +142,6 @@ class Redis extends Driver
      */
     public function push(string $name, $value): void
     {
-        $this->handler->sAdd($name, $value);
+        RedisHandler::sAdd($name, $value);
     }
 }
