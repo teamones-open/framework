@@ -199,6 +199,11 @@ class RedisHandler
      */
     public static function connection($name = 'default')
     {
+        if (!class_exists('\support\bootstrap\Redis')) {
+            // 外面配置了redis 句柄直接获取
+            return \support\bootstrap\Redis::connection($name);
+        }
+
         if (empty(static::$_manager)) {
             $config = config('redis');
             static::$_manager = new RedisManager('', 'phpredis', $config);
