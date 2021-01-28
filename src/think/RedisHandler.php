@@ -194,10 +194,9 @@ class RedisHandler
     protected static $_manager = null;
 
     /**
-     * @param string $name
-     * @return mixed
+     * @return RedisManager
      */
-    public static function instance($name = 'default')
+    public static function instance()
     {
         if (empty(static::$_manager)) {
 
