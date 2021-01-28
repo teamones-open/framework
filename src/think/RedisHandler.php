@@ -189,7 +189,7 @@ use Illuminate\Redis\RedisManager;
 class RedisHandler
 {
     /**
-     * @var RedisHandler
+     * @var RedisManager
      */
     protected static $_manager = null;
 
@@ -197,18 +197,19 @@ class RedisHandler
      * @param string $name
      * @return mixed
      */
-    public static function connection($name = 'default')
+    public static function instance($name = 'default')
     {
-        if (!class_exists('\support\bootstrap\Redis')) {
-            // 外面配置了redis 句柄直接获取
-            return \support\bootstrap\Redis::connection($name);
-        }
-
         if (empty(static::$_manager)) {
-            $config = config('redis');
-            static::$_manager = new RedisManager('', 'phpredis', $config);
+
+            if (class_exists('\support\bootstrap\Redis') && isset(\support\bootstrap\Redis::$_manager)) {
+                // 外面配置了redis 句柄直接获取
+                static::$_manager = \support\bootstrap\Redis::$_manager;
+            } else {
+                $config = config('redis');
+                static::$_manager = new RedisManager('', 'phpredis', $config);
+            }
         }
-        return static::$_manager->connection($name);
+        return static::$_manager;
     }
 
     /**

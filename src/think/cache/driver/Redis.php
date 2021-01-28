@@ -16,6 +16,31 @@ use think\RedisHandler;
 class Redis extends Driver
 {
     /**
+     * 构造函数
+     * @param array $options 缓存参数
+     * @access public
+     */
+    public function __construct($options = [])
+    {
+        $config = config('redis', []);
+
+        // 初始化redis配置
+        $this->options = [
+            'host' => $config['host'] ?? '127.0.0.1',
+            'port' => $config['port'] ?? 6739,
+            'password' => $config['password'] ?? '',
+            'select' => $config['database'] ?? 0,
+            'timeout' => $config['timeout'] ?? 300,
+            'expire' => $config['expire'] ?? 0,
+            'persistent' => $config['persistent'] ?? true,
+            'prefix' => $config['prefix'] ?? ''
+        ];
+
+        // 初始化对象
+        RedisHandler::instance();
+    }
+
+    /**
      * 判断缓存
      * @access public
      * @param string $name 缓存变量名
