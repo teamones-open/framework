@@ -116,23 +116,23 @@ class Db
             );
         } else {
             $databaseConfig = C('database');
-
             if(!empty($databaseConfig)){
+                $type = $databaseConfig[$driver];
                 $config = array(
                     'type' => $databaseConfig[$driver],
-                    'username' => $databaseConfig['connections'][$driver]['username'],
-                    'password' => $databaseConfig['connections'][$driver]['password'],
-                    'hostname' => $databaseConfig['connections'][$driver]['host'],
-                    'hostport' => $databaseConfig['connections'][$driver]['port'],
-                    'database' => $databaseConfig['connections'][$driver]['database'],
+                    'username' => $databaseConfig['connections'][$type]['username'],
+                    'password' => $databaseConfig['connections'][$type]['password'],
+                    'hostname' => $databaseConfig['connections'][$type]['host'],
+                    'hostport' => $databaseConfig['connections'][$type]['port'],
+                    'database' => $databaseConfig['connections'][$type]['database'],
                     'dsn' => '',
                     'params' => C('DB_PARAMS'),
-                    'charset' => $databaseConfig['connections'][$driver]['charset'],
+                    'charset' => $databaseConfig['connections'][$type]['charset'],
                     'deploy' => C('DB_DEPLOY_TYPE'),
                     'rw_separate' => C('DB_RW_SEPARATE'),
                     'master_num' => C('DB_MASTER_NUM'),
                     'slave_no' => C('DB_SLAVE_NO'),
-                    'debug' => $databaseConfig['connections'][$driver]['username'] ?? APP_DEBUG,
+                    'debug' => $databaseConfig['connections'][$type]['username'] ?? APP_DEBUG,
                     'lite' => C('DB_LITE'),
                 );
             }else{
