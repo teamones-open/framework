@@ -59,7 +59,7 @@ class File extends \SplFileInfo
      * @param $uploadMimeType
      * @param $uploadErrorCode
      */
-    public function __construct($fileName, $uploadName, $uploadMimeType, $uploadErrorCode)
+    public function __construct($fileName, $uploadName = "", $uploadMimeType = "", $uploadErrorCode = 0)
     {
         $this->saveName = $uploadName;
         $this->_uploadMimeType = $uploadMimeType;
@@ -70,7 +70,7 @@ class File extends \SplFileInfo
 
     /**
      * 是否测试
-     * @param  bool   $test 是否测试
+     * @param bool $test 是否测试
      * @return $this
      */
     public function isTest($test = false)
@@ -111,7 +111,7 @@ class File extends \SplFileInfo
 
     /**
      * 设置上传文件的保存文件名
-     * @param  string   $saveName
+     * @param string $saveName
      * @return $this
      */
     public function setSaveName($saveName)
@@ -135,7 +135,7 @@ class File extends \SplFileInfo
 
     /**
      * 检查目录是否可写
-     * @param  string   $path    目录
+     * @param string $path 目录
      * @return boolean
      */
     protected function checkPath($path)
@@ -164,7 +164,7 @@ class File extends \SplFileInfo
 
     /**
      * 设置文件的命名规则
-     * @param  string   $rule    文件命名规则
+     * @param string $rule 文件命名规则
      * @return $this
      */
     public function rule($rule)
@@ -175,7 +175,7 @@ class File extends \SplFileInfo
 
     /**
      * 设置上传文件的验证规则
-     * @param  array   $rule    验证规则
+     * @param array $rule 验证规则
      * @return $this
      */
     public function validate($rule = [])
@@ -198,7 +198,7 @@ class File extends \SplFileInfo
 
     /**
      * 检测上传文件
-     * @param  array   $rule    验证规则
+     * @param array $rule 验证规则
      * @return bool
      */
     public function check($rule = [])
@@ -242,7 +242,7 @@ class File extends \SplFileInfo
 
     /**
      * 检测上传文件后缀
-     * @param  array|string   $ext    允许后缀
+     * @param array|string $ext 允许后缀
      * @return bool
      */
     public function checkExt($ext)
@@ -284,7 +284,7 @@ class File extends \SplFileInfo
 
     /**
      * 检测上传文件大小
-     * @param  integer   $size    最大大小
+     * @param integer $size 最大大小
      * @return bool
      */
     public function checkSize($size)
@@ -305,7 +305,7 @@ class File extends \SplFileInfo
 
     /**
      * 检测上传文件类型
-     * @param  array|string   $mime    允许类型
+     * @param array|string $mime 允许类型
      * @return bool
      */
     public function checkMime($mime)
