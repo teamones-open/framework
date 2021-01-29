@@ -18,9 +18,8 @@ class Container implements ContainerInterface
     protected $_instances = [];
 
     /**
-     * @param string $name
+     * @param $name
      * @return mixed
-     * @throws NotFoundException
      */
     public function get($name)
     {
@@ -71,7 +70,6 @@ class Container implements ContainerInterface
      * @param $name
      * @param array $constructor
      * @return mixed
-     * @throws NotFoundException
      */
     public function make($name, array $constructor = [])
     {

@@ -10,8 +10,8 @@
 // +----------------------------------------------------------------------
 namespace think;
 
-use think\Exception\ExceptionHandlerInterface;
-use think\Exception\ExceptionHandler;
+use think\exception\ExceptionHandlerInterface;
+use think\exception\ExceptionHandler;
 use think\exception\ClassNotFoundException;
 use Workerman\Worker;
 use Workerman\Timer;
