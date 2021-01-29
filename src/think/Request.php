@@ -11,6 +11,8 @@
 
 namespace think;
 
+use Workerman\Protocols\Http;
+
 class Request extends \Workerman\Protocols\Http\Request
 {
 
@@ -556,6 +558,76 @@ class Request extends \Workerman\Protocols\Http\Request
             return $this->post = array_merge($this->post, $name);
         }
         return $this->input($this->post, $name, $default, $filter);
+    }
+
+    /**
+     * @param $http_post_boundary
+     */
+    protected function parseUploadFiles($http_post_boundary)
+    {
+        $http_body = $this->rawBody();
+        $http_body = \substr($http_body, 0, \strlen($http_body) - (\strlen($http_post_boundary) + 4));
+        $boundary_data_array = \explode($http_post_boundary . "\r\n", $http_body);
+        if ($boundary_data_array[0] === '') {
+            unset($boundary_data_array[0]);
+        }
+        $key = -1;
+        $files = array();
+        foreach ($boundary_data_array as $boundary_data_buffer) {
+            list($boundary_header_buffer, $boundary_value) = \explode("\r\n\r\n", $boundary_data_buffer, 2);
+            // Remove \r\n from the end of buffer.
+            $boundary_value = \substr($boundary_value, 0, -2);
+            $key++;
+            foreach (\explode("\r\n", $boundary_header_buffer) as $item) {
+                list($header_key, $header_value) = \explode(": ", $item);
+                $header_key = \strtolower($header_key);
+                switch ($header_key) {
+                    case "content-disposition":
+                        // Is file data.
+                        if (\preg_match('/name="(.*?)"; filename="(.*?)"/i', $header_value, $match)) {
+                            $error = 0;
+                            $tmp_file = '';
+                            $size = \strlen($boundary_value);
+                            $tmp_upload_dir = HTTP::uploadTmpDir();
+                            if (!$tmp_upload_dir) {
+                                $error = UPLOAD_ERR_NO_TMP_DIR;
+                            } else {
+                                $tmp_file = \tempnam($tmp_upload_dir, 'workerman.upload.');
+                                if ($tmp_file === false || false == \file_put_contents($tmp_file, $boundary_value)) {
+                                    $error = UPLOAD_ERR_CANT_WRITE;
+                                }
+                            }
+                            // Parse upload files.
+                            $files[$key] = array(
+                                'key' => $match[1],
+                                'name' => $match[2],
+                                'tmp_name' => $tmp_file,
+                                'size' => $size,
+                                'error' => $error
+                            );
+                            break;
+                        } // Is post field.
+                        else {
+                            // Parse $_POST.
+                            if (\preg_match('/name="(.*?)"$/', $header_value, $match)) {
+                                $this->_data['post'][$match[1]] = $boundary_value;
+                            }
+                        }
+                        break;
+                    case "content-type":
+                        // add file_type
+                        $files[$key]['type'] = \trim($header_value);
+                        break;
+                }
+            }
+        }
+
+        foreach ($files as $file) {
+            $key = $file['key'];
+            unset($file['key']);
+
+            $this->_data['files'][$key] = $file;
+        }
     }
 
     /**
