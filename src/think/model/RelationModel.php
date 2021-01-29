@@ -2325,6 +2325,9 @@ class RelationModel extends Model
             array_unshift($newFields, "{$this->currentModuleCode}.id AS {$this->currentModuleCode}__id");
         }
 
+        // 清除queryModuleRelation缓存
+        $this->queryModuleRelation = [];
+
         return $newFields;
     }
 
