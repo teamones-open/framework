@@ -1492,7 +1492,12 @@ if (!function_exists('request')) {
      */
     function request()
     {
-        return App::request();
+        $request = App::request();
+        if (!isset($request) && class_exists('\think\Rpc')) {
+            $request = \think\Rpc::request();
+        }
+
+        return $request;
     }
 }
 
