@@ -501,7 +501,7 @@ class Request extends \Workerman\Protocols\Http\Request
      */
     public function get($name = '', $default = null, $filter = '')
     {
-        $getContent = parent::get($name, $default);
+        $getContent = parent::get($name === "" ? null : $name, $default);
 
         if (empty($name) && $getContent === null) {
             $this->get = [];
