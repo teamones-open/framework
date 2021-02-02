@@ -2343,6 +2343,7 @@ class Model
         $this->queryComplexHorizontalCustomFieldMapping = [];
         $this->queryComplexRelationCustomFields = [];
         $this->complexFilterRelatedModule = [];
+        $this->queryModuleRelation = [];
     }
 
     /**
