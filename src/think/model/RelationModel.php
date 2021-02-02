@@ -29,9 +29,6 @@ class RelationModel extends Model
     // 关联定义
     protected $_link = array();
 
-    // 定义返回数据
-    public $_resData = [];
-
     // 字段数据源映射源数据字段
     public $_fieldFromDataDict = [];
 
@@ -41,53 +38,6 @@ class RelationModel extends Model
     // 是否是空值查询
     protected $isNullOrEmptyFilter = false;
 
-    // 查询模块模型关联
-    protected $queryModuleRelation = [];
-
-    // 查询需要join查询的模块
-    protected $queryModuleLfetJoinRelation = [];
-
-    // 查询通过自定义字段水平关联的模块
-    protected $queryModuleHorizontalRelation = [];
-
-    // 查询实体关联的模块
-    protected $queryModuleEntityRelation = [];
-
-    // 查询一对多的模块
-    protected $queryModuleHasManyRelation = [];
-
-    // 查询实体关联的模块查询字段列表
-    protected $queryModuleRelationFields = [];
-
-    // 临时存储当前模块字段映射数据
-    protected $queryModuleFieldDict = [];
-
-    // 查询主键IDs
-    protected $queryModulePrimaryKeyIds = [];
-
-    // 复杂查询字段映射
-    protected $queryComplexModuleMapping = [];
-
-    // 复杂查询自定义字段映射
-    protected $queryComplexCustomFieldMapping = [];
-
-    // 复杂查询水平关联自定义字段映射
-    protected $queryComplexHorizontalCustomFieldMapping = [];
-
-    // 复杂查询关联模型自定义字段映射
-    protected $queryComplexRelationCustomFields = [];
-
-    // 复杂过滤条件涉及到的关联模块
-    protected $complexFilterRelatedModule = [];
-
-    // 是否是复杂过滤条件
-    protected $isComplexFilter = false;
-
-    // 当前模块code
-    protected $currentModuleCode = '';
-
-    // 查询model对象
-    protected $moduleModel = null;
 
     public function __construct($name = '', $tablePrefix = '', $connection = '')
     {
@@ -1199,7 +1149,6 @@ class RelationModel extends Model
      */
     public function modifyItem($param = [])
     {
-
         $this->resetDefault();
         if ($this->create($param, self::MODEL_UPDATE)) {
             $result = $this->save();
@@ -2561,6 +2510,8 @@ class RelationModel extends Model
      */
     public function findData($options = [], $needFormat = true)
     {
+        $this->resetDefault();
+
         $this->checkIsComplexFilter($options);
 
         if ($this->isComplexFilter) {
@@ -2611,6 +2562,7 @@ class RelationModel extends Model
      */
     public function selectData($options = [], $needFormat = true)
     {
+        $this->resetDefault();
 
         // 统计个数
         $maxId = $this->max('id');
@@ -2707,6 +2659,8 @@ class RelationModel extends Model
      */
     private function getFieldFromDataDict()
     {
+        $this->_fieldFromDataDict = [];
+
         // 用户数据映射
         $allUserData = M("User")->field("id,name")->select();
         $allUserDataMap = array_column($allUserData, null, "id");
