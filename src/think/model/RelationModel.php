@@ -2444,8 +2444,10 @@ class RelationModel extends Model
      */
     private function checkIsComplexFilter(&$options)
     {
-        if (!empty($options)) {
+        // 清空 isComplexFilter 赋值
+        $this->isComplexFilter = false;
 
+        if (!empty($options)) {
             if (array_key_exists('filter', $options)) {
                 $filterStr = json_encode($options['filter']);
                 if (strpos($filterStr, '.') !== false) {
