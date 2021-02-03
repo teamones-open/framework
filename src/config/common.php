@@ -56,6 +56,9 @@ return array(
     'tags' => [
         'app_init' => [
             'behavior\BuildLiteBehavior', // 生成运行Lite文件
+        ],
+        'app_end' => [
+            'behavior\WriteLogBehavior'
         ]
     ],
 );

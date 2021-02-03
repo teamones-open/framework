@@ -14,10 +14,10 @@
  */
 return array(
     // 配置文件
-    'config' => array(
+    'config' => [
         CONF_PATH . 'convention.php', // 系统惯例配置
         COMMON_PATH . 'config/config' . CONF_EXT, // 应用公共配置
-    ),
+    ],
 
     // 应用tags配置
     'app_tags' => '',
@@ -29,7 +29,7 @@ return array(
     ],
 
     // 别名定义
-    'alias' => array(
+    'alias' => [
         'think\Log' => CORE_PATH . 'Log' . EXT,
         'think\log\driver\File' => CORE_PATH . 'log/driver/file' . EXT,
         'think\Exception' => CORE_PATH . 'Exception' . EXT,
@@ -38,10 +38,10 @@ return array(
         'think\Cache' => CORE_PATH . 'Cache' . EXT,
         'think\cache\driver\File' => CORE_PATH . 'cache/driver/file' . EXT,
         'think\Storage' => CORE_PATH . 'Storage' . EXT,
-    ),
+    ],
 
     // 函数和类文件
-    'core' => array(
+    'core' => [
         CORE_PATH . 'Hook' . EXT,
         CORE_PATH . 'App' . EXT,
         CORE_PATH . 'Log' . EXT,
@@ -49,12 +49,15 @@ return array(
         CORE_PATH . 'Controller' . EXT,
         CORE_PATH . 'Request' . EXT,
         CORE_PATH . 'Response' . EXT
-    ),
+    ],
 
     // 行为扩展定义
-    'tags' => array(
-        'app_init' => array(
+    'tags' => [
+        'app_init' => [
             'behavior\BuildLiteBehavior', // 生成运行Lite文件
-        )
-    ),
+        ],
+        'app_end' => [
+            'behavior\WriteLogBehavior'
+        ]
+    ],
 );
