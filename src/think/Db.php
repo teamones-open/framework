@@ -132,7 +132,7 @@ class Db
                     'rw_separate' => C('DB_RW_SEPARATE'),
                     'master_num' => C('DB_MASTER_NUM'),
                     'slave_no' => C('DB_SLAVE_NO'),
-                    'debug' => $databaseConfig['connections'][$type]['username'] ?? APP_DEBUG,
+                    'debug' => $databaseConfig['connections'][$type]['debug'] ?? APP_DEBUG,
                     'lite' => C('DB_LITE'),
                 );
             }else{
