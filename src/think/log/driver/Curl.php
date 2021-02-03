@@ -36,6 +36,11 @@ class Curl
             return null;
         }
 
+        if (class_exists('\support\bootstrap\Log') && isset(\support\bootstrap\Log::$_instance['default'])) {
+            // 外面配置了Log 句柄直接获取
+            return \support\bootstrap\Log::$_instance['default'];
+        }
+
         if (empty(static::$_instance[$name])) {
             foreach ($configs as $channel => $config) {
                 $logger = static::$_instance[$channel] = new Logger($channel);

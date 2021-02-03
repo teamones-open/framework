@@ -85,23 +85,17 @@ class Log
 
         $message = implode('', self::$log);
 
-        if (class_exists('\support\bootstrap\Log') && isset(\support\bootstrap\Log::$_instance['default'])) {
-            // 外面配置了Log 句柄直接获取
-            \support\bootstrap\Log::error($message);
+        $curlLogHandler = \think\log\driver\Curl::channel();
+        if (isset($curlLogHandler)) {
+            // 走 curl 记录日志
+            \think\log\driver\Curl::error($message);
         } else {
-
-            $curlLogHandler = \think\log\driver\Curl::channel();
-            if (isset($curlLogHandler)) {
-                // 走 curl 记录日志
-                \think\log\driver\Curl::error($message);
-            } else {
-                if (!self::$storage) {
-                    $type = $type ?: C('LOG_TYPE');
-                    $class = 'think\\log\\driver\\' . ucwords($type);
-                    self::$storage = new $class();
-                }
-                self::$storage->write($message, $destination);
+            if (!self::$storage) {
+                $type = $type ?: C('LOG_TYPE');
+                $class = 'think\\log\\driver\\' . ucwords($type);
+                self::$storage = new $class();
             }
+            self::$storage->write($message, $destination);
         }
 
         // 保存后清空日志缓存
