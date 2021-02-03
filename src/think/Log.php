@@ -82,15 +82,23 @@ class Log
                 $destination = LOG_PATH . date('y_m_d') . '.log';
             }
         }
-        if (!self::$storage) {
-            $type = $type ?: C('LOG_TYPE');
-            $class = 'think\\log\\driver\\' . ucwords($type);
-            self::$storage = new $class();
-        }
+
         $message = implode('', self::$log);
-        self::$storage->write($message, $destination);
+
+        if (class_exists('\support\bootstrap\Log') && isset(\support\bootstrap\Log::$_instance['default'])) {
+            // 外面配置了Log 句柄直接获取
+            \support\bootstrap\Log::error($message);
+        } else {
+            if (!self::$storage) {
+                $type = $type ?: C('LOG_TYPE');
+                $class = 'think\\log\\driver\\' . ucwords($type);
+                self::$storage = new $class();
+            }
+            self::$storage->write($message, $destination);
+        }
+
         // 保存后清空日志缓存
-        self::$log = array();
+        self::$log = [];
     }
 
     /**
@@ -101,32 +109,5 @@ class Log
     public static function getLog($type = '')
     {
         return $type ? self::$log[$type] : self::$log;
-    }
-
-    /**
-     * 日志直接写入
-     * @static
-     * @access public
-     * @param string $message 日志信息
-     * @param string $level 日志级别
-     * @param integer $type 日志记录方式
-     * @param string $destination 写入目标
-     * @return void
-     */
-    public static function write($message, $level = self::ERR, $type = '', $destination = '')
-    {
-        if (!self::$storage) {
-            $type = $type ?: C('LOG_TYPE');
-            $class = 'think\\log\\driver\\' . ucwords($type);
-            $config['log_path'] = LOG_PATH;
-            if (IS_CLI) {
-                $config['log_path'] .= 'cli' . DS;
-            }
-            self::$storage = new $class($config);
-        }
-        if (empty($destination)) {
-            $destination = LOG_PATH . date('y_m_d') . '.log';
-        }
-        self::$storage->write("{$level}: {$message}", $destination);
     }
 }
