@@ -15,7 +15,7 @@
         "psr/container": "^1.0",
         "webpatser/laravel-uuid": "^3.0.1",
         "illuminate/redis": "~8.20",
-        "teamones/log": "^0.0.1"
+        "teamones/log": ">=0.0.1"
     },
     "autoload": {
         "files": [
