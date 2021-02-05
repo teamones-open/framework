@@ -60,7 +60,7 @@ return array(
     'DEFAULT_AJAX_RETURN' => 'JSON', // 默认AJAX 数据返回格式,可选JSON XML ...
     'DEFAULT_JSONP_HANDLER' => 'jsonpReturn', // 默认JSONP格式返回的处理方法
     'DEFAULT_FILTER' => 'htmlspecialchars', // 默认参数过滤方法 用于I函数...
-    'DEBUG_DRIVE' => 'file',
+    'DEBUG_LOG_DRIVE' => 'file',
 
     // 控制器类后缀
     'CONTROLLER_SUFFIX' => true,

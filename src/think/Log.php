@@ -86,7 +86,7 @@ class Log
         $message = implode('', self::$log);
 
         $curlLogHandler = \think\log\driver\Curl::channel();
-        if (isset($curlLogHandler) && C('DEBUG_DRIVE') === 'curl') {
+        if (isset($curlLogHandler) && C('DEBUG_LOG_DRIVE') === 'curl') {
             // 走 curl 记录日志
             \think\log\driver\Curl::error($message);
         } else {
