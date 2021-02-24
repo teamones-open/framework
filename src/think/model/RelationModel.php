@@ -1708,10 +1708,12 @@ class RelationModel extends Model
     private function formatFilterCondition($filter)
     {
         foreach ($filter as &$condition) {
-            switch (strtolower($condition[0])) {
-                case 'like':
-                    $condition[1] = "%{$condition[1]}%";
-                    break;
+            if(is_array($condition)){
+                switch (strtolower($condition[0])) {
+                    case 'like':
+                        $condition[1] = "%{$condition[1]}%";
+                        break;
+                }
             }
         }
         return $filter;
