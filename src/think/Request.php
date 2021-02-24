@@ -610,7 +610,13 @@ class Request extends \Workerman\Protocols\Http\Request
                         else {
                             // Parse $_POST.
                             if (\preg_match('/name="(.*?)"$/', $header_value, $match)) {
-                                $this->_data['post'][$match[1]] = $boundary_value;
+                                // 处理多层数组
+                                $keys = explode(' ', str_replace('[', ' ', str_replace(']', '', $match[1])));
+                                if (count($keys) > 1) {
+                                    $this->fillArray($this->_data['post'], $keys, $boundary_value);
+                                } else {
+                                    $this->_data['post'][$match[1]] = $boundary_value;
+                                }
                             }
                         }
                         break;
@@ -628,6 +634,29 @@ class Request extends \Workerman\Protocols\Http\Request
 
             $this->_data['files'][$key] = $file;
         }
+    }
+
+    /**
+     * 递归填充数组
+     * @param $container
+     * @param $keys
+     * @param $val
+     */
+    public function fillArray(&$container, $keys, $val)
+    {
+        if (count($keys) == 1) {
+            $firstKey = array_shift($keys);
+            $container[$firstKey] = $val;
+            return;
+        }
+        $firstKey = array_shift($keys);
+        if (!is_array($container)) {
+            $container = [];
+        }
+        if (!array_key_exists($firstKey, $container)) {
+            $container[$firstKey] = null;
+        }
+        $this->fillArray($container[$firstKey], $keys, $val);
     }
 
     /**
