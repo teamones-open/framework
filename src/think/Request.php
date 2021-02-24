@@ -722,11 +722,14 @@ class Request extends \Workerman\Protocols\Http\Request
             return $name === null ? [] : null;
         }
         if ($name !== null) {
-            return new File($files['tmp_name'], $files['name'], $files['type'], $files['error']);
+            $file = new File($files['tmp_name'], $files['name'], $files['type'], $files['error']);
+            $file->setUploadInfo($files);
+            return $file;
         }
         $uploadFiles = [];
         foreach ($files as $name => $file) {
             $uploadFiles[$name] = new File($file['tmp_name'], $file['name'], $file['type'], $file['error']);
+            $uploadFiles[$name]->setUploadInfo($file);
         }
         return $uploadFiles;
     }
