@@ -610,7 +610,13 @@ class Request extends \Workerman\Protocols\Http\Request
                         else {
                             // Parse $_POST.
                             if (\preg_match('/name="(.*?)"$/', $header_value, $match)) {
-                                $this->_data['post'][$match[1]] = $boundary_value;
+                                // 处理多层数组
+                                $keys = explode(' ', str_replace('[', ' ', str_replace(']', '', $match[1])));
+                                if (count($keys) > 1) {
+                                    $this->fillArray($this->_data['post'], $keys, $boundary_value);
+                                } else {
+                                    $this->_data['post'][$match[1]] = $boundary_value;
+                                }
                             }
                         }
                         break;
@@ -628,6 +634,42 @@ class Request extends \Workerman\Protocols\Http\Request
 
             $this->_data['files'][$key] = $file;
         }
+    }
+
+    /**
+     * 递归填充数组
+     * @param $container
+     * @param $keys
+     * @param $val
+     */
+    public function fillArray(&$container, $keys, $val)
+    {
+        if (!is_array($keys) || count($keys) == 0) {
+            return;
+        }
+        if (count($keys) == 1) {
+            $firstKey = array_shift($keys);
+            // 如果是'' 那么直接追加数组
+            if ($firstKey === '') {
+                $container[] = $val;
+            } else {
+                $container[$firstKey] = $val;
+            }
+            return;
+        }
+        $firstKey = array_shift($keys);
+        if (!is_array($container)) {
+            $container = [];
+        }
+        // 如果是'' 那么直接追加数组
+        if ($firstKey === '') {
+            $container[] = $val;
+        } else {
+            if (!array_key_exists($firstKey, $container)) {
+                $container[$firstKey] = null;
+            }
+        }
+        $this->fillArray($container[$firstKey], $keys, $val);
     }
 
     /**
@@ -693,11 +735,14 @@ class Request extends \Workerman\Protocols\Http\Request
             return $name === null ? [] : null;
         }
         if ($name !== null) {
-            return new File($files['tmp_name'], $files['name'], $files['type'], $files['error']);
+            $file = new File($files['tmp_name'], $files['name'], $files['type'], $files['error']);
+            $file->setUploadInfo($files);
+            return $file;
         }
         $uploadFiles = [];
         foreach ($files as $name => $file) {
             $uploadFiles[$name] = new File($file['tmp_name'], $file['name'], $file['type'], $file['error']);
+            $uploadFiles[$name]->setUploadInfo($file);
         }
         return $uploadFiles;
     }
