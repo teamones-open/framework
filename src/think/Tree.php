@@ -43,7 +43,7 @@ class Tree
     function DeepTree($root = 0)
     {
         if (!$this->OriginalList) {
-            return FALSE;
+            return false;
         }
         $OriginalList = $this->OriginalList;
         $tree = array();//最终数组
