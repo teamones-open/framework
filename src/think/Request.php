@@ -644,17 +644,30 @@ class Request extends \Workerman\Protocols\Http\Request
      */
     public function fillArray(&$container, $keys, $val)
     {
+        if (!is_array($keys) || count($keys) == 0) {
+            return;
+        }
         if (count($keys) == 1) {
             $firstKey = array_shift($keys);
-            $container[$firstKey] = $val;
+            // 如果是'' 那么直接追加数组
+            if ($firstKey === '') {
+                $container[] = $val;
+            } else {
+                $container[$firstKey] = $val;
+            }
             return;
         }
         $firstKey = array_shift($keys);
         if (!is_array($container)) {
             $container = [];
         }
-        if (!array_key_exists($firstKey, $container)) {
-            $container[$firstKey] = null;
+        // 如果是'' 那么直接追加数组
+        if ($firstKey === '') {
+            $container[] = $val;
+        } else {
+            if (!array_key_exists($firstKey, $container)) {
+                $container[$firstKey] = null;
+            }
         }
         $this->fillArray($container[$firstKey], $keys, $val);
     }
