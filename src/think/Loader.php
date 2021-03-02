@@ -235,24 +235,27 @@ class Loader
         // 读取应用模式
         $mode = include_once is_file(CONF_PATH . 'core.php') ? CONF_PATH . 'core.php' : CONF_PATH . APP_MODE . '.php';
 
+
+        // 读取应用调试配置文件
+        if (is_file(CONF_PATH . 'debug' . CONF_EXT)) {
+            C(include CONF_PATH . 'debug' . CONF_EXT);
+        }
+
         // 读取应用模式缓存配置
         // 加载应用模式配置文件
         foreach ($mode['config'] as $key => $file) {
             is_numeric($key) ? C(load_config($file)) : C($key, load_config($file));
         }
 
+
         // 读取当前应用模式对应的配置文件
         if ('common' != APP_MODE && is_file(CONF_PATH . 'config_' . APP_MODE . CONF_EXT)) {
             C(load_config(CONF_PATH . 'config_' . APP_MODE . CONF_EXT));
         }
 
-        // 调试模式加载系统默认的配置文件
-        C(include CONF_PATH . 'debug.php');
 
-        // 读取应用调试配置文件
-        if (is_file(CONF_PATH . 'debug' . CONF_EXT)) {
-            C(include CONF_PATH . 'debug' . CONF_EXT);
-        }
+
+
 
         // 读取当前应用状态对应的配置文件
         if (APP_STATUS && is_file(CONF_PATH . APP_STATUS . CONF_EXT)) {
