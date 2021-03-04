@@ -441,7 +441,7 @@ if (!function_exists('model')) {
      * @param string $name Model名称
      * @param string $layer 业务层名称
      * @param bool $appendSuffix 是否添加类名后缀
-     * @return \think\Model
+     * @return \think\model\RelationModel | \think\Model
      */
     function model($name = '', $layer = 'model', $appendSuffix = false)
     {
