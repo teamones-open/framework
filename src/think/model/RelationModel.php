@@ -77,10 +77,10 @@ class RelationModel extends Model
 
     /**
      * 动态方法实现
-     * @access public
      * @param string $method 方法名称
      * @param array $args 调用参数
      * @return mixed
+     * @throws \think\Exception
      */
     public function __call($method, $args)
     {
@@ -97,6 +97,7 @@ class RelationModel extends Model
 
     /**
      * 数据库Event log Hook
+     * @param $param
      */
     protected function databaseEventLogHook($param)
     {
@@ -270,6 +271,7 @@ class RelationModel extends Model
     protected function getRelation(&$result, $name = '', $return = false)
     {
         if (!empty($this->_link)) {
+            $relationData = [];
             foreach ($this->_link as $key => $val) {
                 $mappingName = !empty($val['mapping_name']) ? $val['mapping_name'] : $key; // 映射名称
                 if (empty($name) || true === $name || $mappingName == $name || (is_array($name) && in_array($mappingName, $name))) {
@@ -726,7 +728,6 @@ class RelationModel extends Model
     /**
      * 处理查询数据
      * @param $data
-     * @param string $model
      * @return array
      */
     protected function handleQueryData($data)
@@ -751,9 +752,9 @@ class RelationModel extends Model
 
     /**
      * @param $newReturnData
+     * @param $primaryKeyId
      * @param $field
      * @param $value
-     * @return int
      */
     private function parsehandleReturnComplexData(&$newReturnData, &$primaryKeyId, $field, $value)
     {
@@ -827,22 +828,24 @@ class RelationModel extends Model
 
     /**
      * 处理查询查询的模块自定义字段
+     * @param $fields
+     * @param $moduleCode
      */
-    private function handleQueryModuleCustomFields(&$fileds, $moduleCode)
+    private function handleQueryModuleCustomFields(&$fields, $moduleCode)
     {
-        if (!empty($fileds) && !empty(Module::$moduleDictData['field_index_by_code'])) {
+        if (!empty($fields) && !empty(Module::$moduleDictData['field_index_by_code'])) {
             // 处理查询的自定义字段
             $moduleFields = Module::$moduleDictData['field_index_by_code'][$moduleCode];
-            $newFileds = [];
+            $newFields = [];
 
-            foreach ($fileds as $field) {
+            foreach ($fields as $field) {
                 if (array_key_exists($field, $moduleFields['custom'])) {
-                    $newFileds[] = "JSON_UNQUOTE(json_extract(json, '$.{$field}' )) as {$field}";
+                    $newFields[] = "JSON_UNQUOTE(json_extract(json, '$.{$field}' )) as {$field}";
                 } else {
-                    $newFileds[] = $field;
+                    $newFields[] = $field;
                 }
 
-                $fileds = $newFileds;
+                $fields = $newFields;
             }
         }
     }
@@ -888,24 +891,24 @@ class RelationModel extends Model
 
                 if ($relationUnfold[$i]['belong_module'] !== $this->currentModuleCode) {
                     if (array_key_exists($relationUnfold[$i]['belong_module'], $this->queryModuleRelationFields)) {
-                        $fileds = $this->queryModuleRelationFields[$relationUnfold[$i]['belong_module']];
+                        $fields = $this->queryModuleRelationFields[$relationUnfold[$i]['belong_module']];
                     } else {
-                        $fileds = [];
+                        $fields = [];
                     }
 
-                    if (!in_array('id', $fileds)) {
-                        array_unshift($fileds, 'id');
+                    if (!in_array('id', $fields)) {
+                        array_unshift($fields, 'id');
                     }
 
-                    if (!in_array('entity_id', $fileds)) {
-                        array_push($fileds, 'entity_id');
+                    if (!in_array('entity_id', $fields)) {
+                        array_push($fields, 'entity_id');
                     }
 
                     if (!empty($middleRelationIds)) {
 
-                        $this->handleQueryModuleCustomFields($fileds, $relationUnfold[$i]['belong_module']);
+                        $this->handleQueryModuleCustomFields($fields, $relationUnfold[$i]['belong_module']);
 
-                        $entityData = $this->getModelObj('entity')->field(join(',', $fileds))->where([
+                        $entityData = $this->getModelObj('entity')->field(join(',', $fields))->where([
                             'id' => ['IN', join(',', $middleRelationIds)],
                             'module_id' => $relationUnfold[$i]['src_module_id'],
                         ])->select();
@@ -996,8 +999,8 @@ class RelationModel extends Model
     private function handleHasManyRelationReturnComplexData(&$queryData, $type = 'find')
     {
         $hasManyMapping = [];
-        foreach ($this->queryModuleHasManyRelation as $moduleCode => $modulConfig) {
-            if ($modulConfig['type'] === 'horizontal') {
+        foreach ($this->queryModuleHasManyRelation as $moduleCode => $moduleConfig) {
+            if ($moduleConfig['type'] === 'horizontal') {
                 // 一对多水平自定义关联处理
                 $relationIds = [];
                 $relationIdMapping = [];
@@ -1015,7 +1018,7 @@ class RelationModel extends Model
                     }
                 }
 
-                $modelObjectClass = get_module_model_name(Module::$moduleDictData['module_index_by_code'][$modulConfig['module_code']]);
+                $modelObjectClass = get_module_model_name(Module::$moduleDictData['module_index_by_code'][$moduleConfig['module_code']]);
                 $newModelObject = model($modelObjectClass);
 
 
@@ -1119,7 +1122,8 @@ class RelationModel extends Model
     /**
      * 新增数据，成功返回当前添加的一条完整数据
      * @param array $param 新增数据参数
-     * @return array|bool|mixed
+     * @return array|bool
+     * @throws \think\Exception
      */
     public function addItem($param = [])
     {
@@ -1145,7 +1149,8 @@ class RelationModel extends Model
     /**
      * 修改数据，必须包含主键，成功返回当前修改的一条完整数据
      * @param array $param 修改数据参数
-     * @return array|bool|mixed
+     * @return array|bool
+     * @throws \think\Exception
      */
     public function modifyItem($param = [])
     {
@@ -1178,7 +1183,8 @@ class RelationModel extends Model
     /**
      * 更新单个组件基础方法
      * @param $data
-     * @return array|bool|mixed
+     * @return array|bool
+     * @throws \think\Exception
      */
     public function updateWidget($data)
     {
@@ -1427,7 +1433,9 @@ class RelationModel extends Model
     /**
      * 获取entity模块父子结构
      * @param $complexFilterRelatedModule
+     * @param $moduleDictByDstModuleId
      * @param $moduleDictBySrcModuleId
+     * @return array
      */
     private function getEntityParentChildHierarchy($complexFilterRelatedModule, $moduleDictByDstModuleId, $moduleDictBySrcModuleId)
     {
@@ -1652,7 +1660,6 @@ class RelationModel extends Model
             $moduleDictBySrcModuleId[$moduleRelationItem['src_module_id']][] = $moduleRelationItem;
         }
 
-        $queryModuleList = [];
         if ($allModuleBack) {
             // 取所有关联模块
             $queryModuleList = $horizontalModuleList;
@@ -1708,7 +1715,7 @@ class RelationModel extends Model
     private function formatFilterCondition($filter)
     {
         foreach ($filter as &$condition) {
-            if(is_array($condition)){
+            if (is_array($condition)) {
                 switch (strtolower($condition[0])) {
                     case 'like':
                         $condition[1] = "%{$condition[1]}%";
@@ -1770,6 +1777,7 @@ class RelationModel extends Model
      * @param $masterModuleCode
      * @param $itemModule
      * @param $filter
+     * @return array
      */
     private function parserFilterItemEntityTaskRelated(&$filterData, $masterModuleCode, $itemModule, $filter)
     {
@@ -1831,9 +1839,10 @@ class RelationModel extends Model
      * @param $field
      * @param $condition
      * @param string $moduleCode
-     * @param $mapModule
+     * @param array $mapModule
+     * @param bool $isMaster
      */
-    private function parserFilterCutsomHorizontalCondition(&$filterData, $field, $condition, $moduleCode = '', $mapModule, $isMaster = true)
+    private function parserFilterCustomHorizontalCondition(&$filterData, $field, $condition, $moduleCode = '', $mapModule = [], $isMaster = true)
     {
         if ($isMaster) {
             // 主表关联
@@ -1877,9 +1886,10 @@ class RelationModel extends Model
      * @param $filterData
      * @param $field
      * @param $condition
-     * @param $moduleCode
+     * @param string $moduleCode
+     * @return mixed
      */
-    private function parserFilterCutsomItemCondition(&$filterData, $field, $condition, $moduleCode = '')
+    private function parserFilterCustomItemCondition(&$filterData, $field, $condition, $moduleCode = '')
     {
         if (is_array($condition)) {
             list($itemCondition, $itemValue) = $condition;
@@ -1929,10 +1939,10 @@ class RelationModel extends Model
                 // 主键查询只需要加上字段别名
                 foreach ($filter as $field => $condition) {
                     if (array_key_exists($field, $this->queryComplexHorizontalCustomFieldMapping)) {
-                        $this->parserFilterCutsomHorizontalCondition($filterData, $field, $condition, $masterModuleCode, $this->queryComplexHorizontalCustomFieldMapping[$field]);
+                        $this->parserFilterCustomHorizontalCondition($filterData, $field, $condition, $masterModuleCode, $this->queryComplexHorizontalCustomFieldMapping[$field]);
                     } else {
                         if (array_key_exists($field, $this->queryComplexCustomFieldMapping)) {
-                            $this->parserFilterCutsomItemCondition($filterData, $field, $condition, $masterModuleCode);
+                            $this->parserFilterCustomItemCondition($filterData, $field, $condition, $masterModuleCode);
                         } else {
                             $filterData["{$masterModuleCode}.{$field}"] = $condition;
                         }
@@ -2123,10 +2133,11 @@ class RelationModel extends Model
 
     /**
      * 处理过滤条件
-     * @param $filterfields
+     * @param $filter
+     * @param array $fields
      * @return array
      */
-    private function buildFilter($filter, $fields)
+    private function buildFilter($filter, $fields = [])
     {
         if ($this->isComplexFilter) {
             // 复杂过滤条件处理
