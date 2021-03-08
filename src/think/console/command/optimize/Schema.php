@@ -31,6 +31,11 @@ class Schema extends Command
             ->setDescription('Build database schema cache.');
     }
 
+    /**
+     * @param Input $input
+     * @param Output $output
+     * @return int|void|null
+     */
     protected function execute(Input $input, Output $output)
     {
         if (!is_dir(RUNTIME_PATH . 'schema')) {
@@ -81,6 +86,10 @@ class Schema extends Command
         $output->writeln('<info>Succeed!</info>');
     }
 
+    /**
+     * @param $class
+     * @throws \ReflectionException
+     */
     protected function buildModelSchema($class)
     {
         $reflect = new \ReflectionClass($class);

@@ -14,10 +14,17 @@ namespace think\exception;
 class ClassNotFoundException extends \RuntimeException
 {
     protected $class;
+
+    /**
+     * ClassNotFoundException constructor.
+     * @param $message
+     * @param string $class
+     */
     public function __construct($message, $class = '')
     {
+        parent::__construct($message);
         $this->message = $message;
-        $this->class   = $class;
+        $this->class = $class;
     }
 
     /**

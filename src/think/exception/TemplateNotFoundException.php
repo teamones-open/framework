@@ -17,7 +17,7 @@ class TemplateNotFoundException extends \RuntimeException
 
     public function __construct($message, $template = '')
     {
-        parent::__construct();
+        parent::__construct($message);
         $this->message = $message;
         $this->template = $template;
     }

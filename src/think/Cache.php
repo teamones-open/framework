@@ -25,7 +25,7 @@ class Cache
 
     /**
      * 操作句柄
-     * @var object
+     * @var Driver
      * @access protected
      */
     protected static $handler;

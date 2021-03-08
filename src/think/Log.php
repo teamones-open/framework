@@ -65,7 +65,7 @@ class Log
      * 日志保存
      * @static
      * @access public
-     * @param integer $type 日志记录方式
+     * @param string $type 日志记录方式
      * @param string $destination 写入目标
      * @return void
      */

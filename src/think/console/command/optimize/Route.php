@@ -31,6 +31,9 @@ class Route extends Command
         $output->writeln('<info>Succeed!</info>');
     }
 
+    /**
+     * @return string|string[]
+     */
     protected function buildRouteCache()
     {
         $files = C('route_config_file');
@@ -50,6 +53,10 @@ class Route extends Command
         return $content;
     }
 
+    /**
+     * @param $value
+     * @throws \ReflectionException
+     */
     protected function buildClosure(&$value)
     {
         if ($value instanceof \Closure) {

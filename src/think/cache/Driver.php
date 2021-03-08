@@ -96,7 +96,7 @@ abstract class Driver
      * 读取缓存并删除
      * @access public
      * @param string $name 缓存变量名
-     * @return mixed
+     * @return mixed|void
      */
     public function pull($name)
     {

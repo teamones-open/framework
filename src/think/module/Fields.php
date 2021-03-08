@@ -9,7 +9,7 @@ class Fields
      * 获取所有模块字段按照模块id映射数据
      * @param array $moduleMapData
      * @return array
-     * @throws \think\Exception
+     * @throws \Exception
      */
     public static function getAllModuleFieldsMapData($moduleMapData = [])
     {

@@ -30,7 +30,8 @@ class File extends Storage
      * 文件内容读取
      * @access public
      * @param string $filename 文件名
-     * @return string
+     * @param string $type
+     * @return bool
      */
     public function read($filename, $type = '')
     {
@@ -42,7 +43,9 @@ class File extends Storage
      * @access public
      * @param string $filename 文件名
      * @param string $content 文件内容
-     * @return boolean
+     * @param string $type
+     * @return bool
+     * @throws \Exception
      */
     public function put($filename, $content, $type = '')
     {
@@ -63,7 +66,9 @@ class File extends Storage
      * @access public
      * @param string $filename 文件名
      * @param string $content 追加的文件内容
-     * @return boolean
+     * @param string $type
+     * @return bool
+     * @throws \Exception
      */
     public function append($filename, $content, $type = '')
     {
@@ -80,19 +85,20 @@ class File extends Storage
      * @param array $vars 传入变量
      * @return void
      */
-    public function load($_filename, $vars = null)
+    public function load($filename, $vars = null)
     {
         if (!is_null($vars)) {
             extract($vars, EXTR_OVERWRITE);
         }
-        include $_filename;
+        include $filename;
     }
 
     /**
      * 文件是否存在
      * @access public
      * @param string $filename 文件名
-     * @return boolean
+     * @param string $type
+     * @return bool
      */
     public function has($filename, $type = '')
     {
@@ -103,6 +109,7 @@ class File extends Storage
      * 文件删除
      * @access public
      * @param string $filename 文件名
+     * @param string $type
      * @return boolean
      */
     public function unlink($filename, $type = '')
@@ -116,6 +123,7 @@ class File extends Storage
      * @access public
      * @param string $filename 文件名
      * @param string $name 信息名 mtime或者content
+     * @param string $type
      * @return boolean
      */
     public function get($filename, $name, $type = '')

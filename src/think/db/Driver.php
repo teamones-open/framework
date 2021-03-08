@@ -124,7 +124,11 @@ abstract class Driver
 
     /**
      * 连接数据库方法
-     * @access public
+     * @param string $config
+     * @param int $linkNum
+     * @param bool $autoConnection
+     * @return mixed
+     * @throws \Exception
      */
     public function connect($config = '', $linkNum = 0, $autoConnection = false)
     {
@@ -178,7 +182,9 @@ abstract class Driver
      * @param string $str sql指令
      * @param boolean $fetchSql 不执行只是获取SQL
      * @param boolean $master 是否在主服务器读操作
-     * @return mixed
+     * @return array|bool|string
+     * @throws PDOException
+     * @throws \Throwable
      */
     public function query($str, $fetchSql = false, $master = false)
     {
@@ -254,7 +260,9 @@ abstract class Driver
      * @access public
      * @param string $str sql指令
      * @param boolean $fetchSql 不执行只是获取SQL
-     * @return mixed
+     * @return bool|int|string
+     * @throws PDOException
+     * @throws \Throwable
      */
     public function execute($str, $fetchSql = false)
     {
@@ -332,8 +340,8 @@ abstract class Driver
 
     /**
      * 启动事务
-     * @access public
-     * @return void
+     * @return bool|void
+     * @throws \Exception
      */
     public function startTrans()
     {
@@ -361,8 +369,8 @@ abstract class Driver
 
     /**
      * 用于非自动提交状态下面的查询提交
-     * @access public
-     * @return boolean
+     * @return bool
+     * @throws \Exception
      */
     public function commit()
     {
@@ -381,8 +389,8 @@ abstract class Driver
 
     /**
      * 事务回滚
-     * @access public
-     * @return boolean
+     * @return bool
+     * @throws \Exception
      */
     public function rollback()
     {
@@ -466,10 +474,9 @@ abstract class Driver
     }
 
     /**
-     * 数据库错误信息
-     * 并显示当前的SQL语句
-     * @access public
+     * 数据库错误信息，并显示当前的SQL语句
      * @return string
+     * @throws \Exception
      */
     public function error()
     {
@@ -494,7 +501,7 @@ abstract class Driver
 
     /**
      * 设置锁机制
-     * @access protected
+     * @param bool $lock
      * @return string
      */
     protected function parseLock($lock = false)
@@ -600,14 +607,14 @@ abstract class Driver
         } else {
             $fieldsStr = '*';
         }
-        //TODO 如果是查询全部字段，并且是join的方式，那么就把要查的表加个别名，以免字段被覆盖
+
         return $fieldsStr;
     }
 
     /**
      * table分析
      * @access protected
-     * @param mixed $table
+     * @param mixed $tables
      * @return string
      */
     protected function parseTable($tables)
@@ -695,7 +702,13 @@ abstract class Driver
         return empty($whereStr) ? '' : ' WHERE ' . $whereStr;
     }
 
-    // where子单元分析
+    /**
+     * where子单元分析
+     * @param $key
+     * @param $val
+     * @return string
+     * @throws \Exception
+     */
     protected function parseWhereItem($key, $val)
     {
         $whereStr = '';
@@ -813,8 +826,7 @@ abstract class Driver
 
     /**
      * limit分析
-     * @access protected
-     * @param mixed $lmit
+     * @param $limit
      * @return string
      */
     protected function parseLimit($limit)
@@ -945,9 +957,7 @@ abstract class Driver
 
     /**
      * 参数绑定分析
-     * @access protected
-     * @param array $bind
-     * @return array
+     * @param $bind
      */
     protected function parseBind($bind)
     {
@@ -988,7 +998,9 @@ abstract class Driver
      * @param mixed $data 数据
      * @param array $options 参数表达式
      * @param boolean $replace 是否replace
-     * @return false | integer
+     * @return bool|int|string
+     * @throws PDOException
+     * @throws \Throwable
      */
     public function insert($data, $options = array(), $replace = false)
     {
@@ -1027,7 +1039,9 @@ abstract class Driver
      * @param mixed $dataSet 数据集
      * @param array $options 参数表达式
      * @param boolean $replace 是否replace
-     * @return false | integer
+     * @return bool|int|string
+     * @throws PDOException
+     * @throws \Throwable
      */
     public function insertAll($dataSet, $options = array(), $replace = false)
     {
@@ -1067,8 +1081,10 @@ abstract class Driver
      * @access public
      * @param string $fields 要插入的数据表字段名
      * @param string $table 要插入的数据表名
-     * @param array $option 查询数据参数
-     * @return false | integer
+     * @param array $options 查询数据参数
+     * @return bool|int|string
+     * @throws PDOException
+     * @throws \Throwable
      */
     public function selectInsert($fields, $table, $options = array())
     {
@@ -1088,7 +1104,9 @@ abstract class Driver
      * @access public
      * @param mixed $data 数据
      * @param array $options 表达式
-     * @return false | integer
+     * @return bool|int|string
+     * @throws PDOException
+     * @throws \Throwable
      */
     public function update($data, $options)
     {
@@ -1114,7 +1132,9 @@ abstract class Driver
      * 删除记录
      * @access public
      * @param array $options 表达式
-     * @return false | integer
+     * @return bool|int|string
+     * @throws PDOException
+     * @throws \Throwable
      */
     public function delete($options = array())
     {
@@ -1143,7 +1163,9 @@ abstract class Driver
      * 查找记录
      * @access public
      * @param array $options 表达式
-     * @return mixed
+     * @return array|bool|string
+     * @throws PDOException
+     * @throws \Throwable
      */
     public function select($options = array())
     {
@@ -1281,8 +1303,9 @@ abstract class Driver
     /**
      * 初始化数据库连接
      * @access protected
-     * @param boolean $master 主服务器
-     * @return void
+     * @param bool $master 主服务器
+     * @return null
+     * @throws \Exception
      */
     protected function initConnect($master = true)
     {
@@ -1303,8 +1326,9 @@ abstract class Driver
     /**
      * 连接分布式服务器
      * @access protected
-     * @param boolean $master 主服务器
-     * @return void
+     * @param bool $master 主服务器
+     * @return mixed
+     * @throws \Exception
      */
     protected function multiConnect($master = false)
     {

@@ -136,8 +136,7 @@ class Module
 
     /**
      * 检测数据结构，使用本框架必须包含
-     * @param string $dbName
-     * @throws \think\Exception
+     * @throws \Exception
      */
     public static function checkSchema()
     {
@@ -170,7 +169,7 @@ class Module
 
     /**
      * 获取模块数据
-     * @throws \think\Exception
+     * @throws \Exception
      */
     protected static function getModuleData()
     {
@@ -184,8 +183,7 @@ class Module
     /**
      * 生成模块字段缓存
      * @param $moduleIndexById
-     * @return array
-     * @throws \think\Exception
+     * @throws \Exception
      */
     protected static function generateModuleFieldCache($moduleIndexById)
     {

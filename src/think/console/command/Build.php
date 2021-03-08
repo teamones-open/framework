@@ -32,6 +32,11 @@ class Build extends Command
             ->setDescription('Build Application Dirs');
     }
 
+    /**
+     * @param Input $input
+     * @param Output $output
+     * @return int|void|null
+     */
     protected function execute(Input $input, Output $output)
     {
         if ($input->hasOption('module')) {

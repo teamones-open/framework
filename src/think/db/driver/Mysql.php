@@ -41,7 +41,10 @@ class Mysql extends Driver
 
     /**
      * 取得数据表的字段信息
-     * @access public
+     * @param $tableName
+     * @return array
+     * @throws \Throwable
+     * @throws \think\exception\PDOException
      */
     public function getFields($tableName)
     {
@@ -75,7 +78,10 @@ class Mysql extends Driver
 
     /**
      * 取得数据库的表信息
-     * @access public
+     * @param string $dbName
+     * @return array
+     * @throws \Throwable
+     * @throws \think\exception\PDOException
      */
     public function getTables($dbName = '')
     {
@@ -120,7 +126,9 @@ class Mysql extends Driver
      * @param mixed $dataSet 数据集
      * @param array $options 参数表达式
      * @param boolean $replace 是否replace
-     * @return false | integer
+     * @return bool|false|int|mixed
+     * @throws \Throwable
+     * @throws \think\exception\PDOException
      */
     public function insertAll($dataSet, $options = array(), $replace = false)
     {
@@ -214,6 +222,7 @@ class Mysql extends Driver
      * @param string $str sql指令
      * @param bool $fetchSql 不执行只是获取SQL
      * @return array|bool|string
+     * @throws \Exception
      */
     public function procedure($str, $fetchSql = false)
     {

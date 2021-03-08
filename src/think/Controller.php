@@ -17,7 +17,6 @@ class Controller
 {
     /**
      * 控制器参数
-     * @var config
      * @access protected
      */
     protected $config = array();

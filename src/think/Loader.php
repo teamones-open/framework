@@ -550,8 +550,8 @@ class Loader
      * @param string $layer 控制层名称
      * @param bool $appendSuffix 是否添加类名后缀
      * @param string $empty 空控制器名称
-     * @return Object|false
-     * @throws ClassNotFoundException
+     * @return object
+     * @throws \ReflectionException
      */
     public static function controller($name, $layer = 'controller', $appendSuffix = false, $empty = '')
     {
@@ -577,7 +577,8 @@ class Loader
      * @param string|array $vars 调用参数 支持字符串和数组
      * @param string $layer 要调用的控制层名称
      * @param bool $appendSuffix 是否添加类名后缀
-     * @return mixed
+     * @return bool|mixed
+     * @throws \ReflectionException
      */
     public static function action($url, $vars = [], $layer = 'controller', $appendSuffix = false)
     {

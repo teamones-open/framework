@@ -27,6 +27,12 @@ class Config extends Command
             ->setDescription('Build config and common file cache.');
     }
 
+    /**
+     * @param Input $input
+     * @param Output $output
+     * @return int|void|null
+     * @throws \think\Exception
+     */
     protected function execute(Input $input, Output $output)
     {
         if ($input->hasArgument('module')) {
@@ -46,6 +52,11 @@ class Config extends Command
         $output->writeln('<info>Succeed!</info>');
     }
 
+    /**
+     * @param $module
+     * @return string
+     * @throws \think\Exception
+     */
     protected function buildCacheContent($module)
     {
         $content = '';

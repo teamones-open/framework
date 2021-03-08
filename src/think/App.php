@@ -508,8 +508,7 @@ class App
                 'debug' => APP_DEBUG
             ]);
             $exception_handler->report($e);
-            $response = $exception_handler->render($request, $e);
-            return $response;
+            return $exception_handler->render($request, $e);
         } catch (\Throwable $e) {
             return APP_DEBUG ? (string)$e : $e->getMessage();
         }
