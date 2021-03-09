@@ -35,6 +35,7 @@ class Schema extends Command
      * @param Input $input
      * @param Output $output
      * @return int|void|null
+     * @throws \ReflectionException
      */
     protected function execute(Input $input, Output $output)
     {
@@ -94,10 +95,10 @@ class Schema extends Command
     {
         $reflect = new \ReflectionClass($class);
         if (!$reflect->isAbstract() && $reflect->isSubclassOf('\think\Model')) {
-            $table   = $class::getTable();
+            $table   = $class::getTableName();
             $dbName  = $class::getConfig('database');
             $content = '<?php ' . PHP_EOL . 'return ';
-            $info    = $class::getConnection()->getFields($table);
+            $info    = $class::connect()->getFields($table);
             $content .= var_export($info, true) . ';';
             file_put_contents(RUNTIME_PATH . 'schema' . DS . $dbName . '.' . $table . EXT, $content);
         }
