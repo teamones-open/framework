@@ -39,7 +39,11 @@ class [MODEL]Model extends Model
 
 }';
 
-    // 检测应用目录是否需要自动创建
+    /**
+     * 检测应用目录是否需要自动创建
+     * @param $module
+     * @throws \Exception
+     */
     public static function checkDir($module)
     {
         if (!is_dir(APP_PATH . $module)) {
@@ -51,7 +55,11 @@ class [MODEL]Model extends Model
         }
     }
 
-    // 创建应用和模块的目录结构
+    /**
+     * 创建应用和模块的目录结构
+     * @param $module
+     * @throws \Exception
+     */
     public static function buildAppDir($module)
     {
         // 没有创建的话自动创建
@@ -108,7 +116,11 @@ class [MODEL]Model extends Model
         }
     }
 
-    // 检查缓存目录(Runtime) 如果不存在则自动创建
+    /**
+     * 检查缓存目录(Runtime) 如果不存在则自动创建
+     * @return bool
+     * @throws \Exception
+     */
     public static function buildRuntime()
     {
         if (!is_dir(RUNTIME_PATH)) {
@@ -134,7 +146,11 @@ class [MODEL]Model extends Model
         return true;
     }
 
-    // 创建控制器类
+    /**
+     * 创建控制器类
+     * @param $module
+     * @param $controllers
+     */
     public static function buildController($module, $controllers)
     {
         $list = is_array($controllers) ? $controllers : explode(',', $controllers);
@@ -157,12 +173,16 @@ class [MODEL]Model extends Model
         }
     }
 
-    // 创建模型类
+    /**
+     * 创建模型类
+     * @param $module
+     * @param $models
+     */
     public static function buildModel($module, $models)
     {
         $list = is_array($models) ? $models : explode(',', $models);
         foreach ($list as $model) {
-            $file = APP_PATH . $module . '/Model/' . $model . 'Model' . EXT;
+            $file = APP_PATH . $module . '/model/' . $model . 'Model' . EXT;
             if (!is_file($file)) {
                 $content = str_replace(array('[MODULE]', '[MODEL]'), array($module, $model), self::$model);
                 if (!C('APP_USE_NAMESPACE')) {
@@ -177,7 +197,10 @@ class [MODEL]Model extends Model
         }
     }
 
-    // 生成目录安全文件
+    /**
+     * 生成目录安全文件
+     * @param array $dirs
+     */
     public static function buildDirSecure($dirs = array())
     {
         // 目录安全写入（默认开启）
