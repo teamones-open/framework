@@ -500,6 +500,12 @@ class App
         return null;
     }
 
+    /**
+     * 异常response对象
+     * @param \Throwable $e
+     * @param $request
+     * @return string|Response
+     */
     protected static function exceptionResponse(\Throwable $e, $request)
     {
         try {
@@ -520,7 +526,7 @@ class App
      * @param $call
      * @param null $args
      * @param bool $withGlobalMiddleware
-     * @param RouteObject $route
+     * @param null $route
      * @return \Closure|mixed
      */
     protected static function getCallback($app, $call, $args = null, $withGlobalMiddleware = true, $route = null)

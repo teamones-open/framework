@@ -13,9 +13,15 @@ namespace think;
 class Tree
 {
     private $OriginalList;
-    public $pk;//主键字段名
-    public $parentKey;//上级id字段名
-    public $childrenKey;//用来存储子分类的数组key名
+
+    //主键字段名
+    public $pk;
+
+    //上级id字段名
+    public $parentKey;
+
+    //用来存储子分类的数组key名
+    public $childrenKey;
 
     function __construct($pk = "id", $parentKey = "pid", $childrenKey = "children")
     {
@@ -28,7 +34,10 @@ class Tree
         }
     }
 
-    //载入初始数组
+    /**
+     * 载入初始数组
+     * @param $data
+     */
     function load($data)
     {
         if (is_array($data)) {
@@ -39,6 +48,8 @@ class Tree
     /**
      * 生成嵌套格式的树形数组
      * array(..."children"=>array(..."children"=>array(...)))
+     * @param int $root
+     * @return array|bool
      */
     function DeepTree($root = 0)
     {

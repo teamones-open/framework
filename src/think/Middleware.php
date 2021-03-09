@@ -1,8 +1,6 @@
 <?php
 namespace think;
 
-use think\App;
-
 /**
  * This file is part of webman.
  *

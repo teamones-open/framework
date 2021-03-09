@@ -273,7 +273,11 @@ class File extends \SplFileInfo
         return true;
     }
 
-    // 判断图像类型
+    /**
+     * 判断图像类型
+     * @param $image
+     * @return false|int|mixed
+     */
     protected function getImageType($image)
     {
         if (function_exists('exif_imagetype')) {

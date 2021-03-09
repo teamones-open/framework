@@ -11,7 +11,7 @@
 namespace think;
 
 /**
- * 用于ThinkPHP的自动生成
+ * 用于Teamones的自动生成
  */
 class Build
 {

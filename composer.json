@@ -16,6 +16,7 @@
         "ext-json": "*",
         "ext-fileinfo": "*",
         "ext-mbstring": "*",
+        "ext-exif": "*",
         "psr/log": "~1.0",
         "psr/container": "~1.0",
         "psr/simple-cache": "^1.0",
