@@ -22,7 +22,7 @@ class Redis extends Driver
      */
     public function __construct($options = [])
     {
-        $config = config('redis', []);
+        $config = config('redis', $options);
 
         // 初始化redis配置
         $this->options = [
