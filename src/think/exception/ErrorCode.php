@@ -19,7 +19,7 @@ class ErrorCode
     // 非法操作
     const ILLEGAL_OPERATION = -400004;
 
-    // 非法操作
+    // 数据记录已经存在
     const DATA_ALREADY_EXISTS = -411111;
 
     // 没有数据被更新
