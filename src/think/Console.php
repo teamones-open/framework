@@ -80,7 +80,7 @@ class Console
             }
 
             // 读取公共配置
-            if(!empty(C('command'))){
+            if (!empty(C('command'))) {
                 if (is_array(C('command'))) {
                     foreach (C('command') as $command) {
                         if (class_exists($command) && is_subclass_of($command, "\\think\\console\\command")) {
@@ -100,10 +100,11 @@ class Console
     }
 
     /**
-     * @param        $command
+     * @param $command
      * @param array $parameters
      * @param string $driver
-     * @return Output|Buffer
+     * @return Output
+     * @throws \Exception
      */
     public static function call($command, array $parameters = [], $driver = 'buffer')
     {
@@ -169,6 +170,7 @@ class Console
      * @param Input $input
      * @param Output $output
      * @return int
+     * @throws \Exception
      */
     public function doRun(Input $input, Output $output)
     {
@@ -196,9 +198,7 @@ class Console
 
         $command = $this->find($name);
 
-        $exitCode = $this->doRunCommand($command, $input, $output);
-
-        return $exitCode;
+        return $this->doRunCommand($command, $input, $output);
     }
 
     /**
@@ -322,7 +322,7 @@ class Console
     /**
      * 添加一个指令
      * @param Command $command
-     * @return Command
+     * @return Command|void
      */
     public function add(Command $command)
     {
@@ -619,9 +619,12 @@ class Console
         return $defaultCommands;
     }
 
-    public static function addDefaultCommands(array $classnames)
+    /**
+     * @param array $classNames
+     */
+    public static function addDefaultCommands(array $classNames)
     {
-        self::$defaultCommands = array_merge(self::$defaultCommands, $classnames);
+        self::$defaultCommands = array_merge(self::$defaultCommands, $classNames);
     }
 
     /**
@@ -664,7 +667,7 @@ class Console
             $collectionParts[$item] = explode(':', $item);
         }
 
-        foreach (explode(':', $name) as $i => $subname) {
+        foreach (explode(':', $name) as $i => $subName) {
             foreach ($collectionParts as $collectionName => $parts) {
                 $exists = isset($alternatives[$collectionName]);
                 if (!isset($parts[$i]) && $exists) {
@@ -674,8 +677,8 @@ class Console
                     continue;
                 }
 
-                $lev = levenshtein($subname, $parts[$i]);
-                if ($lev <= strlen($subname) / 3 || '' !== $subname && false !== strpos($parts[$i], $subname)) {
+                $lev = levenshtein($subName, $parts[$i]);
+                if ($lev <= strlen($subName) / 3 || '' !== $subName && false !== strpos($parts[$i], $subName)) {
                     $alternatives[$collectionName] = $exists ? $alternatives[$collectionName] + $lev : $lev;
                 } elseif ($exists) {
                     $alternatives[$collectionName] += $threshold;

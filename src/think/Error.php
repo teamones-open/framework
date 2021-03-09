@@ -54,7 +54,7 @@ class Error
      * @param  integer $errstr 详细错误信息
      * @param  string $errfile 出错的文件
      * @param  integer $errline 出错行号
-     * @param array $errcontext
+     * @param  array $errcontext
      * @throws ErrorException
      */
     public static function appError($errno, $errstr, $errfile = '', $errline = 0, $errcontext = [])
