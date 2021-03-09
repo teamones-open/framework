@@ -24,8 +24,8 @@ use think\exception\ErrorCode;
  * @method mixed query(string $sql, array $bind = [], boolean $master = false, bool $pdo = false) static SQL查询
  * @method integer execute(string $sql, array $bind = [], boolean $fetch = false, boolean $getLastInsID = false, string $sequence = null) static SQL执行
  * @method void startTrans() static 启动事务
- * @method void commit() static 用于非自动提交状态下面的查询提交
- * @method void rollback() static 事务回滚
+ * @method boolean commit() static 用于非自动提交状态下面的查询提交
+ * @method boolean rollback() static 事务回滚
  * @method string getLastInsID($sequence = null) static 获取最近插入的ID
  * @method array getTables($dbName = '') static 取得数据库的表信息
  * @method array getFields($tableName) static 取得数据表的字段信息
