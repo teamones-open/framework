@@ -10,6 +10,7 @@
 // +----------------------------------------------------------------------
 namespace think\storage\driver;
 
+use think\exception\ErrorCode;
 use think\Storage;
 
 // 本地文件写入存储类
@@ -54,7 +55,7 @@ class File extends Storage
             mkdir($dir, 0777, true);
         }
         if (false === file_put_contents($filename, $content)) {
-            StrackE(L('_STORAGE_WRITE_ERROR_') . ':' . $filename);
+            StrackE(L('_STORAGE_WRITE_ERROR_') . ':' . $filename, ErrorCode::STORAGE_WRITE_ERROR);
         } else {
             $this->contents[$filename] = $content;
             return true;

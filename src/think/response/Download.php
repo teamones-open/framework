@@ -12,6 +12,7 @@
 namespace think\response;
 
 use think\Exception;
+use think\exception\ErrorCode;
 use think\Response;
 
 class Download extends Response
@@ -31,7 +32,7 @@ class Download extends Response
     protected function output($data)
     {
         if (!$this->isContent && !is_file($data)) {
-            throw new Exception('file not exists:' . $data);
+            throw new \Exception('file not exists:' . $data, ErrorCode::FILE_NOT_EXISTS);
         }
 
         ob_end_clean();

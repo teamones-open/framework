@@ -11,6 +11,8 @@
 
 namespace think;
 
+use think\exception\ErrorCode;
+
 class Response
 {
 
@@ -241,7 +243,7 @@ class Response
                 '__toString',
             ])
         ) {
-            throw new \InvalidArgumentException(sprintf('variable type error： %s', gettype($content)));
+            throw new \InvalidArgumentException(sprintf('variable type error： %s', gettype($content)), ErrorCode::VARIABLE_TYPE_ERROR);
         }
 
         $this->content = (string)$content;
@@ -381,7 +383,7 @@ class Response
                 '__toString',
             ])
         ) {
-            throw new \InvalidArgumentException(sprintf('variable type error： %s', gettype($content)));
+            throw new \InvalidArgumentException(sprintf('variable type error： %s', gettype($content)), ErrorCode::VARIABLE_TYPE_ERROR);
         }
 
         $this->content = (string)$content;

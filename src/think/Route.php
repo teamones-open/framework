@@ -11,6 +11,7 @@
 
 namespace think;
 
+use think\exception\ErrorCode;
 use think\exception\HttpException;
 
 class Route
@@ -786,7 +787,7 @@ class Route
                     list($rule, $option, $pattern) = $item['[bind]'];
                     if (!empty($option['https']) && !$request->isSsl()) {
                         // https检测
-                        throw new HttpException(404, 'must use https request:' . $host);
+                        throw new HttpException(ErrorCode::ERROR_404, 'must use https request:' . $host);
                     }
 
                     if (strpos($rule, '?')) {
@@ -1270,7 +1271,7 @@ class Route
             }
 
             if (isset(self::$rules['name'][$name]) || isset(self::$rules['name'][$name2])) {
-                throw new HttpException(-404, 'invalid request:' . str_replace('|', $depr, $url));
+                throw new HttpException(ErrorCode::ERROR_404, 'invalid request:' . str_replace('|', $depr, $url));
             }
         }
         return ['type' => 'module', 'module' => $route];

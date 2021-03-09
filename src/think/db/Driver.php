@@ -258,7 +258,7 @@ abstract class Driver
                 return $this->close()->query($str, $fetchSql, $master);
             }
 
-            throw new PDOException($e, $this->config, $this->getLastsql());
+            throw new \PDOException($e, $this->config, $this->getLastsql());
         } catch (\Throwable $e) {
             if ($this->isBreak($e)) {
                 return $this->close()->query($str, $fetchSql, $master);
@@ -341,7 +341,7 @@ abstract class Driver
                 return $this->close()->execute($str, $fetchSql);
             }
 
-            throw new PDOException($e, $this->config, $this->getLastsql());
+            throw new \PDOException($e, $this->config, $this->getLastsql());
         } catch (\Throwable $e) {
             if ($this->isBreak($e)) {
                 return $this->close()->execute($str, $fetchSql);

@@ -12,6 +12,7 @@
 namespace think;
 
 use think\exception\ClassNotFoundException;
+use think\exception\ErrorCode;
 
 class Loader
 {
@@ -207,7 +208,7 @@ class Loader
             // Register directories for a new namespace.
             $length = strlen($prefix);
             if ('\\' !== $prefix[$length - 1]) {
-                throw new \InvalidArgumentException("A non-empty PSR-4 prefix must end with a namespace separator.");
+                throw new \InvalidArgumentException("A non-empty PSR-4 prefix must end with a namespace separator.", ErrorCode::NONSTANDARD_NAMING_OF_NAMESPACE);
             }
             self::$prefixLengthsPsr4[$prefix[0]][$prefix] = $length;
             self::$prefixDirsPsr4[$prefix] = (array)$paths;

@@ -10,6 +10,7 @@
 // +----------------------------------------------------------------------
 namespace think\model;
 
+use think\exception\ErrorCode;
 use think\Model;
 use think\Hook;
 use think\Db;
@@ -664,7 +665,7 @@ class RelationModel extends Model
         } elseif (array_key_exists($name, $this->data)) {
             return $this->data[$name];
         } else {
-            StrackE('property not exists:' . $name);
+            StrackE('property not exists:' . $name, ErrorCode::PROPERTY_NOT_EXISTS);
         }
     }
 
@@ -1150,7 +1151,7 @@ class RelationModel extends Model
      * 修改数据，必须包含主键，成功返回当前修改的一条完整数据
      * @param array $param 修改数据参数
      * @return array|bool
-     * @throws \think\Exception
+     * @throws \Exception
      */
     public function modifyItem($param = [])
     {
@@ -1162,7 +1163,7 @@ class RelationModel extends Model
                 if ($result === 0) {
                     // 没有数据被更新
                     $this->error = 'No data has been changed.';
-                    $this->errorCode = -411112;
+                    $this->errorCode = ErrorCode::NO_DATA_HAS_BEEN_CHANGED;
                     return false;
                 } else {
                     return false;
@@ -1246,7 +1247,7 @@ class RelationModel extends Model
     private function parserFilterParamValue(&$filterItem, $key, $value)
     {
         if (strpos($key, '.') === false) {
-            throw_strack_exception('The field format must contain a dot symbol.', -400002);
+            throw_strack_exception('The field format must contain a dot symbol.', ErrorCode::FIELD_FORMAT_MUST_CONTAIN_A_DOT_SYMBOL);
         }
 
         $fieldsParam = explode('.', $key);
@@ -1308,7 +1309,7 @@ class RelationModel extends Model
                 $valuParam = array_values($value);
                 $this->parserFilterParamValue($filterItem, $valuKey, $valuParam[0]);
             } else {
-                throw_strack_exception('Parameter format error.', -400001);
+                throw_strack_exception('Parameter format error.', ErrorCode::PARAMETER_FORMAT_ERROR);
             }
         }
 
@@ -2725,7 +2726,7 @@ class RelationModel extends Model
         }
 
         if (!array_key_exists($moduleCode, Module::$moduleDictData['field_index_by_code'])) {
-            throw_strack_exception("{$moduleCode} module does not exist.", -400003);
+            throw_strack_exception("{$moduleCode} module does not exist.", ErrorCode::MODULE_NOT_EXIST);
         }
 
         $currentModuleFields = Module::$moduleDictData['field_index_by_code'][$moduleCode];

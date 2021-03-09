@@ -10,6 +10,8 @@
 // +----------------------------------------------------------------------
 namespace think;
 
+use think\exception\ErrorCode;
+
 /**
  * ThinkPHP Model模型类
  * 实现了ORM和ActiveRecords模式
@@ -415,8 +417,8 @@ class Model
      * @access public
      * @param string $method 方法名称
      * @param array $args 调用参数
-     * @return mixed
-     * @throws Exception
+     * @return $this|mixed|Model
+     * @throws \Exception
      */
     public function __call($method, $args)
     {
@@ -442,8 +444,7 @@ class Model
             // 命名范围的单独调用支持
             return $this->scope($method, $args[0]);
         } else {
-            StrackE(__CLASS__ . ':' . $method . L('_METHOD_NOT_EXIST_'));
-            return;
+            StrackE(__CLASS__ . ':' . $method . L('_METHOD_NOT_EXIST_'), ErrorCode::METHOD_NOT_EXIST);
         }
     }
 
@@ -457,7 +458,7 @@ class Model
      * @access protected
      * @param mixed $data 要操作的数据
      * @return array
-     * @throws Exception
+     * @throws \Exception
      */
     protected function _facade($data)
     {
@@ -476,7 +477,7 @@ class Model
             foreach ($data as $key => $val) {
                 if (!in_array($key, $fields, true)) {
                     if (!empty($this->options['strict'])) {
-                        StrackE(L('_DATA_TYPE_INVALID_') . ':[' . $key . '=>' . $val . ']');
+                        StrackE(L('_DATA_TYPE_INVALID_') . ':[' . $key . '=>' . $val . ']', ErrorCode::DATA_TYPE_INVALID);
                     }
                     unset($data[$key]);
                 } elseif (is_scalar($val)) {
@@ -509,8 +510,8 @@ class Model
      * @param mixed $data 数据
      * @param array $options 表达式
      * @param boolean $replace 是否replace
-     * @return bool|string
-     * @throws Exception
+     * @return bool|int|string
+     * @throws \Exception
      */
     public function add($data = '', $options = array(), $replace = false)
     {
@@ -527,6 +528,7 @@ class Model
         }
         // 数据处理
         $data = $this->_facade($data);
+
         // 分析表达式
         $options = $this->_parseOptions($options);
         if (false === $this->_before_insert($data, $options)) {
@@ -584,8 +586,8 @@ class Model
      * @param $dataList
      * @param array $options
      * @param bool $replace
-     * @return bool|string
-     * @throws Exception
+     * @return bool|int|string
+     * @throws \Exception
      */
     public function addAll($dataList, $options = array(), $replace = false)
     {
@@ -612,10 +614,9 @@ class Model
 
     /**
      * 批量更新数据
-     * @param [array] $datas [更新数据]
-     * @param [string] $table_name [表名]
+     * @param $allData
      */
-    public function saveAll($datas)
+    public function saveAll($allData)
     {
         $sql = ''; //Sql
         $pk = $this->getPk();
@@ -623,7 +624,7 @@ class Model
 
         $lists = []; //记录集$lists
         $ids = [];
-        foreach ($datas as $data) {
+        foreach ($allData as $data) {
             foreach ($data as $key => $value) {
                 if ($pk === $key) {
                     $ids[] = $value;
@@ -678,8 +679,8 @@ class Model
      * @access public
      * @param mixed $data 数据
      * @param array $options 表达式
-     * @return bool
-     * @throws Exception
+     * @return bool|int
+     * @throws \Exception
      */
     public function save($data = '', $options = array(), $writeEvent = true)
     {
@@ -1899,7 +1900,7 @@ class Model
                 $uniqueFindData = $this->where($map)->find();
 
                 if ($uniqueFindData) {
-                    $this->errorCode = -411111;
+                    $this->errorCode = ErrorCode::DATA_ALREADY_EXISTS;
                     $this->checkUniqueExitData = $uniqueFindData;
                     return false;
                 }
@@ -2446,7 +2447,7 @@ class Model
         } elseif (is_string($data)) {
             parse_str($data, $data);
         } elseif (!is_array($data)) {
-            StrackE(L('_DATA_TYPE_INVALID_'));
+            StrackE(L('_DATA_TYPE_INVALID_'), ErrorCode::DATA_TYPE_INVALID);
         }
         $this->data = $data;
         return $this;
@@ -2527,7 +2528,8 @@ class Model
      * @access public
      * @param mixed $union
      * @param boolean $all
-     * @return Model
+     * @return $this
+     * @throws \Exception
      */
     public function union($union, $all = false)
     {
@@ -2556,7 +2558,7 @@ class Model
                 $options = $union;
             }
         } else {
-            StrackE(L('_DATA_TYPE_INVALID_'));
+            StrackE(L('_DATA_TYPE_INVALID_'), ErrorCode::DATA_TYPE_INVALID);
         }
         $this->options['union'][] = $options;
         return $this;

@@ -12,6 +12,7 @@
 namespace think\module;
 
 use think\Db;
+use think\exception\ErrorCode;
 
 class Module
 {
@@ -146,14 +147,14 @@ class Module
             $tempDb = new $class($options);
         } else {
             // 类没有定义
-            throw new \RuntimeException('Class is not defined ' . $class);
+            throw new \RuntimeException('Class is not defined ' . $class, ErrorCode::CLASS_NOT_DEFINED);
         }
 
         $tables = $tempDb->getTables();
         if (!empty($tables) && is_array($tables)) {
             foreach (self::$requireModules as $requireModule) {
                 if (!in_array($requireModule, $tables)) {
-                    throw new \RuntimeException('Data structure error. Need module ' . join(',', self::$requireModules));
+                    throw new \RuntimeException('Data structure error. Need module ' . join(',', self::$requireModules), ErrorCode::DATA_STRUCTURE_NEED_MODULE);
                 }
             }
 
@@ -163,7 +164,7 @@ class Module
             // 销毁对象
             unset($tempDb);
         } else {
-            throw new \RuntimeException('Data structure error. Need module ' . join(',', self::$requireModules));
+            throw new \RuntimeException('Data structure error. Need module ' . join(',', self::$requireModules), ErrorCode::DATA_STRUCTURE_NEED_MODULE);
         }
     }
 

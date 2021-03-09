@@ -11,6 +11,7 @@
 namespace think;
 
 use think\cache\Driver;
+use think\exception\ErrorCode;
 use think\exception\InvalidArgumentException;
 
 /**
@@ -219,7 +220,7 @@ class Cache
         $item = self::get($name, []);
 
         if (!is_array($item)) {
-            throw new InvalidArgumentException('only array cache can be push');
+            throw new InvalidArgumentException('only array cache can be push', ErrorCode::CACHE_PUSH_FORMAT_ONLY_ARRAY);
         }
 
         $item[] = $value;

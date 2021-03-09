@@ -4,6 +4,7 @@ namespace think;
 
 use Psr\Container\ContainerInterface;
 use think\exception\ClassNotFoundException;
+use think\exception\ErrorCode;
 
 /**
  * Class Container
@@ -25,7 +26,7 @@ class Container implements ContainerInterface
     {
         if (!isset($this->_instances[$name])) {
             if (!class_exists($name)) {
-                throw new ClassNotFoundException("Class '$name' not found");
+                throw new ClassNotFoundException("Class '$name' not found", ErrorCode::CLASS_NOT_FOUND);
             }
             $this->_instances[$name] = new $name();
         }
@@ -74,7 +75,7 @@ class Container implements ContainerInterface
     public function make($name, array $constructor = [])
     {
         if (!class_exists($name)) {
-            throw new ClassNotFoundException("Class '$name' not found");
+            throw new ClassNotFoundException("Class '$name' not found", ErrorCode::CLASS_NOT_FOUND);
         }
         return new $name(... array_values($constructor));
     }

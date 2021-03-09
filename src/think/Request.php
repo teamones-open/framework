@@ -11,6 +11,7 @@
 
 namespace think;
 
+use think\exception\ErrorCode;
 use Workerman\Protocols\Http;
 
 class Request extends \Workerman\Protocols\Http\Request
@@ -135,7 +136,7 @@ class Request extends \Workerman\Protocols\Http\Request
      * @param $method
      * @param $args
      * @return mixed
-     * @throws Exception
+     * @throws \Exception
      */
     public function __call($method, $args)
     {
@@ -143,7 +144,7 @@ class Request extends \Workerman\Protocols\Http\Request
             array_unshift($args, $this);
             return call_user_func_array(self::$hook[$method], $args);
         } else {
-            throw new Exception('method not exists:' . __CLASS__ . '->' . $method);
+            throw new \Exception('method not exists:' . __CLASS__ . '->' . $method, ErrorCode::ERROR_404);
         }
     }
 
@@ -956,7 +957,7 @@ class Request extends \Workerman\Protocols\Http\Request
                 if (is_scalar($data)) {
                     $data = (string)$data;
                 } else {
-                    throw new \InvalidArgumentException('variable type error：' . gettype($data));
+                    throw new \InvalidArgumentException('variable type error：' . gettype($data), ErrorCode::VARIABLE_TYPE_ERROR);
                 }
         }
     }

@@ -10,6 +10,7 @@
 // +----------------------------------------------------------------------
 namespace think;
 
+use think\exception\ErrorCode;
 use think\exception\ExceptionHandlerInterface;
 use think\exception\ExceptionHandler;
 use think\exception\ClassNotFoundException;
@@ -217,7 +218,7 @@ class App
                 // 初始化模块
                 static::$_request->module($module);
             } else {
-                throw new HttpException(404, 'module not exists:' . $module);
+                throw new HttpException(ErrorCode::ERROR_404, 'module not exists:' . $module);
             }
         } else {
             // 单一模块部署
@@ -235,7 +236,7 @@ class App
         $controller = strip_tags($result[1] ?: $config['DEFAULT_CONTROLLER']);
 
         if (!preg_match('/^[A-Za-z](\w|\.)*$/', $controller)) {
-            throw new HttpException(404, 'controller not exists:' . $controller);
+            throw new HttpException(ErrorCode::ERROR_404, 'controller not exists:' . $controller);
         }
 
         $controller = $convert ? strtolower($controller) : $controller;
@@ -272,7 +273,7 @@ class App
 
             if ($must && false === $result) {
                 // 路由无效
-                StrackE('Invalid route config.', -404);
+                StrackE('Invalid route config.', ErrorCode::ERROR_404);
             }
         }
 
@@ -303,7 +304,7 @@ class App
             );
         }
 
-        throw new \InvalidArgumentException('dispatch type not support');
+        throw new \InvalidArgumentException('dispatch type not support', ErrorCode::DISPATCH_TYPE_NOT_SUPPORT);
     }
 
 
@@ -355,7 +356,7 @@ class App
                 } elseif ($param->isDefaultValueAvailable()) {
                     $args[] = $param->getDefaultValue();
                 } else {
-                    throw new \InvalidArgumentException('method param miss:' . $name);
+                    throw new \InvalidArgumentException('method param miss:' . $name, ErrorCode::MISS_METHOD_PARAM);
                 }
             }
         }
@@ -601,13 +602,11 @@ class App
     }
 
     /**
-     * @param $connection
-     * @param $path
      * @param $key
      * @param Request $request
      * @param $dispatch
      * @param $config
-     * @return bool
+     * @return mixed
      * @throws \ReflectionException
      */
     protected static function exec($key, Request $request, $dispatch, $config)
@@ -625,13 +624,13 @@ class App
                 $config['EMPTY_CONTROLLER']
             );
         } catch (ClassNotFoundException $e) {
-            throw new HttpException(-404, 'controller not exists:' . $e->getClass());
+            throw new HttpException(ErrorCode::ERROR_404, 'controller not exists:' . $e->getClass());
         }
 
         if (\is_callable([$controllerObj, $action])) {
             $callback = static::getCallback($app, [$controllerObj, $action]);
         } else {
-            throw new HttpException(-404, 'action not exists:' . $action);
+            throw new HttpException(ErrorCode::ERROR_404, 'action not exists:' . $action);
         }
 
 
@@ -658,7 +657,8 @@ class App
     }
 
     /**
-     * @return void
+     * 加载控制器
+     * @param $path
      */
     public static function loadController($path)
     {

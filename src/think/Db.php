@@ -11,6 +11,8 @@
 
 namespace think;
 
+use think\exception\ErrorCode;
+
 /**
  * Class Db
  * @package think
@@ -73,7 +75,7 @@ class Db
                 self::$instance[$md5] = new $class($options);
             } else {
                 // 类没有定义
-                StrackE(L('_NO_DB_DRIVER_') . ': ' . $class);
+                StrackE(L('_NO_DB_DRIVER_') . ': ' . $class, ErrorCode::UNABLE_TO_LOAD_DATABASE_DRIVER);
             }
         }
         self::$_instance = self::$instance[$md5];
@@ -167,7 +169,7 @@ class Db
                     'lite' => C('DB_LITE'),
                 ];
             } else {
-                StrackE('There is no database configuration.');
+                StrackE('There is no database configuration.', ErrorCode::DATABASE_CONFIG_NOT_FOUND);
             }
         }
 

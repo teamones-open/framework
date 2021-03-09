@@ -10,6 +10,8 @@
 // +----------------------------------------------------------------------
 namespace think;
 
+use think\exception\ErrorCode;
+
 /**
  * 控制器基类 抽象类
  */
@@ -49,10 +51,10 @@ class Controller
                 // 如果定义了_empty操作 则调用
                 $this->_empty($method, $args);
             } else {
-                StrackE(L('_ERROR_ACTION_') . ':' . \request()->action());
+                StrackE(L('_ERROR_ACTION_') . ':' . \request()->action(), ErrorCode::ILLEGAL_OPERATION);
             }
         } else {
-            StrackE(__CLASS__ . ':' . $method . L('_METHOD_NOT_EXIST_'));
+            StrackE(__CLASS__ . ':' . $method . L('_METHOD_NOT_EXIST_'), ErrorCode::METHOD_NOT_EXIST);
             return;
         }
     }
