@@ -72,8 +72,9 @@ class Config extends Command
 
             // 加载应用状态配置
             if ($config['app_status']) {
-                $config = load_config(CONF_PATH . $module . $config['app_status'] . CONF_EXT);
+                load_config(CONF_PATH . $module . $config['app_status'] . CONF_EXT);
             }
+
             // 读取扩展配置文件
             if (is_dir(CONF_PATH . $module . 'extra')) {
                 $dir   = CONF_PATH . $module . 'extra';

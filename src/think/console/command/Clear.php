@@ -26,6 +26,11 @@ class Clear extends Command
             ->setDescription('Clear runtime file');
     }
 
+    /**
+     * @param Input $input
+     * @param Output $output
+     * @return int|void|null
+     */
     protected function execute(Input $input, Output $output)
     {
         $path  = $input->getOption('path') ?: RUNTIME_PATH;

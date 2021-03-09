@@ -36,11 +36,12 @@ class Build extends Command
      * @param Input $input
      * @param Output $output
      * @return int|void|null
+     * @throws \Exception
      */
     protected function execute(Input $input, Output $output)
     {
         if ($input->hasOption('module')) {
-            \think\Build::module($input->getOption('module'));
+            \think\Build::buildModel($input->getOption('module'));
             $output->writeln("Successed");
             return;
         }
@@ -54,7 +55,7 @@ class Build extends Command
             $output->writeln("Build Config Is Empty");
             return;
         }
-        \think\Build::run($build);
+        \think\Build::buildAppDir($build);
         $output->writeln("Successed");
 
     }

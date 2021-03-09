@@ -71,6 +71,12 @@ EOF;
         $output->writeln('<info>Succeed!</info>');
     }
 
+    /**
+     * @param $dir
+     * @param $namespace
+     * @param $classMap
+     * @return mixed
+     */
     protected function addClassMapCode($dir, $namespace, $classMap)
     {
         foreach ($this->createMap($dir, $namespace) as $class => $path) {
@@ -91,13 +97,16 @@ EOF;
         return $classMap;
     }
 
+    /**
+     * @param $path
+     * @return string
+     */
     protected function getPathCode($path)
     {
 
         $baseDir    = '';
         $appPath    = $this->normalizePath(realpath(APP_PATH));
         $libPath    = $this->normalizePath(realpath(LIB_PATH));
-        $extendPath = $this->normalizePath(realpath(EXTEND_PATH));
         $path       = $this->normalizePath($path);
 
         if (strpos($path, $libPath . '/') === 0) {
@@ -115,6 +124,10 @@ EOF;
         return $baseDir . (($path !== false) ? var_export($path, true) : "");
     }
 
+    /**
+     * @param $path
+     * @return string
+     */
     protected function normalizePath($path)
     {
         $parts    = [];
@@ -146,6 +159,11 @@ EOF;
         return $prefix . ($absolute ? '/' : '') . implode('/', $parts);
     }
 
+    /**
+     * @param $path
+     * @param null $namespace
+     * @return array
+     */
     protected function createMap($path, $namespace = null)
     {
         if (is_string($path)) {
@@ -202,6 +220,10 @@ EOF;
         return $map;
     }
 
+    /**
+     * @param $path
+     * @return array
+     */
     protected function findClasses($path)
     {
         $extraTypes = '|trait';

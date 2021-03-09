@@ -27,6 +27,9 @@ class Controller extends Make
             ->setDescription('Create a new resource controller class');
     }
 
+    /**
+     * @return string
+     */
     protected function getStub()
     {
         if ($this->input->getOption('plain')) {
@@ -36,11 +39,20 @@ class Controller extends Make
         return __DIR__ . '/stubs/controller.stub';
     }
 
+    /**
+     * @param $name
+     * @return string
+     */
     protected function getClassName($name)
     {
         return parent::getClassName($name) . (C('controller_suffix') ? ucfirst(C('url_controller_layer')) : '');
     }
 
+    /**
+     * @param $appNamespace
+     * @param $module
+     * @return string
+     */
     protected function getNamespace($appNamespace, $module)
     {
         return parent::getNamespace($appNamespace, $module) . '\Controller';

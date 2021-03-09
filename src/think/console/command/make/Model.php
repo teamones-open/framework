@@ -24,11 +24,19 @@ class Model extends Make
             ->setDescription('Create a new model class');
     }
 
+    /**
+     * @return string
+     */
     protected function getStub()
     {
         return __DIR__ . '/stubs/model.stub';
     }
 
+    /**
+     * @param $appNamespace
+     * @param $module
+     * @return string
+     */
     protected function getNamespace($appNamespace, $module)
     {
         return parent::getNamespace($appNamespace, $module) . '\Model';

@@ -25,12 +25,29 @@ namespace think;
  * @method void commit() static 用于非自动提交状态下面的查询提交
  * @method void rollback() static 事务回滚
  * @method string getLastInsID($sequence = null) static 获取最近插入的ID
+ * @method array getTables($dbName = '') static 取得数据库的表信息
+ * @method array getFields($tableName) static 取得数据表的字段信息
  */
 class Db
 {
 
-    private static $instance = array(); //  数据库连接实例
-    private static $_instance = null; //  当前数据库连接实例
+    /**
+     * 数据库连接实例
+     * @var array
+     */
+    private static $instance = array();
+
+    /**
+     * 当前数据库连接实例
+     * @var null
+     */
+    private static $_instance = null;
+
+    /**
+     * 数据库配置
+     * @var array
+     */
+    protected static $config = [];
 
     /**
      * 取得数据库类实例
@@ -84,6 +101,20 @@ class Db
     }
 
     /**
+     * 获取数据库配置
+     * @param string $name
+     * @return array|mixed|null
+     */
+    public static function getConfig($name = '')
+    {
+        if ('' === $name) {
+            return self::$config;
+        }
+
+        return isset(self::$config[$name]) ? self::$config[$name] : null;
+    }
+
+    /**
      * 数据库连接参数解析
      * @param array $config
      * @param string $driver
@@ -97,7 +128,7 @@ class Db
                 return self::parseDsn($config);
             }
             $config = array_change_key_case($config);
-            $config = array(
+            $config = [
                 'type' => $config['db_type'],
                 'username' => $config['db_user'],
                 'password' => $config['db_pwd'],
@@ -113,12 +144,12 @@ class Db
                 'slave_no' => isset($config['db_slave_no']) ? $config['db_slave_no'] : '',
                 'debug' => isset($config['db_debug']) ? $config['db_debug'] : APP_DEBUG,
                 'lite' => isset($config['db_lite']) ? $config['db_lite'] : false,
-            );
+            ];
         } else {
             $databaseConfig = C('database');
-            if(!empty($databaseConfig)){
+            if (!empty($databaseConfig)) {
                 $type = $databaseConfig[$driver];
-                $config = array(
+                $config = [
                     'type' => $databaseConfig[$driver],
                     'username' => $databaseConfig['connections'][$type]['username'],
                     'password' => $databaseConfig['connections'][$type]['password'],
@@ -134,11 +165,15 @@ class Db
                     'slave_no' => C('DB_SLAVE_NO'),
                     'debug' => $databaseConfig['connections'][$type]['debug'] ?? APP_DEBUG,
                     'lite' => C('DB_LITE'),
-                );
-            }else{
+                ];
+            } else {
                 StrackE('There is no database configuration.');
             }
         }
+
+
+        self::$config = $config;
+
         return $config;
     }
 
@@ -177,7 +212,13 @@ class Db
         return $dsn;
     }
 
-    // 调用驱动类的方法
+    /**
+     * 调用驱动类的方法
+     * @param $method
+     * @param $params
+     * @return mixed
+     * @throws \Exception
+     */
     public static function __callStatic($method, $params)
     {
         return call_user_func_array(array(self::getInstance(), $method), $params);

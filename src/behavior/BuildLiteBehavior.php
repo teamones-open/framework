@@ -17,6 +17,9 @@ use think\Hook as Hook;
 
 class BuildLiteBehavior
 {
+    /**
+     * @param $params
+     */
     public function run(&$params)
     {
         if (!defined('BUILD_LITE_FILE')) {
@@ -39,21 +42,19 @@ class BuildLiteBehavior
         $content .= $this->buildArrayDefine($defs['user']) . '}';
 
         // 读取编译列表文件
-        $filelist = is_file(CONF_PATH . 'lite.php') ?
-            include CONF_PATH . 'lite.php' :
-            array(
-                THINK_PATH . 'helper.php',
-                APP_PATH . 'helper.php',
-                CORE_PATH . 'Hook' . EXT,
-                CORE_PATH . 'App' . EXT,
-                CORE_PATH . 'Log' . EXT,
-                CORE_PATH . 'log/driver/File' . EXT,
-                CORE_PATH . 'Route' . EXT,
-                CORE_PATH . 'Controller' . EXT,
-                CORE_PATH . 'Storage' . EXT,
-                CORE_PATH . 'storage/driver/File' . EXT,
-                CORE_PATH . 'Exception' . EXT,
-            );
+        $filelist = [
+            THINK_PATH . 'helper.php',
+            APP_PATH . 'helper.php',
+            CORE_PATH . 'Hook' . EXT,
+            CORE_PATH . 'App' . EXT,
+            CORE_PATH . 'Log' . EXT,
+            CORE_PATH . 'log/driver/File' . EXT,
+            CORE_PATH . 'Route' . EXT,
+            CORE_PATH . 'Controller' . EXT,
+            CORE_PATH . 'Storage' . EXT,
+            CORE_PATH . 'storage/driver/File' . EXT,
+            CORE_PATH . 'Exception' . EXT,
+        ];
 
         // 编译文件
         foreach ($filelist as $file) {
@@ -70,7 +71,11 @@ class BuildLiteBehavior
         file_put_contents($litefile, strip_whitespace('<?php ' . $content));
     }
 
-    // 根据数组生成常量定义
+    /**
+     * 根据数组生成常量定义
+     * @param $array
+     * @return string
+     */
     private function buildArrayDefine($array)
     {
         $content = "\n";
