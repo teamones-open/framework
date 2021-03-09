@@ -249,9 +249,10 @@ class Mysql extends Driver
             return false;
         }
         try {
-            $result = $this->PDOStatement->execute();
+            $this->PDOStatement->execute();
             // 调试结束
             $this->debug(false);
+            $resultArr = [];
             do {
                 $result = $this->PDOStatement->fetchAll(\PDO::FETCH_ASSOC);
                 if ($result) {

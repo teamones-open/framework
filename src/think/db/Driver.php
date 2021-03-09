@@ -23,7 +23,9 @@ abstract class Driver
 
     // 当前SQL指令
     protected $queryStr = '';
-    protected $modelSql = array();
+
+    // 模型SQL
+    protected $modelSql = [];
 
     // 最后插入ID
     protected $lastInsID = null;
@@ -41,13 +43,13 @@ abstract class Driver
     protected $error = '';
 
     // 数据库连接ID 支持多个连接
-    protected $linkID = array();
+    protected $linkID = [];
 
     // 当前连接ID
     protected $_linkID = null;
 
     // 数据库连接参数配置
-    protected $config = array(
+    protected $config = [
         'type' => '', // 数据库类型
         'hostname' => '127.0.0.1', // 服务器地址
         'database' => '', // 数据库名
@@ -64,10 +66,25 @@ abstract class Driver
         'master_num' => 1, // 读写分离后 主服务器数量
         'slave_no' => '', // 指定从服务器序号
         'db_like_fields' => '',
-    );
+    ];
 
     // 数据库表达式
-    protected $exp = array('eq' => '=', 'neq' => '<>', 'gt' => '>', 'egt' => '>=', 'lt' => '<', 'elt' => '<=', 'notlike' => 'NOT LIKE', 'like' => 'LIKE', 'in' => 'IN', 'notin' => 'NOT IN', 'not in' => 'NOT IN', 'between' => 'BETWEEN', 'not between' => 'NOT BETWEEN', 'notbetween' => 'NOT BETWEEN');
+    protected $exp = [
+        'eq' => '=',
+        'neq' => '<>',
+        'gt' => '>',
+        'egt' => '>=',
+        'lt' => '<',
+        'elt' => '<=',
+        'notlike' => 'NOT LIKE',
+        'like' => 'LIKE',
+        'in' => 'IN',
+        'notin' => 'NOT IN',
+        'not in' => 'NOT IN',
+        'between' => 'BETWEEN',
+        'not between' => 'NOT BETWEEN',
+        'notbetween' => 'NOT BETWEEN'
+    ];
 
     // 查询表达式
     protected $selectSql = 'SELECT%DISTINCT% %FIELD% FROM %TABLE%%FORCE%%JOIN%%WHERE%%GROUP%%HAVING%%ORDER%%LIMIT% %UNION%%LOCK%%COMMENT%';
@@ -79,13 +96,13 @@ abstract class Driver
     protected $executeTimes = 0;
 
     // PDO连接参数
-    protected $options = array(
+    protected $options = [
         PDO::ATTR_CASE => PDO::CASE_LOWER,
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_ORACLE_NULLS => PDO::NULL_NATURAL,
         PDO::ATTR_STRINGIFY_FETCHES => false,
         PDO::ATTR_EMULATE_PREPARES => false,
-    );
+    ];
 
     /**
      * 服务器断线标识字符
@@ -105,14 +122,16 @@ abstract class Driver
         'failed with errno',
     ];
 
-    protected $bind = array(); // 参数绑定
+    // 参数绑定
+    protected $bind = array();
 
     /**
+     * Driver constructor.
      * 架构函数 读取数据库配置信息
      * @access public
      * @param array $config 数据库配置数组
      */
-    public function __construct($config = '')
+    public function __construct($config = [])
     {
         if (!empty($config)) {
             $this->config = array_merge($this->config, $config);
@@ -124,13 +143,13 @@ abstract class Driver
 
     /**
      * 连接数据库方法
-     * @param string $config
+     * @param array $config
      * @param int $linkNum
      * @param bool $autoConnection
      * @return mixed
      * @throws \Exception
      */
-    public function connect($config = '', $linkNum = 0, $autoConnection = false)
+    public function connect($config = [], $linkNum = 0, $autoConnection = false)
     {
         if (!isset($this->linkID[$linkNum])) {
             if (empty($config)) {
