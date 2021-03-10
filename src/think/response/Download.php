@@ -11,7 +11,6 @@
 
 namespace think\response;
 
-use think\Exception;
 use think\exception\ErrorCode;
 use think\Response;
 

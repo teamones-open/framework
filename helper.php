@@ -440,7 +440,7 @@ if (!function_exists('model')) {
      * @param string $name Model名称
      * @param string $layer 业务层名称
      * @param bool $appendSuffix 是否添加类名后缀
-     * @return \think\model\RelationModel | \think\Model
+     * @return object|\think\Model|\think\model\RelationModel
      */
     function model($name = '', $layer = 'model', $appendSuffix = false)
     {
@@ -479,7 +479,8 @@ if (!function_exists('controller')) {
      * @param string $name 资源地址
      * @param string $layer 控制层名称
      * @param bool $appendSuffix 是否添加类名后缀
-     * @return \think\Controller
+     * @return object|\think\Controller
+     * @throws ReflectionException
      */
     function controller($name, $layer = 'controller', $appendSuffix = false)
     {
@@ -494,7 +495,8 @@ if (!function_exists('action')) {
      * @param string|array $vars 调用参数 支持字符串和数组
      * @param string $layer 要调用的控制层名称
      * @param bool $appendSuffix 是否添加类名后缀
-     * @return mixed
+     * @return bool|mixed
+     * @throws ReflectionException
      */
     function action($url, $vars = [], $layer = 'controller', $appendSuffix = false)
     {
@@ -508,14 +510,15 @@ if (!function_exists('R')) {
      * @param string $url 调用地址
      * @param string|array $vars 调用参数 支持字符串和数组
      * @param string $layer 要调用的控制层名称
-     * @return mixed
+     * @return bool|mixed
+     * @throws ReflectionException
      */
     function R($url, $vars = array(), $layer = '')
     {
         $info = pathinfo($url);
         $action = $info['basename'];
         $module = $info['dirname'];
-        $class = A($module, $layer);
+        $class = action($module, $layer);
         if ($class) {
             if (is_string($vars)) {
                 parse_str($vars, $vars);
@@ -672,11 +675,12 @@ if (!function_exists('layout')) {
 if (!function_exists('U')) {
     /**
      * URL组装 支持不同URL模式
+     * @param Request $request
      * @param string $url URL表达式，格式：'[模块/控制器/操作#锚点@域名]?参数1=值1&参数2=值2...'
      * @param string|array $vars 传入的参数，支持数组和字符串
      * @param string|boolean $suffix 伪静态后缀，默认为true表示获取配置值
      * @param boolean $domain 是否显示域名
-     * @return string
+     * @return false|mixed|string|string[]
      */
     function U(Request $request, $url = '', $vars = '', $suffix = true, $domain = false)
     {
@@ -851,7 +855,8 @@ if (!function_exists('W')) {
      * 渲染输出Widget
      * @param string $name Widget名称
      * @param array $data 传入的参数
-     * @return void
+     * @return bool|mixed
+     * @throws ReflectionException
      */
     function W($name, $data = array())
     {
@@ -882,7 +887,9 @@ if (!function_exists('redirect')) {
      * @param string $url 重定向的URL地址
      * @param integer $time 重定向的等待时间（秒）
      * @param string $msg 重定向前的提示信息
-     * @return void
+     * @param array $params
+     * @param int $code
+     * @return mixed
      */
     function redirect($url, $time = 0, $msg = '', $params = [], $code = 302)
     {
@@ -1326,6 +1333,23 @@ if (!function_exists('array_depth')) {
     }
 }
 
+if (!function_exists('camelize')) {
+    /**
+     *  下划线转驼峰
+     * 思路:
+     * step1.原字符串转小写,原字符串中的分隔符用空格替换,在字符串开头加上分隔符
+     * step2.将字符串中每个单词的首字母转换为大写,再去空格,去字符串首部附加的分隔符.
+     * @param $unCamelizeWords
+     * @param string $separator
+     * @return string
+     */
+    function camelize($unCamelizeWords, $separator = '_')
+    {
+        $unCamelizeWords = $separator . str_replace($separator, " ", strtolower($unCamelizeWords));
+        return str_replace(" ", "", ucwords(ltrim($unCamelizeWords, $separator)));
+    }
+}
+
 if (!function_exists('get_module_model_name')) {
     /**
      * @param $moduleData
@@ -1359,29 +1383,14 @@ if (!function_exists('get_module_table_name')) {
     }
 }
 
-if (!function_exists('view')) {
-    /**
-     * 渲染模板输出
-     * @param string $template 模板文件
-     * @param array $vars 模板变量
-     * @param array $replace 模板替换
-     * @param integer $code 状态码
-     * @return \think\response\View
-     */
-    function view($template = '', $vars = [], $replace = [], $code = 200)
-    {
-        return Response::create($template, 'view', $code)->replace($replace)->assign($vars);
-    }
-}
-
-
 if (!function_exists('halt')) {
     /**
      * 调试变量并且中断输出
+     * @throws \HttpResponseException
      */
     function halt()
     {
-        throw new HttpResponseException(new Response);
+        throw new \HttpResponseException(new Response);
     }
 }
 
