@@ -25,12 +25,12 @@ class Storage
      * 连接分布式文件系统
      * @access public
      * @param string $type 文件类型
-     * @param array $options  配置数组
+     * @param array $options 配置数组
      * @return void
      */
     public static function connect($type = 'File', $options = array())
     {
-        $class         = 'think\\storage\\driver\\' . ucwords($type);
+        $class = 'think\\storage\\driver\\' . ucwords($type);
         self::$handler = new $class($options);
     }
 
