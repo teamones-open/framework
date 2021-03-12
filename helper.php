@@ -1551,3 +1551,21 @@ if (!function_exists('to_under_score')) {
         return trim(preg_replace('/_{2,}/', '_', $dstr), '_');
     }
 }
+
+if (!function_exists('generate_mysql_json_contains')) {
+    /**
+     * 生成mysql json contains
+     * @param $str
+     * @return string
+     */
+    function generate_mysql_json_contains($data, $field)
+    {
+        $itemValueStr = "";
+        foreach ($data as $item) {
+            $itemValueStr .= "\"{$item[$field]}\"" . ",";
+        }
+        $itemValueStr = substr($itemValueStr, 0, -1);
+
+        return $itemValueStr;
+    }
+}
