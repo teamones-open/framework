@@ -27,7 +27,7 @@ class RelationModel extends Model
     const MANY_TO_MANY = 4;
 
     // 关联定义
-    protected $_link = array();
+    protected $_link = [];
 
     // 字段数据源映射源数据字段
     public $_fieldFromDataDict = [];
@@ -87,9 +87,9 @@ class RelationModel extends Model
     {
         if (strtolower(substr($method, 0, 8)) == 'relation') {
             $type = strtoupper(substr($method, 8));
-            if (in_array($type, array('ADD', 'SAVE', 'DEL'), true)) {
+            if (in_array($type, ['ADD', 'SAVE', 'DEL'], true)) {
                 array_unshift($args, $type);
-                return call_user_func_array(array(&$this, 'opRelation'), $args);
+                return call_user_func_array([&$this, 'opRelation'], $args);
             }
         } else {
             return parent::__call($method, $args);
@@ -361,7 +361,7 @@ class RelationModel extends Model
                             break;
                     }
                     if (!$return) {
-                        if (isset($val['as_fields']) && in_array($mappingType, array(self::HAS_ONE, self::BELONGS_TO))) {
+                        if (isset($val['as_fields']) && in_array($mappingType, [self::HAS_ONE, self::BELONGS_TO])) {
                             // 支持直接把关联的字段值映射成数据对象中的某个字段
                             // 仅仅支持HAS_ONE BELONGS_TO
                             $fields = explode(',', $val['as_fields']);
@@ -425,7 +425,7 @@ class RelationModel extends Model
                     if (!empty($val['condition'])) {
                         $mappingCondition = $val['condition'];
                     } else {
-                        $mappingCondition = array();
+                        $mappingCondition = [];
                         $mappingCondition[$mappingFk] = $pk;
                     }
                     // 获取关联model对象
@@ -491,7 +491,7 @@ class RelationModel extends Model
                                     $mappingRelationTable = $this->getRelationTableName($model);
                                 }
                                 if (is_array($mappingData)) {
-                                    $ids = array();
+                                    $ids = [];
                                     foreach ($mappingData as $vo) {
                                         $ids[] = $vo[$mappingKey];
                                     }

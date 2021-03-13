@@ -38,6 +38,10 @@ class Ask
         $this->question = $question;
     }
 
+    /**
+     * @return bool|false|mixed|string
+     * @throws \Exception
+     */
     public function run()
     {
         if (!$this->input->isInteractive()) {
@@ -233,6 +237,11 @@ class Ask
         throw new \RuntimeException('Unable to hide the response.');
     }
 
+    /**
+     * @param $interviewer
+     * @return mixed
+     * @throws \Exception
+     */
     protected function validateAttempts($interviewer)
     {
         /** @var \Exception $error */
@@ -333,8 +342,8 @@ class Ask
             return self::$stty;
         }
 
-        exec('stty 2>&1', $output, $exitcode);
+        exec('stty 2>&1', $output, $exitCode);
 
-        return self::$stty = $exitcode === 0;
+        return self::$stty = $exitCode === 0;
     }
 }

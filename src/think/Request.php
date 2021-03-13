@@ -573,7 +573,7 @@ class Request extends \Workerman\Protocols\Http\Request
             unset($boundary_data_array[0]);
         }
         $key = -1;
-        $files = array();
+        $files = [];
         foreach ($boundary_data_array as $boundary_data_buffer) {
             list($boundary_header_buffer, $boundary_value) = \explode("\r\n\r\n", $boundary_data_buffer, 2);
             // Remove \r\n from the end of buffer.
@@ -599,13 +599,13 @@ class Request extends \Workerman\Protocols\Http\Request
                                 }
                             }
                             // Parse upload files.
-                            $files[$key] = array(
+                            $files[$key] = [
                                 'key' => $match[1],
                                 'name' => $match[2],
                                 'tmp_name' => $tmp_file,
                                 'size' => $size,
                                 'error' => $error
-                            );
+                            ];
                             break;
                         } // Is post field.
                         else {

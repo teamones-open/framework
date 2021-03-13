@@ -12,7 +12,7 @@
 /**
  * ThinkPHP 简体中文语言包
  */
-return array(
+return [
     /* 核心语言变量 */
     '_MODULE_NOT_EXIST_' => '无法加载模块',
     '_CONTROLLER_NOT_EXIST_' => '无法加载控制器',
@@ -88,4 +88,4 @@ return array(
     'Validate_Email' => ':attribute必须是邮件格式',
     'Validate_Boolean' => ':attribute必须是布尔型',
     'Validate_Regex' => ':attribute不符合指定的正则规则'
-);
+];

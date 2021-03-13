@@ -57,20 +57,20 @@ class Mysql extends Driver
             $sql = 'SHOW COLUMNS FROM `' . $tableName . '`';
         }
         $result = $this->query($sql);
-        $info = array();
+        $info = [];
         if ($result) {
             foreach ($result as $key => $val) {
                 if (\PDO::CASE_LOWER != $this->_linkID->getAttribute(\PDO::ATTR_CASE)) {
                     $val = array_change_key_case($val, CASE_LOWER);
                 }
-                $info[$val['field']] = array(
+                $info[$val['field']] = [
                     'name' => $val['field'],
                     'type' => $val['type'],
                     'notnull' => (bool)('' === $val['null']), // not null is empty, null is yes
                     'default' => $val['default'],
                     'primary' => (strtolower($val['key']) == 'pri'),
                     'autoinc' => (strtolower($val['extra']) == 'auto_increment'),
-                );
+                ];
             }
         }
         return $info;
@@ -87,7 +87,7 @@ class Mysql extends Driver
     {
         $sql = !empty($dbName) ? 'SHOW TABLES FROM ' . $dbName : 'SHOW TABLES ';
         $result = $this->query($sql);
-        $info = array();
+        $info = [];
         foreach ($result as $key => $val) {
             $info[$key] = current($val);
         }
@@ -130,17 +130,17 @@ class Mysql extends Driver
      * @throws \Throwable
      * @throws \think\exception\PDOException
      */
-    public function insertAll($dataSet, $options = array(), $replace = false)
+    public function insertAll($dataSet, $options = [], $replace = false)
     {
-        $values = array();
+        $values = [];
         $this->model = $options['model'];
         if (!is_array($dataSet[0])) {
             return false;
         }
-        $this->parseBind(!empty($options['bind']) ? $options['bind'] : array());
-        $fields = array_map(array($this, 'parseKey'), array_keys($dataSet[0]));
+        $this->parseBind(!empty($options['bind']) ? $options['bind'] : []);
+        $fields = array_map([$this, 'parseKey'], array_keys($dataSet[0]));
         foreach ($dataSet as $data) {
-            $value = array();
+            $value = [];
             foreach ($data as $key => $val) {
                 if (is_array($val) && 'exp' == $val[0]) {
                     $value[] = $val[1];
@@ -184,7 +184,7 @@ class Mysql extends Driver
             // 对象转数组
             $duplicate = get_class_vars($duplicate);
         }
-        $updates = array();
+        $updates = [];
         foreach ((array)$duplicate as $key => $val) {
             if (is_numeric($key)) {
                 // array('field1', 'field2', 'field3') 解析为 ON DUPLICATE KEY UPDATE field1=VALUES(field1), field2=VALUES(field2), field3=VALUES(field3)
@@ -192,7 +192,7 @@ class Mysql extends Driver
             } else {
                 if (is_scalar($val)) // 兼容标量传值方式
                 {
-                    $val = array('value', $val);
+                    $val = ['value', $val];
                 }
                 if (!isset($val[1]) && !is_null($val[1])) {
                     continue;

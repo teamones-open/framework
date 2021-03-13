@@ -16,7 +16,7 @@
  * 所有配置参数都可以在生效前动态改变
  */
 
-return array(
+return [
     /* 框架版本号 */
     'THINK_VERSION' => '1.6.8',
 
@@ -24,11 +24,11 @@ return array(
     'APP_NAMESPACE' => 'app',
     'APP_USE_NAMESPACE' => true, // 应用类库是否使用命名空间
     'APP_SUB_DOMAIN_DEPLOY' => false, // 是否开启子域名部署
-    'APP_SUB_DOMAIN_RULES' => array(), // 子域名部署规则
+    'APP_SUB_DOMAIN_RULES' => [], // 子域名部署规则
     'APP_DOMAIN_SUFFIX' => '', // 域名后缀 如果是com.cn net.cn 之类的后缀必须设置
     'ACTION_SUFFIX' => '', // 操作方法后缀
     'MULTI_MODULE' => false, // 是否允许多模块 如果为false 则必须设置 DEFAULT_MODULE
-    'MODULE_DENY_LIST' => array('common', 'runtime'),
+    'MODULE_DENY_LIST' => ['common', 'runtime'],
     'CONTROLLER_LEVEL' => 1,
     'AUTO_BIND_MODULE' => false,
     'APP_AUTOLOAD_LAYER' => 'controller,model', // 自动加载的应用类库层 关闭APP_USE_NAMESPACE后有效
@@ -79,7 +79,7 @@ return array(
     'DB_PWD' => '', // 密码
     'DB_PORT' => '', // 端口
     'DB_PREFIX' => '', // 数据库表前缀
-    'DB_PARAMS' => array(), // 数据库连接参数
+    'DB_PARAMS' => [], // 数据库连接参数
     'DB_DEBUG' => true, // 数据库调试模式 开启后可以记录SQL日志
     'DB_FIELDS_CACHE' => true, // 启用字段缓存
     'DB_CHARSET' => 'utf8', // 数据库编码默认采用utf8
@@ -175,8 +175,8 @@ return array(
     'URL_PARAMS_FILTER' => false, // URL变量绑定过滤
     'URL_PARAMS_FILTER_TYPE' => '', // URL变量绑定过滤方法 如果为空 调用DEFAULT_FILTER
     'URL_ROUTER_ON' => true, // 是否开启URL路由
-    'URL_ROUTE_RULES' => array(), // 默认路由规则 针对模块
-    'URL_MAP_RULES' => array(), // URL映射定义规则
+    'URL_ROUTE_RULES' => [], // 默认路由规则 针对模块
+    'URL_MAP_RULES' => [], // URL映射定义规则
 
     // 路由配置文件（支持配置多个）
     'ROUTE_CONFIG_FILE' => ['route'],
@@ -233,4 +233,4 @@ return array(
     'FILE_UPLOAD_TYPE' => 'Local', // 文件上传方式
     'DATA_CRYPT_TYPE' => 'Think', // 数据加密方式
     'HTTPS_AGENT_NAME' => '', // HTTPS代理标识
-);
+];

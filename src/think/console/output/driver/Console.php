@@ -86,10 +86,10 @@ class Console
             }
             $lines = [];
             foreach (preg_split('/\r?\n/', $e->getMessage()) as $line) {
-                foreach ($this->splitStringByWidth($line, $width - 4) as $line) {
+                foreach ($this->splitStringByWidth($line, $width - 4) as $lineItem) {
 
-                    $lineLength = $this->stringWidth(preg_replace('/\[[^m]*m/', '', $line)) + 4;
-                    $lines[]    = [$line, $lineLength];
+                    $lineLength = $this->stringWidth(preg_replace('/\[[^m]*m/', '', $lineItem)) + 4;
+                    $lines[]    = [$lineItem, $lineLength];
 
                     $len = max($lineLength, $len);
                 }

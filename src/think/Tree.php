@@ -57,8 +57,8 @@ class Tree
             return false;
         }
         $OriginalList = $this->OriginalList;
-        $tree = array();//最终数组
-        $refer = array();//存储主键与数组单元的引用关系
+        $tree = [];//最终数组
+        $refer = [];//存储主键与数组单元的引用关系
         //遍历
         foreach ($OriginalList as $k => $v) {
             if (!isset($v[$this->pk]) || !isset($v[$this->parentKey]) || isset($v[$this->childrenKey])) {

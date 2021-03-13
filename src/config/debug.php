@@ -14,7 +14,7 @@
  */
 
 // 调试模式下面默认设置 可以在应用配置目录下重新定义 debug.php 覆盖
-return array(
+return [
     'LOG_RECORD'           => true, // 进行日志记录
     'LOG_EXCEPTION_RECORD' => true, // 是否记录异常信息日志
     'LOG_LEVEL'            => 'EMERG,ALERT,CRIT,ERR,WARN,NOTIC,INFO,DEBUG,SQL', // 允许记录的日志级别
@@ -24,4 +24,4 @@ return array(
     'TMPL_STRIP_SPACE'     => false, // 是否去除模板文件里面的html空格与换行
     'SHOW_ERROR_MSG'       => true, // 显示错误信息
     'URL_CASE_INSENSITIVE' => true, // URL区分大小写
-);
+];
