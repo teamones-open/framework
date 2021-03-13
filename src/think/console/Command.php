@@ -180,10 +180,9 @@ class Command
 
     /**
      * 设置执行代码
-     * @param callable $code callable(InputInterface $input, OutputInterface $output)
-     * @return Command
-     * @throws \InvalidArgumentException
-     * @see execute()
+     * @param callable $code
+     * @return $this
+     * @throws \ReflectionException
      */
     public function setCode(callable $code)
     {

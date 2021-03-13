@@ -71,6 +71,14 @@ class Output
         $this->handle = new $class($this);
     }
 
+    /**
+     * @param Input $input
+     * @param $question
+     * @param null $default
+     * @param null $validator
+     * @return bool|false|mixed|string
+     * @throws Exception
+     */
     public function ask(Input $input, $question, $default = null, $validator = null)
     {
         $question = new Question($question, $default);
@@ -79,6 +87,13 @@ class Output
         return $this->askQuestion($input, $question);
     }
 
+    /**
+     * @param Input $input
+     * @param $question
+     * @param null $validator
+     * @return bool|false|mixed|string
+     * @throws Exception
+     */
     public function askHidden(Input $input, $question, $validator = null)
     {
         $question = new Question($question);
@@ -89,13 +104,25 @@ class Output
         return $this->askQuestion($input, $question);
     }
 
+    /**
+     * @param Input $input
+     * @param $question
+     * @param bool $default
+     * @return bool|false|mixed|string
+     * @throws Exception
+     */
     public function confirm(Input $input, $question, $default = true)
     {
         return $this->askQuestion($input, new Confirmation($question, $default));
     }
 
     /**
-     * {@inheritdoc}
+     * @param Input $input
+     * @param $question
+     * @param array $choices
+     * @param null $default
+     * @return bool|false|mixed|string
+     * @throws Exception
      */
     public function choice(Input $input, $question, array $choices, $default = null)
     {
@@ -107,6 +134,12 @@ class Output
         return $this->askQuestion($input, new Choice($question, $choices, $default));
     }
 
+    /**
+     * @param Input $input
+     * @param Question $question
+     * @return bool|false|mixed|string
+     * @throws Exception
+     */
     protected function askQuestion(Input $input, Question $question)
     {
         $ask = new Ask($input, $this, $question);
@@ -205,6 +238,12 @@ class Output
         $descriptor->describe($this, $object, $options);
     }
 
+    /**
+     * @param $method
+     * @param $args
+     * @return mixed
+     * @throws Exception
+     */
     public function __call($method, $args)
     {
         if (in_array($method, $this->styles)) {

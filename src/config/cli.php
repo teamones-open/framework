@@ -12,7 +12,7 @@
 /**
  * ThinkPHP 普通模式定义
  */
-return array(
+return [
     // 配置文件
     'config' => [
         CONF_PATH . 'convention.php', // 系统惯例配置
@@ -60,4 +60,4 @@ return array(
             'behavior\WriteLogBehavior'
         ]
     ],
-);
+];

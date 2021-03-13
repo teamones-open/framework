@@ -12,7 +12,7 @@
 /**
  * ThinkPHP English language package
  */
-return array(
+return [
     /* core language package */
     '_MODULE_NOT_EXIST_' => "Module can't be loaded",
     '_CONTROLLER_NOT_EXIST_' => "Controller can't be loaded",
@@ -88,4 +88,4 @@ return array(
     'Validate_Email' => ':attribute must be mail format',
     'Validate_Boolean' => ':attribute must be bool',
     'Validate_Regex' => ':attribute does not conform to the specified rule'
-);
+];

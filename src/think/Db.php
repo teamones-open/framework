@@ -37,7 +37,7 @@ class Db
      * 数据库连接实例
      * @var array
      */
-    private static $instance = array();
+    private static $instance = [];
 
     /**
      * 当前数据库连接实例
@@ -57,7 +57,7 @@ class Db
      * @return mixed|null
      * @throws \Exception
      */
-    public static function getInstance($config = array())
+    public static function getInstance($config = [])
     {
         // 解析连接参数 支持数组和字符串
         $options = self::parseConfig($config);
@@ -196,7 +196,7 @@ class Db
         if (!$info) {
             return false;
         }
-        $dsn = array(
+        $dsn = [
             'type' => $info['scheme'],
             'username' => isset($info['user']) ? $info['user'] : '',
             'password' => isset($info['pass']) ? $info['pass'] : '',
@@ -204,12 +204,12 @@ class Db
             'hostport' => isset($info['port']) ? $info['port'] : '',
             'database' => isset($info['path']) ? substr($info['path'], 1) : '',
             'charset' => isset($info['fragment']) ? $info['fragment'] : 'utf8',
-        );
+        ];
 
         if (isset($info['query'])) {
             parse_str($info['query'], $dsn['params']);
         } else {
-            $dsn['params'] = array();
+            $dsn['params'] = [];
         }
         return $dsn;
     }
@@ -223,6 +223,6 @@ class Db
      */
     public static function __callStatic($method, $params)
     {
-        return call_user_func_array(array(self::getInstance(), $method), $params);
+        return call_user_func_array([self::getInstance(), $method], $params);
     }
 }

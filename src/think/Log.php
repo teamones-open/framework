@@ -28,13 +28,13 @@ class Log
     const SQL = 'SQL'; // SQL：SQL语句 注意只在调试模式开启时有效
 
     // 日志信息
-    protected static $log = array();
+    protected static $log = [];
 
     // 日志存储
     protected static $storage = null;
 
     // 日志初始化
-    public static function init($config = array())
+    public static function init($config = [])
     {
         $type = isset($config['type']) ? $config['type'] : 'File';
         $class = strpos($type, '\\') ? $type : 'think\\log\\driver\\' . ucwords(strtolower($type));

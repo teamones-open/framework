@@ -27,7 +27,7 @@ class Module
 
     /**
      * 模块初始化
-     * @throws \think\Exception
+     * @throws \Exception
      */
     public static function init()
     {
@@ -57,7 +57,7 @@ class Module
     public static function getAllModuleData($tempDb)
     {
         $result = $tempDb->query("select * from module");
-        $info = array();
+        $info = [];
         foreach ($result as $key => $val) {
             $info[$val['code']] = $val;
         }

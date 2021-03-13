@@ -21,7 +21,7 @@ class Controller
      * 控制器参数
      * @access protected
      */
-    protected $config = array();
+    protected $config = [];
 
     /**
      * 架构函数 取得模板对象实例

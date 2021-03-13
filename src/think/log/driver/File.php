@@ -14,14 +14,14 @@ namespace think\log\driver;
 class File
 {
 
-    protected $config = array(
+    protected $config = [
         'log_time_format' => ' c ',
         'log_file_size' => 2097152,
         'log_path' => '',
-    );
+    ];
 
     // 实例化并传入参数
-    public function __construct($config = array())
+    public function __construct($config = [])
     {
         $this->config = array_merge($this->config, $config);
     }

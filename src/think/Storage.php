@@ -28,7 +28,7 @@ class Storage
      * @param array $options 配置数组
      * @return void
      */
-    public static function connect($type = 'File', $options = array())
+    public static function connect($type = 'File', $options = [])
     {
         $class = 'think\\storage\\driver\\' . ucwords($type);
         self::$handler = new $class($options);
@@ -43,7 +43,7 @@ class Storage
     {
         //调用缓存驱动的方法
         if (method_exists(self::$handler, $method)) {
-            return call_user_func_array(array(self::$handler, $method), $args);
+            return call_user_func_array([self::$handler, $method], $args);
         }
     }
 }

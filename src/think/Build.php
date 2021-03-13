@@ -68,7 +68,7 @@ class [MODEL]Model extends Model
         }
 
         if (is_writeable(APP_PATH)) {
-            $dirs = array(
+            $dirs = [
                 COMMON_PATH,
                 COMMON_PATH . 'common/',
                 CONF_PATH,
@@ -84,7 +84,7 @@ class [MODEL]Model extends Model
                 LOG_PATH . $module . '/',
                 TEMP_PATH,
                 DATA_PATH,
-            );
+            ];
             foreach ($dirs as $dir) {
                 if (!is_dir($dir)) {
                     mkdir($dir, 0755, true);
@@ -160,7 +160,7 @@ class [MODEL]Model extends Model
             $hello = C('DEFAULT_CONTROLLER') == $controller ? $hello : '';
             $file = APP_PATH . $module . '/Controller/' . $controller . 'Controller' . EXT;
             if (!is_file($file)) {
-                $content = str_replace(array('[MODULE]', '[CONTROLLER]', '[CONTENT]'), array($module, $controller, $hello), self::$controller);
+                $content = str_replace(['[MODULE]', '[CONTROLLER]', '[CONTENT]'], [$module, $controller, $hello], self::$controller);
                 if (!C('APP_USE_NAMESPACE')) {
                     $content = preg_replace('/namespace\s(.*?);/', '', $content, 1);
                 }
@@ -176,15 +176,15 @@ class [MODEL]Model extends Model
     /**
      * 创建模型类
      * @param $module
-     * @param $models
+     * @param Null $models
      */
-    public static function buildModel($module, $models)
+    public static function buildModel($module, $models = null)
     {
         $list = is_array($models) ? $models : explode(',', $models);
         foreach ($list as $model) {
             $file = APP_PATH . $module . '/model/' . $model . 'Model' . EXT;
             if (!is_file($file)) {
-                $content = str_replace(array('[MODULE]', '[MODEL]'), array($module, $model), self::$model);
+                $content = str_replace(['[MODULE]', '[MODEL]'], [$module, $model], self::$model);
                 if (!C('APP_USE_NAMESPACE')) {
                     $content = preg_replace('/namespace\s(.*?);/', '', $content, 1);
                 }
@@ -201,7 +201,7 @@ class [MODEL]Model extends Model
      * 生成目录安全文件
      * @param array $dirs
      */
-    public static function buildDirSecure($dirs = array())
+    public static function buildDirSecure($dirs = [])
     {
         // 目录安全写入（默认开启）
         defined('BUILD_DIR_SECURE') or define('BUILD_DIR_SECURE', true);
