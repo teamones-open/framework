@@ -1863,19 +1863,15 @@ class RelationModel extends Model
             }
 
             if (is_array($itemValue)) {
-                $itemValueStr = "";
-                foreach ($itemValue as $item) {
-                    $itemValueStr .= "\"{$item}\"" . ",";
-                }
-                $itemValueStr = substr($itemValueStr, 0, -1);
+                $itemValueStr = implode(',',$itemValue);
             } else {
-                $itemValueStr = "\"{$itemValue}\"";
+                $itemValueStr = $itemValue;
             }
 
             if (!empty($moduleCode)) {
-                $filterData['_string'] = "JSON_CONTAINS('[{$itemValueStr}]' , json_extract({$moduleCode}.json, '$.{$field}' ))";
+                $filterData['_string'] = "JSON_CONTAINS('[{$itemValueStr}]' , JSON_UNQUOTE(JSON_EXTRACT({$moduleCode}.json, '$.{$field}' )))";
             } else {
-                $filterData['_string'] = "JSON_CONTAINS('[{$itemValueStr}]' , json_extract(json, '$.{$field}' ))";
+                $filterData['_string'] = "JSON_CONTAINS('[{$itemValueStr}]' , JSON_UNQUOTE(JSON_EXTRACT(json, '$.{$field}' )))";
             }
         } else {
 //        echo json_encode($field);
