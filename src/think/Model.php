@@ -1836,6 +1836,9 @@ class Model
         }
 
         if (false === $this->_validationFieldItem($data, $val)) {
+            if (empty($this->errorCode)) {
+                $this->errorCode = ErrorCode::MODEL_VALIDATE_ERROR;
+            }
             if ($this->patchValidate) {
                 $this->error[$val[0]] = $val[2];
             } else {
@@ -2033,6 +2036,7 @@ class Model
 
                 //判断密码强度，必须大于三分
                 if ($score < 3) {
+                    $this->errorCode = ErrorCode::PASSWORD_STRENGTH_NOT_MATCH;
                     return false;
                 } else {
                     return true;
@@ -2328,6 +2332,7 @@ class Model
     {
         //清除上次操作错误
         $this->error = '';
+        $this->errorCode = 0;
         $this->successMsg = '';
         $this->options = [];
         $this->_resData = [];
