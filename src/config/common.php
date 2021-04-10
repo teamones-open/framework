@@ -49,14 +49,11 @@ return [
         CORE_PATH . 'Controller' . EXT,
         CORE_PATH . 'Request' . EXT,
         CORE_PATH . 'Response' . EXT,
-        BEHAVIOR_PATH . 'BuildLiteBehavior' . EXT
     ],
 
     // 行为扩展定义
     'tags' => [
-        'app_init' => [
-            'behavior\BuildLiteBehavior', // 生成运行Lite文件
-        ],
+        'app_init' => [],
         'app_end' => [
             'behavior\WriteLogBehavior'
         ]

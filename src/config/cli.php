@@ -54,7 +54,6 @@ return [
     // 行为扩展定义
     'tags' => [
         'app_init' => [
-            'behavior\BuildLiteBehavior', // 生成运行Lite文件
         ],
         'app_end' => [
             'behavior\WriteLogBehavior'
