@@ -981,7 +981,12 @@ class RelationModel extends Model
                 foreach ($queryItem as $field => $value) {
                     $this->parsehandleReturnComplexData($newReturnItem, $primaryKeyId, $field, $value);
                 }
-                $newReturnData[$primaryKeyId] = $newReturnItem;
+                if ($primaryKeyId === 0) {
+                    // 没有查询主键出来 那么就新建数组对象
+                    $newReturnData[] = $newReturnItem;
+                } else {
+                    $newReturnData[$primaryKeyId] = $newReturnItem;
+                }
             }
         }
 
