@@ -1424,6 +1424,10 @@ class RelationModel extends Model
             if (array_key_exists($moduleData['id'], $moduleDictByDstModuleId)) {
                 foreach ($moduleDictByDstModuleId[$moduleData['id']] as $moduleDictSrcItem) {
                     $srcModuleData = Module::$moduleDictData['module_index_by_id'][$moduleDictSrcItem['src_module_id']];
+                    // 自己关联自己 跳过父级模块检查 避免无限循环
+                    if ($this->currentModuleCode === $srcModuleData['code']) {
+                        continue;
+                    }
                     if ($srcModuleData['type'] === 'entity') {
                         $this->recurrenceEntityParentHierarchy($result, $srcModuleData['code'], $moduleDictByDstModuleId, $moduleDictBySrcModuleId, true);
                         continue;
@@ -1863,7 +1867,7 @@ class RelationModel extends Model
             }
 
             if (is_array($itemValue)) {
-                $itemValueStr = implode(',',$itemValue);
+                $itemValueStr = implode(',', $itemValue);
             } else {
                 $itemValueStr = $itemValue;
             }
@@ -1958,7 +1962,7 @@ class RelationModel extends Model
                 }
                 break;
             case 'direct':
-                $selectData = $this->getModelObj($itemModule['module_code'])->where($this->formatFilterCondition($filter))->select();
+                $selectData = $this->getModelObj(get_module_table_name(Module::$moduleDictData['module_index_by_id'][$itemModule['dst_module_id']]))->where($this->formatFilterCondition($filter))->select();
                 if (!empty($selectData)) {
                     $ids = array_column($selectData, 'id');
                     $idsString = join(',', $ids);
