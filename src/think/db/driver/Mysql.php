@@ -59,7 +59,7 @@ class Mysql extends Driver
         $result = $this->query($sql);
         $info = [];
         if ($result) {
-            foreach ($result as $key => $val) {
+            foreach ($result as $val) {
                 if (\PDO::CASE_LOWER != $this->_linkID->getAttribute(\PDO::ATTR_CASE)) {
                     $val = array_change_key_case($val, CASE_LOWER);
                 }
@@ -141,7 +141,7 @@ class Mysql extends Driver
         $fields = array_map([$this, 'parseKey'], array_keys($dataSet[0]));
         foreach ($dataSet as $data) {
             $value = [];
-            foreach ($data as $key => $val) {
+            foreach ($data as $val) {
                 if (is_array($val) && 'exp' == $val[0]) {
                     $value[] = $val[1];
                 } elseif (is_null($val)) {
