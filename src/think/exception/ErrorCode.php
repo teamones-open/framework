@@ -78,4 +78,10 @@ class ErrorCode
 
     // 存储写入错误
     const STORAGE_WRITE_ERROR = -4001018;
+
+    // 模型验证规则验证失败
+    const MODEL_VALIDATE_ERROR = -4001019;
+
+    // 密码强度规则不匹配
+    const PASSWORD_STRENGTH_NOT_MATCH = -4001020;
 }

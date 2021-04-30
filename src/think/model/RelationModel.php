@@ -981,7 +981,12 @@ class RelationModel extends Model
                 foreach ($queryItem as $field => $value) {
                     $this->parsehandleReturnComplexData($newReturnItem, $primaryKeyId, $field, $value);
                 }
-                $newReturnData[$primaryKeyId] = $newReturnItem;
+                if ($primaryKeyId === 0) {
+                    // 没有查询主键出来 那么就新建数组对象
+                    $newReturnData[] = $newReturnItem;
+                } else {
+                    $newReturnData[$primaryKeyId] = $newReturnItem;
+                }
             }
         }
 
@@ -1424,6 +1429,10 @@ class RelationModel extends Model
             if (array_key_exists($moduleData['id'], $moduleDictByDstModuleId)) {
                 foreach ($moduleDictByDstModuleId[$moduleData['id']] as $moduleDictSrcItem) {
                     $srcModuleData = Module::$moduleDictData['module_index_by_id'][$moduleDictSrcItem['src_module_id']];
+                    // 自己关联自己 跳过父级模块检查 避免无限循环
+                    if ($this->currentModuleCode === $srcModuleData['code']) {
+                        continue;
+                    }
                     if ($srcModuleData['type'] === 'entity') {
                         $this->recurrenceEntityParentHierarchy($result, $srcModuleData['code'], $moduleDictByDstModuleId, $moduleDictBySrcModuleId, true);
                         continue;
@@ -1863,19 +1872,15 @@ class RelationModel extends Model
             }
 
             if (is_array($itemValue)) {
-                $itemValueStr = "";
-                foreach ($itemValue as $item) {
-                    $itemValueStr .= "\"{$item}\"" . ",";
-                }
-                $itemValueStr = substr($itemValueStr, 0, -1);
+                $itemValueStr = implode(',', $itemValue);
             } else {
-                $itemValueStr = "\"{$itemValue}\"";
+                $itemValueStr = $itemValue;
             }
 
             if (!empty($moduleCode)) {
-                $filterData['_string'] = "JSON_CONTAINS('[{$itemValueStr}]' , json_extract({$moduleCode}.json, '$.{$field}' ))";
+                $filterData['_string'] = "JSON_CONTAINS('[{$itemValueStr}]' , JSON_UNQUOTE(JSON_EXTRACT({$moduleCode}.json, '$.{$field}' )))";
             } else {
-                $filterData['_string'] = "JSON_CONTAINS('[{$itemValueStr}]' , json_extract(json, '$.{$field}' ))";
+                $filterData['_string'] = "JSON_CONTAINS('[{$itemValueStr}]' , JSON_UNQUOTE(JSON_EXTRACT(json, '$.{$field}' )))";
             }
         } else {
 //        echo json_encode($field);
@@ -1962,7 +1967,7 @@ class RelationModel extends Model
                 }
                 break;
             case 'direct':
-                $selectData = $this->getModelObj($itemModule['module_code'])->where($this->formatFilterCondition($filter))->select();
+                $selectData = $this->getModelObj(get_module_table_name(Module::$moduleDictData['module_index_by_code'][$itemModule['module_code']]))->where($this->formatFilterCondition($filter))->select();
                 if (!empty($selectData)) {
                     $ids = array_column($selectData, 'id');
                     $idsString = join(',', $ids);
