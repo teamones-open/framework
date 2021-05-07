@@ -184,12 +184,12 @@ abstract class Driver
 
     /**
      * 解析pdo连接的dsn信息
-     * @access public
-     * @param array $config 连接信息
+     * @param $config
      * @return string
      */
-    protected function parseDsn($config)
+    protected function parseDsn($config): string
     {
+
     }
 
     /**
@@ -265,13 +265,7 @@ abstract class Driver
             }
 
             throw new PDOException($e, $this->config, $this->getLastsql());
-        } catch (\Throwable $e) {
-            if ($this->isBreak($e)) {
-                return $this->close()->query($str, $fetchSql, $master);
-            }
-
-            throw $e;
-        } catch (\Exception $e) {
+        } catch (\Throwable | \Exception $e) {
             if ($this->isBreak($e)) {
                 return $this->close()->query($str, $fetchSql, $master);
             }
@@ -348,13 +342,7 @@ abstract class Driver
             }
 
             throw new PDOException($e, $this->config, $this->getLastsql());
-        } catch (\Throwable $e) {
-            if ($this->isBreak($e)) {
-                return $this->close()->execute($str, $fetchSql);
-            }
-
-            throw $e;
-        } catch (\Exception $e) {
+        } catch (\Throwable | \Exception $e) {
             if ($this->isBreak($e)) {
                 return $this->close()->execute($str, $fetchSql);
             }
@@ -1347,8 +1335,7 @@ abstract class Driver
 
     /**
      * 初始化数据库连接
-     * @access protected
-     * @param bool $master 主服务器
+     * @param bool $master
      * @return null
      * @throws \Exception
      */

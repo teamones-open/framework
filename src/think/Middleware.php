@@ -61,8 +61,7 @@ class Middleware
         if ($app_name === '') {
             return [];
         }
-        $app_middleware = static::$_instances[$app_name] ?? [];
-        return $app_middleware;
+        return static::$_instances[$app_name] ?? [];
     }
 
     /**
