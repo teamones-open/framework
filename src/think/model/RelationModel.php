@@ -1261,12 +1261,22 @@ class RelationModel extends Model
             $this->complexFilterRelatedModule[] = $fieldsParam[0];
         }
 
+        /**
+         *
+         * 通过判断是否已经筛选过该条件 进行组装不同格式filter
+         * ["key"=>condition ]
+         *
+         * ["key"=>condition1,["key"=>condition2]]
+         *
+         */
         if (!array_key_exists($fieldsParam[0], $filterItem)) {
-            $filterItem[$fieldsParam[0]] = [
-                $fieldsParam[1] => $this->buildWidgetFilter($fieldsParam[0], $fieldsParam[1], $value)
-            ];
-        } else {
             $filterItem[$fieldsParam[0]][$fieldsParam[1]] = $this->buildWidgetFilter($fieldsParam[0], $fieldsParam[1], $value);
+        } else {
+            if (array_key_exists($fieldsParam[1], $filterItem[$fieldsParam[0]])) {
+                $filterItem[$fieldsParam[0]][] = [$fieldsParam[1] => $this->buildWidgetFilter($fieldsParam[0], $fieldsParam[1], $value)];
+            } else {
+                $filterItem[$fieldsParam[0]][$fieldsParam[1]] = $this->buildWidgetFilter($fieldsParam[0], $fieldsParam[1], $value);
+            }
         }
     }
 
@@ -1732,12 +1742,18 @@ class RelationModel extends Model
     private function formatFilterCondition($filter)
     {
         foreach ($filter as &$condition) {
-            if (is_array($condition)) {
+            // 判断复杂情况
+            // ['eq',1]
+            if (is_array($condition) && isset($condition[0])) {
                 switch (strtolower($condition[0])) {
                     case 'like':
                         $condition[1] = "%{$condition[1]}%";
                         break;
                 }
+            } else if (is_array($condition) && !isset($condition[0])) {
+                // ['id'=>['eq',1]]
+                // 多层结构 递归处理
+                $condition = $this->formatFilterCondition($condition);
             }
         }
         return $filter;
@@ -1953,14 +1969,37 @@ class RelationModel extends Model
         switch ($itemModule['filter_type']) {
             case 'master':
                 // 主键查询只需要加上字段别名
-                foreach ($filter as $field => $condition) {
-                    if (array_key_exists($field, $this->queryComplexHorizontalCustomFieldMapping)) {
-                        $this->parserFilterCustomHorizontalCondition($filterData, $field, $condition, $masterModuleCode, $this->queryComplexHorizontalCustomFieldMapping[$field]);
+                /**
+                 *
+                 * filter 里 会包含两种类型
+                 * 一种是 field => condition
+                 * 一种是 numberIndex => [ 'field1' => condition , 'field2' => condition2 ]
+                 *
+                 */
+                foreach ($filter as $key => $filterItem) {
+                    if (is_numeric($key)) {
+                        foreach ($filterItem as $field => $condition) {
+                            if (array_key_exists($field, $this->queryComplexHorizontalCustomFieldMapping)) {
+                                $this->parserFilterCustomHorizontalCondition($filterData, $field, $condition, $masterModuleCode, $this->queryComplexHorizontalCustomFieldMapping[$field]);
+                            } else {
+                                if (array_key_exists($field, $this->queryComplexCustomFieldMapping)) {
+                                    $this->parserFilterCustomItemCondition($filterData, $field, $condition, $masterModuleCode);
+                                } else {
+                                    $filterData[] = ["{$masterModuleCode}.{$field}" => $condition];
+                                }
+                            }
+                        }
                     } else {
-                        if (array_key_exists($field, $this->queryComplexCustomFieldMapping)) {
-                            $this->parserFilterCustomItemCondition($filterData, $field, $condition, $masterModuleCode);
+                        $field = $key;
+                        $condition = $filterItem;
+                        if (array_key_exists($field, $this->queryComplexHorizontalCustomFieldMapping)) {
+                            $this->parserFilterCustomHorizontalCondition($filterData, $field, $condition, $masterModuleCode, $this->queryComplexHorizontalCustomFieldMapping[$field]);
                         } else {
-                            $filterData["{$masterModuleCode}.{$field}"] = $condition;
+                            if (array_key_exists($field, $this->queryComplexCustomFieldMapping)) {
+                                $this->parserFilterCustomItemCondition($filterData, $field, $condition, $masterModuleCode);
+                            } else {
+                                $filterData["{$masterModuleCode}.{$field}"] = $condition;
+                            }
                         }
                     }
 
