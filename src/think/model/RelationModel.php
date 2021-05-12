@@ -2605,6 +2605,11 @@ class RelationModel extends Model
         // 处理join查询
         $this->parseQueryRelationDataJoinSql();
 
+        if (array_key_exists("order", $options)) {
+            // 有order参数
+            $this->order($options["order"]);
+        }
+
         $findData = $this->find();
 
         if (empty($findData)) {
