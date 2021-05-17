@@ -1936,16 +1936,16 @@ class RelationModel extends Model
                 }
             } else {
                 if (!empty($moduleCode)) {
-                    $filterData["JSON_EXTRACT(`{$moduleCode}`.`json`, '$.{$field}' )"] = $condition;
+                    $filterData["JSON_UNQUOTE( JSON_EXTRACT(`{$moduleCode}`.`json`, '$.{$field}' ) )"] = $condition;
                 } else {
-                    $filterData["JSON_EXTRACT(`json`, '$.{$field}' )"] = $condition;
+                    $filterData["JSON_UNQUOTE( JSON_EXTRACT(`json`, '$.{$field}' ) )"] = $condition;
                 }
             }
         } else {
             if (!empty($moduleCode)) {
-                $filterData["JSON_EXTRACT(`{$moduleCode}`.`json`, '$.{$field}' )"] = $condition;
+                $filterData["JSON_UNQUOTE( JSON_EXTRACT(`{$moduleCode}`.`json`, '$.{$field}' ) )"] = $condition;
             } else {
-                $filterData["JSON_EXTRACT(`json`, '$.{$field}' )"] = $condition;
+                $filterData["JSON_UNQUOTE( JSON_EXTRACT(`json`, '$.{$field}' ) )"] = $condition;
             }
         }
 

@@ -783,6 +783,8 @@ abstract class Driver
                 } elseif ('bind' == $exp) {
                     // 使用表达式
                     $whereStr .= $key . ' = :' . $val[1];
+                } elseif ('find_in_set' == $exp) {
+                    $whereStr .= 'FIND_IN_SET(\'' . $val[1] . '\',' . $key . ')';
                 } elseif ('exp' == $exp) {
                     // 使用表达式
                     $whereStr .= $key . ' ' . $val[1];
