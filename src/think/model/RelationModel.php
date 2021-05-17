@@ -1865,6 +1865,7 @@ class RelationModel extends Model
     {
         if ($isMaster) {
             // 主表关联
+            $itemCondition = null;
             if (is_array($condition)) {
                 list($itemCondition, $itemValue) = $condition;
             } else {
@@ -1877,10 +1878,23 @@ class RelationModel extends Model
                 $itemValueStr = $itemValue;
             }
 
+            // todo 针对itemCondition 进行sql组装
             if (!empty($moduleCode)) {
-                $filterData['_string'] = "JSON_CONTAINS('[{$itemValueStr}]' , JSON_UNQUOTE(JSON_EXTRACT(`{$moduleCode}`.`json`, '$.{$field}' )))";
+                switch ($itemCondition) {
+                    case "FIND_IN_SET":
+                        $filterData['_string'] = "FIND_IN_SET('{$itemValueStr}' , JSON_UNQUOTE(JSON_EXTRACT(`{$moduleCode}`.`json`, '$.{$field}' )))";
+                        break;
+                    default:
+                        $filterData['_string'] = "JSON_CONTAINS('[{$itemValueStr}]' , JSON_UNQUOTE(JSON_EXTRACT(`{$moduleCode}`.`json`, '$.{$field}' )))";
+                }
             } else {
-                $filterData['_string'] = "JSON_CONTAINS('[{$itemValueStr}]' , JSON_UNQUOTE(JSON_EXTRACT(`json`, '$.{$field}' )))";
+                switch ($itemCondition) {
+                    case "FIND_IN_SET":
+                        $filterData['_string'] = "FIND_IN_SET('{$itemValueStr}' , JSON_UNQUOTE(JSON_EXTRACT(`json`, '$.{$field}' )))";
+                        break;
+                    default:
+                        $filterData['_string'] = "JSON_CONTAINS('[{$itemValueStr}]' , JSON_UNQUOTE(JSON_EXTRACT(`json`, '$.{$field}' )))";
+                }
             }
         } else {
 //        echo json_encode($field);
