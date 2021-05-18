@@ -1891,17 +1891,29 @@ class Model
                 $map = [];
                 if (is_array($val[0])) {
                     // 支持多个字段验证
+                    $needCheckFields = [];
                     foreach ($val[0] as $field) {
                         if (!array_key_exists($field, $data)) {
                             // 多个字段如果值不存在，则去数据库查找，更新
                             if (array_key_exists($pk, $data)) {
-                                $map[$field] = $this->where([$pk => $data[$pk]])->getField($field);
+                                $needCheckFields[] = $field;
                             } else {
                                 // 主键不存直接返回 false
                                 return false;
                             }
                         } else {
                             $map[$field] = $data[$field];
+                        }
+                    }
+                    // 检查字段
+                    if (count($needCheckFields) > 0) {
+                        $checkData = $this->where([$pk => $data[$pk]])->field($needCheckFields)->find();
+                        if (is_array($checkData)) {
+                            foreach ($needCheckFields as $checkField) {
+                                if (array_key_exists($checkField, $checkData)) {
+                                    $map[$checkField] = $checkData[$checkField];
+                                }
+                            }
                         }
                     }
                 } else {

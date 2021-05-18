@@ -837,7 +837,8 @@ class Request extends \Workerman\Protocols\Http\Request
             '-bw' => 'BETWEEN', // 在之间
             '-not-bw' => 'NOT BETWEEN', // 不在之间
             '-in' => 'IN', // 在里面
-            '-not-in' => 'NOT IN' // 不在里面
+            '-not-in' => 'NOT IN', // 不在里面
+            '-fit' => 'FIND_IN_SET', // 列表里存在
         ];
 
         if (array_key_exists($val, $map)) {

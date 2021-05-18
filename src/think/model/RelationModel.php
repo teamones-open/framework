@@ -841,7 +841,7 @@ class RelationModel extends Model
 
             foreach ($fields as $field) {
                 if (array_key_exists($field, $moduleFields['custom'])) {
-                    $newFields[] = "JSON_UNQUOTE(json_extract(json, '$.{$field}' )) as {$field}";
+                    $newFields[] = "JSON_UNQUOTE(json_extract(`json`, '$.{$field}' )) as {$field}";
                 } else {
                     $newFields[] = $field;
                 }
@@ -1865,6 +1865,7 @@ class RelationModel extends Model
     {
         if ($isMaster) {
             // 主表关联
+            $itemCondition = null;
             if (is_array($condition)) {
                 list($itemCondition, $itemValue) = $condition;
             } else {
@@ -1877,10 +1878,23 @@ class RelationModel extends Model
                 $itemValueStr = $itemValue;
             }
 
+            // todo 针对itemCondition 进行sql组装
             if (!empty($moduleCode)) {
-                $filterData['_string'] = "JSON_CONTAINS('[{$itemValueStr}]' , JSON_UNQUOTE(JSON_EXTRACT({$moduleCode}.json, '$.{$field}' )))";
+                switch ($itemCondition) {
+                    case "FIND_IN_SET":
+                        $filterData['_string'] = "FIND_IN_SET('{$itemValueStr}' , JSON_UNQUOTE(JSON_EXTRACT(`{$moduleCode}`.`json`, '$.{$field}' )))";
+                        break;
+                    default:
+                        $filterData['_string'] = "JSON_CONTAINS('[{$itemValueStr}]' , JSON_UNQUOTE(JSON_EXTRACT(`{$moduleCode}`.`json`, '$.{$field}' )))";
+                }
             } else {
-                $filterData['_string'] = "JSON_CONTAINS('[{$itemValueStr}]' , JSON_UNQUOTE(JSON_EXTRACT(json, '$.{$field}' )))";
+                switch ($itemCondition) {
+                    case "FIND_IN_SET":
+                        $filterData['_string'] = "FIND_IN_SET('{$itemValueStr}' , JSON_UNQUOTE(JSON_EXTRACT(`json`, '$.{$field}' )))";
+                        break;
+                    default:
+                        $filterData['_string'] = "JSON_CONTAINS('[{$itemValueStr}]' , JSON_UNQUOTE(JSON_EXTRACT(`json`, '$.{$field}' )))";
+                }
             }
         } else {
 //        echo json_encode($field);
@@ -1916,22 +1930,22 @@ class RelationModel extends Model
                 }
 
                 if (!empty($moduleCode)) {
-                    $filterData["_string"] = "json_contains('{$inArray}', JSON_EXTRACT({$moduleCode}.json,'$.{$field}'))";
+                    $filterData["_string"] = "JSON_CONTAINS('{$inArray}', JSON_EXTRACT(`{$moduleCode}`.`json`,'$.{$field}'))";
                 } else {
-                    $filterData["_string"] = "json_contains('{$inArray}', JSON_EXTRACT(json,'$.{$field}'))";
+                    $filterData["_string"] = "JSON_CONTAINS('{$inArray}', JSON_EXTRACT(`json`,'$.{$field}'))";
                 }
             } else {
                 if (!empty($moduleCode)) {
-                    $filterData["json_extract({$moduleCode}.json, '$.{$field}' )"] = $condition;
+                    $filterData["JSON_EXTRACT(`{$moduleCode}`.`json`, '$.{$field}' )"] = $condition;
                 } else {
-                    $filterData["json_extract(json, '$.{$field}' )"] = $condition;
+                    $filterData["JSON_EXTRACT(`json`, '$.{$field}' )"] = $condition;
                 }
             }
         } else {
             if (!empty($moduleCode)) {
-                $filterData["json_extract({$moduleCode}.json, '$.{$field}' )"] = $condition;
+                $filterData["JSON_EXTRACT(`{$moduleCode}`.`json`, '$.{$field}' )"] = $condition;
             } else {
-                $filterData["json_extract(json, '$.{$field}' )"] = $condition;
+                $filterData["JSON_EXTRACT(`json`, '$.{$field}' )"] = $condition;
             }
         }
 
@@ -1978,9 +1992,9 @@ class RelationModel extends Model
                 if ($itemModule['type'] === 'horizontal') {
                     // 水平关联为自定义字段
                     if (empty($idsString) || $idsString == 'null') {
-                        $filterData['_string'] = "JSON_EXTRACT({$masterModuleCode}.json, '$.{$itemModule['link_id']}' ) IS NULL";
+                        $filterData['_string'] = "JSON_EXTRACT(`{$masterModuleCode}`.`json`, '$.{$itemModule['link_id']}' ) IS NULL";
                     } else {
-                        $filterData['_string'] = "JSON_CONTAINS('[{$idsString}]', JSON_UNQUOTE(JSON_EXTRACT({$masterModuleCode}.json, '$.{$itemModule['link_id']}' ) ) )";
+                        $filterData['_string'] = "JSON_CONTAINS('[{$idsString}]', JSON_UNQUOTE(JSON_EXTRACT(`{$masterModuleCode}`.`json`, '$.{$itemModule['link_id']}' ) ) )";
                     }
                 } else {
                     // 普通直接查询条件
@@ -2192,12 +2206,12 @@ class RelationModel extends Model
             $fieldArray = explode('.', $field);
             if (array_key_exists($fieldArray[1], $this->queryComplexCustomFieldMapping)) {
                 $fieldConfig = $this->queryComplexCustomFieldMapping[$fieldArray[1]];
-                return "JSON_UNQUOTE(JSON_EXTRACT({$fieldConfig['query_module_code']}.json, '$.{$fieldConfig['field']}'))";
+                return "JSON_UNQUOTE(JSON_EXTRACT(`{$fieldConfig['query_module_code']}`.`json`, '$.{$fieldConfig['field']}'))";
             }
         } else {
             if (array_key_exists($field, $this->queryComplexCustomFieldMapping)) {
                 $fieldConfig = $this->queryComplexCustomFieldMapping[$field];
-                return "JSON_UNQUOTE(JSON_EXTRACT(json, '$.{$fieldConfig['field']}'))";
+                return "JSON_UNQUOTE(JSON_EXTRACT(`json`, '$.{$fieldConfig['field']}'))";
             }
         }
 
@@ -2232,7 +2246,7 @@ class RelationModel extends Model
                         case "belong_to":
                             if (!empty($this->queryComplexRelationCustomFields[$moduleArray[0]])
                                 && array_key_exists($moduleArray[1], $this->queryComplexRelationCustomFields[$moduleArray[0]])) {
-                                $newFields[] = "JSON_UNQUOTE(JSON_EXTRACT({$moduleArray[0]}.json, '$.{$moduleArray[1]}')) AS {$moduleArray[0]}__{$moduleArray[1]}";
+                                $newFields[] = "JSON_UNQUOTE(JSON_EXTRACT(`{$moduleArray[0]}`.`json`, '$.{$moduleArray[1]}')) AS {$moduleArray[0]}__{$moduleArray[1]}";
                             } else {
                                 $newFields[] = "{$fieldItem} AS {$moduleArray[0]}__{$moduleArray[1]}";
                             }
@@ -2245,7 +2259,7 @@ class RelationModel extends Model
                                 // 水平关联自定义字段
                                 $newFields[] = "{$fieldItem} AS {$moduleArray[0]}__{$moduleArray[1]}";
                                 if (!array_key_exists($moduleArray[0], $this->queryModuleLfetJoinRelation)) {
-                                    $filterModuleLinkRelation[$moduleArray[0]]['link_id'] = "JSON_UNQUOTE(JSON_EXTRACT({$this->currentModuleCode}.json, '$.{$filterModuleLinkRelation[$moduleArray[0]]['link_id']}'))";
+                                    $filterModuleLinkRelation[$moduleArray[0]]['link_id'] = "JSON_UNQUOTE(JSON_EXTRACT(`{$this->currentModuleCode}`.`json`, '$.{$filterModuleLinkRelation[$moduleArray[0]]['link_id']}'))";
                                     $this->queryModuleLfetJoinRelation[$moduleArray[0]] = $filterModuleLinkRelation[$moduleArray[0]];
                                 }
                             } else if ($filterModuleLinkRelation[$moduleArray[0]]['type'] === 'fixed') {
@@ -2262,7 +2276,7 @@ class RelationModel extends Model
                             if ($filterModuleLinkRelation[$moduleArray[0]]['type'] === 'horizontal') {
                                 if (!array_key_exists($moduleArray[0], $this->queryModuleHorizontalRelation)) {
                                     $this->queryModuleHorizontalRelation[$moduleArray[0]] = $filterModuleLinkRelation[$moduleArray[0]];
-                                    $newFields[] = "JSON_UNQUOTE(JSON_EXTRACT({$this->currentModuleCode}.json, '$.{$filterModuleLinkRelation[$moduleArray[0]]['link_id']}')) AS {$moduleArray[0]}__link";
+                                    $newFields[] = "JSON_UNQUOTE(JSON_EXTRACT(`{$this->currentModuleCode}`.`json`, '$.{$filterModuleLinkRelation[$moduleArray[0]]['link_id']}')) AS {$moduleArray[0]}__link";
                                 }
                             }
                             break;
@@ -2281,18 +2295,18 @@ class RelationModel extends Model
                         if ($filterModuleLinkRelation[$moduleArray[1]]['type'] === 'horizontal') {
                             if (!array_key_exists($moduleArray[1], $this->queryModuleHorizontalRelation)) {
                                 $this->queryModuleHorizontalRelation[$moduleArray[1]] = $filterModuleLinkRelation[$moduleArray[1]];
-                                $newFields[] = "JSON_UNQUOTE(JSON_EXTRACT({$this->currentModuleCode}.json, '$.{$filterModuleLinkRelation[$moduleArray[1]]['link_id']}')) AS {$moduleArray[1]}__link";
+                                $newFields[] = "JSON_UNQUOTE(JSON_EXTRACT(`{$this->currentModuleCode}`.`json`, '$.{$filterModuleLinkRelation[$moduleArray[1]]['link_id']}')) AS {$moduleArray[1]}__link";
                             }
                         }
                     } else {
                         if (!array_key_exists($moduleArray[1], $this->queryModuleLfetJoinRelation)) {
 
                             // 默认增加id name code 字段
-                            $newFields[] = "{$moduleArray[1]}.id AS {$moduleArray[1]}__id";
-                            $newFields[] = "{$moduleArray[1]}.name AS {$moduleArray[1]}__name";
-                            $newFields[] = "{$moduleArray[1]}.code AS {$moduleArray[1]}__code";
+                            $newFields[] = "`{$moduleArray[1]}`.`id` AS {$moduleArray[1]}__id";
+                            $newFields[] = "`{$moduleArray[1]}`.`name` AS {$moduleArray[1]}__name";
+                            $newFields[] = "`{$moduleArray[1]}`.`code` AS {$moduleArray[1]}__code";
 
-                            $filterModuleLinkRelation[$moduleArray[1]]['link_id'] = "JSON_UNQUOTE(JSON_EXTRACT({$this->currentModuleCode}.json, '$.{$filterModuleLinkRelation[$moduleArray[1]]['link_id']}'))";
+                            $filterModuleLinkRelation[$moduleArray[1]]['link_id'] = "JSON_UNQUOTE(JSON_EXTRACT(`{$this->currentModuleCode}`.`json`, '$.{$filterModuleLinkRelation[$moduleArray[1]]['link_id']}'))";
                             $this->queryModuleLfetJoinRelation[$moduleArray[1]] = $filterModuleLinkRelation[$moduleArray[1]];
                         }
                     }
@@ -2304,7 +2318,7 @@ class RelationModel extends Model
 
         if (array_key_exists($this->currentModuleCode, $this->queryModuleRelationFields) && !in_array('id', $this->queryModuleRelationFields[$this->currentModuleCode])) {
             // 主表必须查询返回ID字段
-            array_unshift($newFields, "{$this->currentModuleCode}.id AS {$this->currentModuleCode}__id");
+            array_unshift($newFields, "`{$this->currentModuleCode}`.`id` AS {$this->currentModuleCode}__id");
         }
 
         return $newFields;
@@ -2485,9 +2499,9 @@ class RelationModel extends Model
                 foreach ($linkIds as $linkId) {
                     if (strpos($linkId, 'module_id') !== false) {
                         if ($this->currentModuleCode === 'task') {
-                            $queryJoin['condition'][] = "{$joinModuleCode}.id = {$this->currentModuleCode}.entity_module_id";
+                            $queryJoin['condition'][] = "`{$joinModuleCode}`.`id` = `{$this->currentModuleCode}`.`entity_module_id`";
                         } else {
-                            $queryJoin['condition'][] = "{$joinModuleCode}.id = {$this->currentModuleCode}.{$linkId}";
+                            $queryJoin['condition'][] = "`{$joinModuleCode}`.`id` = `{$this->currentModuleCode}`.`{$linkId}`";
                         }
                     } else {
                         if ($linkId) {
@@ -2501,9 +2515,9 @@ class RelationModel extends Model
                             } else {
                                 // 区分belong_to 和has_one
                                 if ($joinItem['relation_type'] == "has_one") {
-                                    $queryJoin['condition'][] = "{$joinModuleCode}.{$linkId} = {$this->currentModuleCode}.id";
+                                    $queryJoin['condition'][] = "`{$joinModuleCode}`.`{$linkId}` = `{$this->currentModuleCode}`.`id`";
                                 } else if ($joinItem['relation_type'] == "belong_to") {
-                                    $queryJoin['condition'][] = " {$joinModuleCode}.id = {$this->currentModuleCode}.{$linkId} ";
+                                    $queryJoin['condition'][] = " `{$joinModuleCode}`.`id` = `{$this->currentModuleCode}`.`{$linkId}` ";
                                 }
                             }
 
@@ -2565,6 +2579,11 @@ class RelationModel extends Model
 
         // 处理join查询
         $this->parseQueryRelationDataJoinSql();
+
+        if (array_key_exists("order", $options)) {
+            // 有order参数
+            $this->order($options["order"]);
+        }
 
         $findData = $this->find();
 
