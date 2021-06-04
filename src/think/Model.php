@@ -2362,6 +2362,8 @@ class Model
         $this->queryComplexRelationCustomFields = [];
         $this->complexFilterRelatedModule = [];
         $this->queryModuleRelation = [];
+        $this->oldUpdateData = [];
+        $this->newUpdateData = [];
     }
 
     /**
