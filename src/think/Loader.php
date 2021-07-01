@@ -326,7 +326,6 @@ class Loader
         defined('RUNTIME_PATH') or define('RUNTIME_PATH', ROOT_PATH . 'runtime/');   // 定义缓存目录
         defined('APP_STATUS') or define('APP_STATUS', ''); // 应用状态 加载对应的配置文件
         defined('APP_MODE') or define('APP_MODE', 'common'); // 应用模式 默认为普通模式
-        defined('STORAGE_TYPE') or define('STORAGE_TYPE', 'File'); // 存储类型 默认为File
         defined('COMMON_PATH') or define('COMMON_PATH', APP_PATH . 'common' . DS); // 应用公共目录
         defined('EXTEND_PATH') or define('EXTEND_PATH', ROOT_PATH . 'extend' . DS);
         defined('COMMON_VENDOR_PATH') or define('COMMON_VENDOR_PATH', ROOT_PATH . 'vendor' . DS);
