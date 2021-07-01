@@ -1,13 +1,18 @@
 <?php
+
+declare(strict_types=1);
+
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK ]
+// | The teamones framework runs on the workerman high performance framework
 // +----------------------------------------------------------------------
-// | Copyright (c) 2006~2013 http://topthink.com All rights reserved.
+// | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
 // | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
 // +----------------------------------------------------------------------
+
 namespace think;
 
 /**
@@ -16,7 +21,7 @@ namespace think;
 class Hook
 {
 
-    public static $tags = [];
+    public static array $tags = [];
 
     /**
      * 动态添加插件到某个标签
@@ -24,7 +29,7 @@ class Hook
      * @param mixed $name 插件名称
      * @return void
      */
-    public static function add($tag, $name)
+    public static function add(string $tag, $name): void
     {
         if (!isset(self::$tags[$tag])) {
             self::$tags[$tag] = [];
@@ -42,7 +47,7 @@ class Hook
      * @param boolean $recursive 是否递归合并
      * @return void
      */
-    public static function import($data, $recursive = true)
+    public static function import(array $data, $recursive = true): void
     {
         if (!$recursive) {
             // 覆盖导入
@@ -71,7 +76,7 @@ class Hook
      * @param string $tag 插件位置 留空获取全部
      * @return array
      */
-    public static function get($tag = '')
+    public static function get($tag = ''): array
     {
         if (empty($tag)) {
             // 获取全部的插件信息
@@ -87,7 +92,7 @@ class Hook
      * @param string $tag 标签名称
      * @param null $params 传入参数
      */
-    public static function listen($tag, &$params = null)
+    public static function listen(string $tag, &$params = null): void
     {
         if (isset(self::$tags[$tag])) {
             if (APP_DEBUG) {
@@ -111,7 +116,6 @@ class Hook
                 trace('[ ' . $tag . ' ] --END-- [ RunTime:' . G($tag . 'Start', $tag . 'End', 6) . 's ]');
             }
         }
-        return;
     }
 
     /**
@@ -121,7 +125,7 @@ class Hook
      * @param Mixed $params 传入的参数
      * @return mixed
      */
-    public static function exec($name, $tag, &$params = null)
+    public static function exec(string $name, $tag, &$params = null)
     {
         if ('Behavior' == substr($name, -8)) {
             // 行为扩展必须用run入口方法
