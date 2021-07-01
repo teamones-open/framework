@@ -1056,6 +1056,9 @@ abstract class Driver
      */
     public function insert($data, $options = [], $replace = false)
     {
+        // 防止内存溢出，执行操作前清空sql历史记录
+        $this->modelSql = [];
+
         $values = $fields = [];
         $this->model = $options['model'];
         $this->parseBind(!empty($options['bind']) ? $options['bind'] : []);
@@ -1097,6 +1100,9 @@ abstract class Driver
      */
     public function insertAll($dataSet, $options = [], $replace = false)
     {
+        // 防止内存溢出，执行操作前清空sql历史记录
+        $this->modelSql = [];
+
         $values = [];
         $this->model = $options['model'];
         if (!is_array($dataSet[0])) {
@@ -1140,6 +1146,9 @@ abstract class Driver
      */
     public function selectInsert($fields, $table, $options = [])
     {
+        // 防止内存溢出，执行操作前清空sql历史记录
+        $this->modelSql = [];
+
         $this->model = $options['model'];
         $this->parseBind(!empty($options['bind']) ? $options['bind'] : []);
         if (is_string($fields)) {
@@ -1162,6 +1171,9 @@ abstract class Driver
      */
     public function update($data, $options)
     {
+        // 防止内存溢出，执行操作前清空sql历史记录
+        $this->modelSql = [];
+
         $this->model = $options['model'];
         $this->parseBind(!empty($options['bind']) ? $options['bind'] : []);
         $table = $this->parseTable($options['table']);
@@ -1190,6 +1202,9 @@ abstract class Driver
      */
     public function delete($options = [])
     {
+        // 防止内存溢出，执行操作前清空sql历史记录
+        $this->modelSql = [];
+
         $this->model = $options['model'];
         $this->parseBind(!empty($options['bind']) ? $options['bind'] : []);
         $table = $this->parseTable($options['table']);

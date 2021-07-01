@@ -132,6 +132,9 @@ class Mysql extends Driver
      */
     public function insertAll($dataSet, $options = [], $replace = false)
     {
+        // 防止内存溢出，执行操作前清空sql历史记录
+        $this->modelSql = [];
+
         $values = [];
         $this->model = $options['model'];
         if (!is_array($dataSet[0])) {
@@ -240,7 +243,7 @@ class Mysql extends Driver
             $this->free();
         }
         $this->queryTimes++;
-       
+
         // 调试开始
         $this->debug(true);
         $this->PDOStatement = $this->_linkID->prepare($str);
