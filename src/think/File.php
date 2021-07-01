@@ -1,12 +1,16 @@
 <?php
+
+declare(strict_types=1);
+
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK ]
+// | The teamones framework runs on the workerman high performance framework
 // +----------------------------------------------------------------------
-// | Copyright (c) 2006~2017 http://thinkphp.cn All rights reserved.
+// | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
 // | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
 // +----------------------------------------------------------------------
 
 namespace think;
@@ -19,38 +23,38 @@ class File extends \SplFileInfo
      * 错误信息
      * @var string
      */
-    private $error = '';
+    private string $error = '';
 
     // 当前完整文件名
-    protected $filename;
+    protected string $filename;
 
     // 上传文件名
-    protected $saveName;
+    protected string $saveName;
 
     // 文件上传命名规则
-    protected $rule = 'date';
+    protected string $rule = 'date';
 
     // 文件上传验证规则
-    protected $validate = [];
+    protected array $validate = [];
 
     // 单元测试
-    protected $isTest;
+    protected bool $isTest;
 
     // 上传文件信息
-    protected $info;
+    protected array $info;
 
     // 文件hash信息
-    protected $hash = [];
+    protected array $hash = [];
 
     /**
      * @var string
      */
-    protected $_uploadMimeType = null;
+    protected string $_uploadMimeType = '';
 
     /**
      * @var int
      */
-    protected $_uploadErrorCode = null;
+    protected int $_uploadErrorCode = 0;
 
 
     /**
@@ -75,7 +79,7 @@ class File extends \SplFileInfo
      * @param bool $test 是否测试
      * @return $this
      */
-    public function isTest($test = false)
+    public function isTest($test = false): File
     {
         $this->isTest = $test;
         return $this;
@@ -86,7 +90,7 @@ class File extends \SplFileInfo
      * @param array $info 上传文件信息
      * @return $this
      */
-    public function setUploadInfo($info)
+    public function setUploadInfo(array $info): File
     {
         $this->info = $info;
         return $this;
@@ -99,14 +103,14 @@ class File extends \SplFileInfo
      */
     public function getInfo($name = '')
     {
-        return isset($this->info[$name]) ? $this->info[$name] : $this->info;
+        return $this->info[$name] ?? $this->info;
     }
 
     /**
      * 获取上传文件的文件名
      * @return string
      */
-    public function getSaveName()
+    public function getSaveName(): string
     {
         return $this->saveName;
     }
@@ -116,7 +120,7 @@ class File extends \SplFileInfo
      * @param string $saveName
      * @return $this
      */
-    public function setSaveName($saveName)
+    public function setSaveName(string $saveName): File
     {
         $this->saveName = $saveName;
         return $this;
@@ -140,7 +144,7 @@ class File extends \SplFileInfo
      * @param string $path 目录
      * @return boolean
      */
-    protected function checkPath($path)
+    protected function checkPath(string $path): bool
     {
         if (is_dir($path)) {
             return true;
@@ -156,12 +160,12 @@ class File extends \SplFileInfo
 
     /**
      * 获取文件类型信息
-     * @return mixed
+     * @return false|string
      */
     public function getMime()
     {
-        $finfo = finfo_open(FILEINFO_MIME_TYPE);
-        return finfo_file($finfo, $this->filename);
+        $fileInfo = finfo_open(FILEINFO_MIME_TYPE);
+        return finfo_file($fileInfo, $this->filename);
     }
 
     /**
@@ -169,7 +173,7 @@ class File extends \SplFileInfo
      * @param string $rule 文件命名规则
      * @return $this
      */
-    public function rule($rule)
+    public function rule(string $rule): File
     {
         $this->rule = $rule;
         return $this;
@@ -180,7 +184,7 @@ class File extends \SplFileInfo
      * @param array $rule 验证规则
      * @return $this
      */
-    public function validate($rule = [])
+    public function validate($rule = []): File
     {
         $this->validate = $rule;
         return $this;
@@ -190,7 +194,7 @@ class File extends \SplFileInfo
      * 检测是否合法的上传文件
      * @return bool
      */
-    public function isValid()
+    public function isValid(): bool
     {
         if ($this->isTest) {
             return is_file($this->filename);
@@ -203,7 +207,7 @@ class File extends \SplFileInfo
      * @param array $rule 验证规则
      * @return bool
      */
-    public function check($rule = [])
+    public function check($rule = []): bool
     {
         $rule = $rule ?: $this->validate;
 
@@ -235,7 +239,7 @@ class File extends \SplFileInfo
     }
 
     /**
-     * @return mixed
+     * @return array|string|string[]
      */
     public function getExtension()
     {
@@ -247,7 +251,7 @@ class File extends \SplFileInfo
      * @param array|string $ext 允许后缀
      * @return bool
      */
-    public function checkExt($ext)
+    public function checkExt($ext): bool
     {
         if (is_string($ext)) {
             $ext = explode(',', $ext);
@@ -263,7 +267,7 @@ class File extends \SplFileInfo
      * 检测图像文件
      * @return bool
      */
-    public function checkImg()
+    public function checkImg(): bool
     {
         $extension = strtolower(pathinfo($this->getInfo('name'), PATHINFO_EXTENSION));
         /* 对图像文件进行严格检测 */
@@ -293,7 +297,7 @@ class File extends \SplFileInfo
      * @param integer $size 最大大小
      * @return bool
      */
-    public function checkSize($size)
+    public function checkSize($size): bool
     {
         if ($this->getSize() > $size) {
             return false;
@@ -304,7 +308,7 @@ class File extends \SplFileInfo
     /**
      * @return string
      */
-    public function getMineType()
+    public function getMineType(): string
     {
         return $this->_uploadMimeType;
     }
@@ -314,7 +318,7 @@ class File extends \SplFileInfo
      * @param array|string $mime 允许类型
      * @return bool
      */
-    public function checkMime($mime)
+    public function checkMime($mime): bool
     {
         if (is_string($mime)) {
             $mime = explode(',', $mime);
@@ -329,7 +333,7 @@ class File extends \SplFileInfo
      * @param $destination
      * @return File
      */
-    public function move($destination)
+    public function move($destination): File
     {
         set_error_handler(function ($type, $msg) use (&$error) {
             $error = $msg;
@@ -350,17 +354,18 @@ class File extends \SplFileInfo
 
     /**
      * 获取错误信息
-     * @return mixed
+     * @return string
      */
-    public function getError()
+    public function getError(): string
     {
         return $this->error;
     }
 
     /**
+     * 获取上传错误码
      * @return int
      */
-    public function getUploadErrorCode()
+    public function getUploadErrorCode(): int
     {
         return $this->_uploadErrorCode;
     }
