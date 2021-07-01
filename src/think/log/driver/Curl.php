@@ -1,5 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
+// +----------------------------------------------------------------------
+// | The teamones framework runs on the workerman high performance framework
+// +----------------------------------------------------------------------
+// | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
+// +----------------------------------------------------------------------
+// | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
+// +----------------------------------------------------------------------
+
 namespace think\log\driver;
 
 use Monolog\Logger;
@@ -23,13 +36,13 @@ class Curl
     /**
      * @var array
      */
-    protected static $_instance = [];
+    protected static array $_instance = [];
 
     /**
      * @param string $name
      * @return Logger;
      */
-    public static function channel($name = 'default')
+    public static function channel(string $name = 'default'): ?Logger
     {
         $configs = config('monolog', []);
         if (empty($configs)) {

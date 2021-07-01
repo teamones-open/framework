@@ -1,12 +1,16 @@
 <?php
+
+declare(strict_types=1);
+
 // +----------------------------------------------------------------------
-// | TOPThink [ WE CAN DO IT JUST THINK ]
+// | The teamones framework runs on the workerman high performance framework
 // +----------------------------------------------------------------------
-// | Copyright (c) 2011 http://topthink.com All rights reserved.
+// | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
 // | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
 // +----------------------------------------------------------------------
 
 namespace think\log\driver;
@@ -14,13 +18,17 @@ namespace think\log\driver;
 class File
 {
 
-    protected $config = [
+    protected array $config = [
         'log_time_format' => ' c ',
         'log_file_size' => 2097152,
         'log_path' => '',
     ];
 
-    // 实例化并传入参数
+    /**
+     * 实例化并传入参数
+     * File constructor.
+     * @param array $config
+     */
     public function __construct($config = [])
     {
         $this->config = array_merge($this->config, $config);
@@ -33,7 +41,7 @@ class File
      * @param string $destination 写入目标
      * @return void
      */
-    public function write($log, $destination = '')
+    public function write(string $log, $destination = ''): void
     {
         $now = date($this->config['log_time_format']);
         if (empty($destination)) {

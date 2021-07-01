@@ -1,13 +1,18 @@
 <?php
+
+declare(strict_types=1);
+
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK IT ]
+// | The teamones framework runs on the workerman high performance framework
 // +----------------------------------------------------------------------
 // | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
 // | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
 // +----------------------------------------------------------------------
+
 namespace think;
 
 /**
@@ -28,15 +33,18 @@ class Log
     const SQL = 'SQL'; // SQL：SQL语句 注意只在调试模式开启时有效
 
     // 日志信息
-    protected static $log = [];
+    protected static array $log = [];
 
     // 日志存储
-    protected static $storage = null;
+    protected static ?object $storage = null;
 
-    // 日志初始化
-    public static function init($config = [])
+    /**
+     * 日志初始化
+     * @param array $config
+     */
+    public static function init($config = []): void
     {
-        $type = isset($config['type']) ? $config['type'] : 'File';
+        $type = $config['type'] ?? 'File';
         $class = strpos($type, '\\') ? $type : 'think\\log\\driver\\' . ucwords(strtolower($type));
         unset($config['type']);
         if (IS_CLI) {
@@ -54,12 +62,12 @@ class Log
      * @param boolean $record 是否强制记录
      * @return void
      */
-    public static function record($message, $level = self::ERR, $record = false)
+    public static function record(string $message, string $level = self::ERR, bool $record = false): void
     {
         if ($record || in_array(strtoupper($level), explode(",", C('LOG_LEVEL')))) {
             self::$log[] = "{$level}: {$message}\r\n";
 
-            if(count(self::$log) > 100){
+            if (count(self::$log) > 100) {
                 // 防止日志累计太多，内存溢出
                 self::save();
                 self::$log = [];
@@ -75,7 +83,7 @@ class Log
      * @param string $destination 写入目标
      * @return void
      */
-    public static function save($type = '', $destination = '')
+    public static function save(string $type = '', string $destination = ''): void
     {
         if (empty(self::$log)) {
             return;
@@ -113,7 +121,7 @@ class Log
      * @param string $type 信息类型
      * @return array
      */
-    public static function getLog($type = '')
+    public static function getLog(string $type = ''): array
     {
         return $type ? self::$log[$type] : self::$log;
     }
