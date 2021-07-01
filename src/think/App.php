@@ -1,118 +1,118 @@
 <?php
+
+declare(strict_types=1);
+
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK IT ]
+// | The teamones framework runs on the workerman high performance framework
 // +----------------------------------------------------------------------
 // | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
 // | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
 // +----------------------------------------------------------------------
+
 namespace think;
 
-use think\exception\ErrorCode;
-use think\exception\ExceptionHandlerInterface;
-use think\exception\ExceptionHandler;
-use think\exception\ClassNotFoundException;
-use Workerman\Worker;
-use Workerman\Timer;
-use Workerman\Connection\TcpConnection;
-use think\exception\HttpResponseException;
-use think\exception\HttpException;
-use Psr\Container\ContainerInterface;
 use Monolog\Logger;
+use Psr\Container\ContainerInterface;
+use think\exception\ClassNotFoundException;
+use think\exception\ErrorCode;
+use think\exception\ExceptionHandler;
+use think\exception\ExceptionHandlerInterface;
+use think\exception\HttpException;
+use think\exception\HttpResponseException;
+use Workerman\Connection\TcpConnection;
+use Workerman\Timer;
+use Workerman\Worker;
 
 class App
 {
     /**
      * @var bool 是否初始化过
      */
-    protected static $init = false;
+    protected static bool $init = false;
 
     /**
      * @var string 当前模块路径
      */
-    public static $modulePath;
+    public static string $modulePath;
 
     /**
      * @var string 应用类库命名空间
      */
-    public static $namespace = 'App';
+    public static string $namespace = 'App';
 
     /**
      * @var bool 应用类库后缀
      */
-    public static $suffix = false;
+    public static bool $suffix = false;
 
     /**
      * @var bool 应用路由检测
      */
-    protected static $routeCheck;
+    protected static bool $routeCheck;
 
     /**
      * @var bool 严格路由检测
      */
-    protected static $routeMust;
+    protected static bool $routeMust;
 
     /**
      * @var bool
      */
-    protected static $_supportStaticFiles = true;
+    protected static bool $_supportStaticFiles = true;
 
     /**
      * @var bool
      */
-    protected static $_supportPHPFiles = false;
+    protected static bool $_supportPHPFiles = false;
 
     /**
      * @var array
      */
-    protected static $_callbacks = [];
+    protected static array $_callbacks = [];
 
     /**
-     * @var Worker
+     * @var Worker|null
      */
-    protected static $_worker = null;
+    protected static ?Worker $_worker = null;
 
     /**
-     * @var ContainerInterface
+     * @var ContainerInterface|null
      */
-    protected static $_container = null;
+    protected static ?ContainerInterface $_container = null;
 
     /**
-     * @var Logger
+     * @var Logger|null
      */
-    protected static $_logger = null;
-
-    /**
-     * @var string
-     */
-    protected static $_publicPath = '';
+    protected static ?Logger $_logger = null;
 
     /**
      * @var string
      */
-    protected static $_configPath = '';
+    protected static string $_publicPath = '';
 
     /**
-     * @var TcpConnection
+     * @var TcpConnection|null
      */
-    protected static $_connection = null;
+    protected static ?TcpConnection $_connection = null;
 
     /**
-     * @var Request
+     * @var Request|null
      */
-    protected static $_request = null;
-
-    /**
-     * @var int
-     */
-    protected static $_maxRequestCount = 1000000;
+    protected static ?Request $_request = null;
 
     /**
      * @var int
      */
-    protected static $_gracefulStopTimer = null;
+    protected static int $_maxRequestCount = 1000000;
+
+    /**
+     * @var int|null
+     */
+    protected static ?int $_gracefulStopTimer = null;
 
 
     /**
@@ -131,9 +131,9 @@ class App
         static::$_publicPath = $public_path;
         static::loadController($app_path . C("DEFAULT_MODULE"));
 
-        $max_requst_count = (int)C('SERVER.max_request');
-        if ($max_requst_count > 0) {
-            static::$_maxRequestCount = $max_requst_count;
+        $maxRequestCount = (int)C('SERVER.max_request');
+        if ($maxRequestCount > 0) {
+            static::$_maxRequestCount = $maxRequestCount;
         }
         static::$_supportStaticFiles = true;
         static::$_supportPHPFiles = false;
@@ -144,7 +144,7 @@ class App
      * 应用程序初始化
      * @throws Exception
      */
-    public static function init()
+    public static function init(): void
     {
         // 日志目录转换为绝对路径 默认情况下存储到公共模块下面
         C('LOG_PATH', realpath(LOG_PATH) . '/Common/');
@@ -156,17 +156,15 @@ class App
 
         // 加载动态应用公共文件和配置
         load_ext_file(COMMON_PATH);
-
-        return;
     }
 
 
     /**
      * 初始化应用，并返回配置信息
-     * @return mixed
+     * @return array|null
      * @throws Exception
      */
-    public static function initCommon()
+    public static function initCommon(): ?array
     {
         if (empty(self::$init)) {
             self::init();
@@ -180,21 +178,20 @@ class App
     /**
      * 执行模块
      * @access public
-     * @param array $result 模块/控制器/操作
+     * @param array|string $result 模块/控制器/操作
      * @param array $config 配置参数
-     * @param bool $convert 是否自动转换控制器和操作名
-     * @return mixed
-     * @throws \ReflectionException
+     * @param bool|null $convert 是否自动转换控制器和操作名
+     * @return array
      */
-    public static function module($result, $config, $convert = null)
+    public static function module($result, array $config, $convert = null): array
     {
         if (is_string($result)) {
             $result = explode('/', $result);
         }
 
+        $module = strip_tags($result[0] ?: $config['DEFAULT_MODULE']);
         if ($config['MULTI_MODULE']) {
             // 多模块部署
-            $module = strip_tags($result[0] ?: $config['DEFAULT_MODULE']);
             $bind = Route::getBind('module');
             $available = false;
 
@@ -222,7 +219,6 @@ class App
             }
         } else {
             // 单一模块部署
-            $module = strip_tags($result[0] ?: $config['DEFAULT_MODULE']);
             static::$_request->module($module);
         }
 

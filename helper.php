@@ -1,12 +1,16 @@
 <?php
+
+declare(strict_types=1);
+
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK IT ]
+// | The teamones framework runs on the workerman high performance framework
 // +----------------------------------------------------------------------
 // | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
 // | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
 // +----------------------------------------------------------------------
 
 /**
@@ -14,11 +18,11 @@
  */
 
 use think\App;
+use think\Cache;
 use think\Loader;
+use think\Log;
 use think\Request;
 use think\Response;
-use think\Log;
-use think\Cache;
 
 if (!function_exists('C')) {
     /**
@@ -26,11 +30,11 @@ if (!function_exists('C')) {
      * @param string|array $name 配置变量
      * @param mixed $value 配置值
      * @param mixed $default 默认值
-     * @return mixed
+     * @return array|string|null
      */
-    function C($name = null, $value = null, $default = null)
+    function C($name = '', $value = null, $default = null)
     {
-        static $_config = array();
+        static $_config = [];
         // 无参数时获取所有
         if (empty($name)) {
             return $_config;
@@ -40,7 +44,7 @@ if (!function_exists('C')) {
             if (!strpos($name, '.')) {
                 $name = strtoupper($name);
                 if (is_null($value)) {
-                    return isset($_config[$name]) ? $_config[$name] : $default;
+                    return $_config[$name] ?? $default;
                 }
 
                 $_config[$name] = $value;
@@ -50,7 +54,7 @@ if (!function_exists('C')) {
             $name = explode('.', $name);
             $name[0] = strtoupper($name[0]);
             if (is_null($value)) {
-                return isset($_config[$name[0]][$name[1]]) ? $_config[$name[0]][$name[1]] : $default;
+                return $_config[$name[0]][$name[1]] ?? $default;
             }
 
             $_config[$name[0]][$name[1]] = $value;
@@ -82,10 +86,9 @@ if (!function_exists('load_config')) {
      * 加载配置文件 支持格式转换 仅支持一级配置
      * @param string $file 配置文件名
      * @param string $parse 配置解析方法 有些格式需要用户自己解析
-     * @return array|bool|mixed
-     * @throws \think\Exception
+     * @return array|false|mixed
      */
-    function load_config($file, $parse = CONF_PARSE)
+    function load_config(string $file, $parse = CONF_PARSE)
     {
         $ext = pathinfo($file, PATHINFO_EXTENSION);
         switch ($ext) {
@@ -119,7 +122,7 @@ if (!function_exists('json')) {
      * @param array $options 参数
      * @return Response
      */
-    function json($data = [], $code = 200, $header = [], $options = [])
+    function json($data = [], $code = 200, $header = [], $options = []) : Response
     {
         return Response::create($data, 'json', $code, $header, $options);
     }

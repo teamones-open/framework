@@ -296,19 +296,6 @@ class Loader
     }
 
     /**
-     * 检查应用目录结构 如果不存在则自动创建
-     */
-    private static function checkAppDir()
-    {
-        if (C('CHECK_APP_DIR')) {
-            if (!is_dir(APP_PATH . BIND_MODULE) || !is_dir(LOG_PATH)) {
-                // 检测应用目录结构
-                Build::checkDir(BIND_MODULE);
-            }
-        }
-    }
-
-    /**
      * 加载常量
      */
     public static function loadConstant()
@@ -320,6 +307,16 @@ class Loader
         defined('MEMORY_LIMIT_ON') or define('MEMORY_LIMIT_ON', function_exists('memory_get_usage'));
         if (MEMORY_LIMIT_ON) {
             $GLOBALS['_startUseMems'] = memory_get_usage();
+        }
+
+        if(!defined('APP_PATH')) {
+            // 需要在 start.php 入口定义
+            define('APP_PATH', '');
+        }
+
+        if(!defined('APP_DEBUG')) {
+            // 需要在 start.php 入口定义
+            define('APP_DEBUG', false);
         }
 
         // 系统常量定义
