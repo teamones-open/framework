@@ -88,7 +88,7 @@ class Db
     public static function clearInstance(): void
     {
         // 解析连接参数 支持数组和字符串
-        self::$_instance = [];
+        self::$instance = [];
         self::$_instance = null;
     }
 
