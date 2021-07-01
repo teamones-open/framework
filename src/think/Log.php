@@ -58,6 +58,12 @@ class Log
     {
         if ($record || in_array(strtoupper($level), explode(",", C('LOG_LEVEL')))) {
             self::$log[] = "{$level}: {$message}\r\n";
+
+            if(count(self::$log) > 100){
+                // 防止日志累计太多，内存溢出
+                self::save();
+                self::$log = [];
+            }
         }
     }
 

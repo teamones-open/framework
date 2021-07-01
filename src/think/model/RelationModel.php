@@ -2634,8 +2634,8 @@ class RelationModel extends Model
             $this->where($filter);
         }
 
-        if ($maxId > 1000000) {
-            // 当单表数据量超过100万时候，不做count查询
+        if ($maxId > 100000) {
+            // 当单表数据量超过10万时候，不做count查询
             $total = C("database.database_max_select_rows");
         } else {
             $total = $this->count();
