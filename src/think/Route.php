@@ -1457,44 +1457,6 @@ class Route
             }
         }
 
-        // 绑定模型数据
-        if (isset($option['bind_model'])) {
-            $bind = [];
-            foreach ($option['bind_model'] as $key => $val) {
-                if ($val instanceof \Closure) {
-                    $result = call_user_func_array($val, [$matches]);
-                } else {
-                    if (is_array($val)) {
-                        $fields = explode('&', $val[1]);
-                        $model = $val[0];
-                        $exception = isset($val[2]) ? $val[2] : true;
-                    } else {
-                        $fields = ['id'];
-                        $model = $val;
-                        $exception = true;
-                    }
-                    $where = [];
-                    $match = true;
-                    foreach ($fields as $field) {
-                        if (!isset($matches[$field])) {
-                            $match = false;
-                            break;
-                        } else {
-                            $where[$field] = $matches[$field];
-                        }
-                    }
-                    if ($match) {
-                        $query = strpos($model, '\\') ? $model::where($where) : Loader::model($model)->where($where);
-                        $result = $query->failException($exception)->find();
-                    }
-                }
-                if (!empty($result)) {
-                    $bind[$key] = $result;
-                }
-            }
-            $request->bind($bind);
-        }
-
         if (!empty($option['response'])) {
             Hook::add('response_send', $option['response']);
         }
@@ -1559,18 +1521,6 @@ class Route
             }
         }
 
-        // 开启请求缓存
-        if ($request->isGet() && isset($option['cache'])) {
-            $cache = $option['cache'];
-            if (is_array($cache)) {
-                list($key, $expire, $tag) = array_pad($cache, 3, null);
-            } else {
-                $key = str_replace('|', '/', $pathinfo);
-                $expire = $cache;
-                $tag = null;
-            }
-            $request->cache($key, $expire, $tag);
-        }
         return $result;
     }
 
