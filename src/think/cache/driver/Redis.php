@@ -1,13 +1,18 @@
 <?php
+
+declare(strict_types=1);
+
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK IT ]
+// | The teamones framework runs on the workerman high performance framework
 // +----------------------------------------------------------------------
 // | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
 // | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
 // +----------------------------------------------------------------------
+
 namespace think\cache\driver;
 
 use think\cache\Driver;
@@ -46,9 +51,9 @@ class Redis extends Driver
      * @param string $name 缓存变量名
      * @return bool
      */
-    public function has($name)
+    public function has(string $name): bool
     {
-        return RedisHandler::get($this->getCacheKey($name)) ? true : false;
+        return (bool)RedisHandler::get($this->getCacheKey($name));
     }
 
     /**
@@ -58,7 +63,7 @@ class Redis extends Driver
      * @param mixed $default 默认值
      * @return mixed
      */
-    public function get($name, $default = false)
+    public function get(string $name, $default = false)
     {
         $value = RedisHandler::get($this->getCacheKey($name));
 
@@ -79,7 +84,7 @@ class Redis extends Driver
      * @param integer $expire 有效时间（秒）
      * @return boolean
      */
-    public function set($name, $value, $expire = null)
+    public function set(string $name, $value, $expire = null): bool
     {
         if (is_null($expire)) {
             $expire = $this->options['expire'];
@@ -105,9 +110,9 @@ class Redis extends Driver
      * @access public
      * @param string $name 缓存变量名
      * @param int $step 步长
-     * @return false|int
+     * @return int
      */
-    public function inc($name, $step = 1)
+    public function inc(string $name, $step = 1): int
     {
         $key = $this->getCacheKey($name);
         return RedisHandler::incrBy($key, $step);
@@ -118,9 +123,9 @@ class Redis extends Driver
      * @access public
      * @param string $name 缓存变量名
      * @param int $step 步长
-     * @return false|int
+     * @return int
      */
-    public function dec($name, $step = 1)
+    public function dec(string $name, $step = 1): int
     {
         $key = $this->getCacheKey($name);
         return RedisHandler::decrBy($key, $step);
@@ -130,9 +135,9 @@ class Redis extends Driver
      * 删除缓存
      * @access public
      * @param string $name 缓存变量名
-     * @return boolean
+     * @return int
      */
-    public function rm($name)
+    public function rm(string $name): int
     {
         return RedisHandler::del($this->getCacheKey($name));
     }
@@ -143,7 +148,7 @@ class Redis extends Driver
      * @param string $tag 标签名
      * @return boolean
      */
-    public function clear($tag = null)
+    public function clear($tag = null): bool
     {
         if ($tag) {
             // 指定标签清除

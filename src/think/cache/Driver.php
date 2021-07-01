@@ -1,12 +1,16 @@
 <?php
+
+declare(strict_types=1);
+
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK ]
+// | The teamones framework runs on the workerman high performance framework
 // +----------------------------------------------------------------------
-// | Copyright (c) 2006~2017 http://thinkphp.cn All rights reserved.
+// | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
 // | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
 // +----------------------------------------------------------------------
 
 namespace think\cache;
@@ -16,9 +20,9 @@ namespace think\cache;
  */
 abstract class Driver
 {
-    protected $handler = null;
-    protected $options = [];
-    protected $tag;
+    protected ?object $handler = null;
+    protected array $options = [];
+    protected ?string $tag;
 
     /**
      * 判断缓存是否存在
@@ -26,44 +30,44 @@ abstract class Driver
      * @param string $name 缓存变量名
      * @return bool
      */
-    abstract public function has($name);
+    abstract public function has(string $name): bool;
 
     /**
      * 读取缓存
      * @access public
      * @param string $name 缓存变量名
-     * @param mixed  $default 默认值
+     * @param mixed $default 默认值
      * @return mixed
      */
-    abstract public function get($name, $default = false);
+    abstract public function get(string $name, $default = false);
 
     /**
      * 写入缓存
      * @access public
-     * @param string    $name 缓存变量名
-     * @param mixed     $value  存储数据
-     * @param int       $expire  有效时间 0为永久
+     * @param string $name 缓存变量名
+     * @param mixed $value 存储数据
+     * @param int $expire 有效时间 0为永久
      * @return boolean
      */
-    abstract public function set($name, $value, $expire = null);
+    abstract public function set(string $name, $value, $expire = null): bool;
 
     /**
      * 自增缓存（针对数值缓存）
      * @access public
-     * @param string    $name 缓存变量名
-     * @param int       $step 步长
+     * @param string $name 缓存变量名
+     * @param int $step 步长
      * @return false|int
      */
-    abstract public function inc($name, $step = 1);
+    abstract public function inc(string $name, $step = 1);
 
     /**
      * 自减缓存（针对数值缓存）
      * @access public
-     * @param string    $name 缓存变量名
-     * @param int       $step 步长
+     * @param string $name 缓存变量名
+     * @param int $step 步长
      * @return false|int
      */
-    abstract public function dec($name, $step = 1);
+    abstract public function dec(string $name, $step = 1);
 
     /**
      * 删除缓存
@@ -71,7 +75,7 @@ abstract class Driver
      * @param string $name 缓存变量名
      * @return boolean
      */
-    abstract public function rm($name);
+    abstract public function rm(string $name);
 
     /**
      * 清除缓存
@@ -79,7 +83,7 @@ abstract class Driver
      * @param string $tag 标签名
      * @return boolean
      */
-    abstract public function clear($tag = null);
+    abstract public function clear($tag = null): bool;
 
     /**
      * 获取实际的缓存标识
@@ -87,7 +91,7 @@ abstract class Driver
      * @param string $name 缓存名
      * @return string
      */
-    protected function getCacheKey($name)
+    protected function getCacheKey(string $name): string
     {
         return $this->options['prefix'] . $name;
     }
@@ -98,7 +102,7 @@ abstract class Driver
      * @param string $name 缓存变量名
      * @return mixed|void
      */
-    public function pull($name)
+    public function pull(string $name)
     {
         $result = $this->get($name, false);
         if ($result) {
@@ -112,12 +116,12 @@ abstract class Driver
     /**
      * 如果不存在则写入缓存
      * @access public
-     * @param string    $name 缓存变量名
-     * @param mixed     $value  存储数据
-     * @param int       $expire  有效时间 0为永久
+     * @param string $name 缓存变量名
+     * @param mixed $value 存储数据
+     * @param int $expire 有效时间 0为永久
      * @return mixed
      */
-    public function remember($name, $value, $expire = null)
+    public function remember(string $name, $value, $expire = null)
     {
         if (!$this->has($name)) {
             if ($value instanceof \Closure) {
@@ -133,12 +137,12 @@ abstract class Driver
     /**
      * 缓存标签
      * @access public
-     * @param string        $name 标签名
-     * @param string|array  $keys 缓存标识
-     * @param bool          $overlay 是否覆盖
+     * @param string $name 标签名
+     * @param string|array $keys 缓存标识
+     * @param bool $overlay 是否覆盖
      * @return $this
      */
-    public function tag($name, $keys = null, $overlay = false)
+    public function tag(string $name, $keys = null, $overlay = false): Driver
     {
         if (is_null($keys)) {
             $this->tag = $name;
@@ -164,10 +168,10 @@ abstract class Driver
      * @param string $name 缓存标识
      * @return void
      */
-    protected function setTagItem($name)
+    protected function setTagItem(string $name)
     {
         if ($this->tag) {
-            $key       = 'tag_' . md5($this->tag);
+            $key = 'tag_' . md5($this->tag);
             $this->tag = null;
             if ($this->has($key)) {
                 $value = $this->get($key);
@@ -185,9 +189,9 @@ abstract class Driver
      * @param string $tag 缓存标签
      * @return array
      */
-    protected function getTagItem($tag)
+    protected function getTagItem(string $tag): array
     {
-        $key   = 'tag_' . md5($tag);
+        $key = 'tag_' . md5($tag);
         $value = $this->get($key);
         if ($value) {
             return explode(',', $value);
@@ -202,7 +206,7 @@ abstract class Driver
      * @access public
      * @return object
      */
-    public function handler()
+    public function handler(): ?object
     {
         return $this->handler;
     }

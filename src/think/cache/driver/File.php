@@ -1,13 +1,18 @@
 <?php
+
+declare(strict_types=1);
+
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK IT ]
+// | The teamones framework runs on the workerman high performance framework
 // +----------------------------------------------------------------------
 // | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
 // | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
 // +----------------------------------------------------------------------
+
 namespace think\cache\driver;
 
 use think\cache\Driver;
@@ -18,11 +23,11 @@ use think\cache\Driver;
 class File extends Driver
 {
 
-    protected $options = [
-        'expire'        => 0,
-        'cache_subdir'  => true,
-        'prefix'        => '',
-        'path'          => CACHE_PATH,
+    protected array $options = [
+        'expire' => 0,
+        'cache_subdir' => true,
+        'prefix' => '',
+        'path' => CACHE_PATH,
         'data_compress' => false,
     ];
 
@@ -46,7 +51,7 @@ class File extends Driver
      * @access private
      * @return boolean
      */
-    private function init()
+    private function init(): bool
     {
         // 创建项目缓存目录
         if (!is_dir($this->options['path'])) {
@@ -63,7 +68,7 @@ class File extends Driver
      * @param string $name 缓存变量名
      * @return string
      */
-    protected function getCacheKey($name)
+    protected function getCacheKey(string $name): string
     {
         $name = md5($name);
         if ($this->options['cache_subdir']) {
@@ -74,7 +79,7 @@ class File extends Driver
             $name = $this->options['prefix'] . DS . $name;
         }
         $filename = $this->options['path'] . $name . '.php';
-        $dir      = dirname($filename);
+        $dir = dirname($filename);
         if (!is_dir($dir)) {
             mkdir($dir, 0755, true);
         }
@@ -87,19 +92,19 @@ class File extends Driver
      * @param string $name 缓存变量名
      * @return bool
      */
-    public function has($name)
+    public function has(string $name): bool
     {
-        return $this->get($name) ? true : false;
+        return (bool)$this->get($name);
     }
 
     /**
      * 读取缓存
      * @access public
      * @param string $name 缓存变量名
-     * @param mixed  $default 默认值
+     * @param mixed $default 默认值
      * @return mixed
      */
-    public function get($name, $default = false)
+    public function get(string $name, $default = false)
     {
         $filename = $this->getCacheKey($name);
         if (!is_file($filename)) {
@@ -107,7 +112,7 @@ class File extends Driver
         }
         $content = file_get_contents($filename);
         if (false !== $content) {
-            $expire = (int) substr($content, 8, 12);
+            $expire = (int)substr($content, 8, 12);
             if (0 != $expire && $_SERVER['REQUEST_TIME'] > filemtime($filename) + $expire) {
                 //缓存过期删除缓存文件
                 $this->unlink($filename);
@@ -118,8 +123,7 @@ class File extends Driver
                 //启用数据压缩
                 $content = gzuncompress($content);
             }
-            $content = unserialize($content);
-            return $content;
+            return unserialize($content);
         } else {
             return $default;
         }
@@ -128,12 +132,12 @@ class File extends Driver
     /**
      * 写入缓存
      * @access public
-     * @param string    $name 缓存变量名
-     * @param mixed     $value  存储数据
-     * @param int       $expire  有效时间 0为永久
+     * @param string $name 缓存变量名
+     * @param mixed $value 存储数据
+     * @param int $expire 有效时间 0为永久
      * @return boolean
      */
-    public function set($name, $value, $expire = null)
+    public function set(string $name, $value, $expire = null): bool
     {
         if (is_null($expire)) {
             $expire = $this->options['expire'];
@@ -148,7 +152,7 @@ class File extends Driver
             //数据压缩
             $data = gzcompress($data, 3);
         }
-        $data   = "<?php\n//" . sprintf('%012d', $expire) . $data . "\n?>";
+        $data = "<?php\n//" . sprintf('%012d', $expire) . $data . "\n?>";
         $result = file_put_contents($filename, $data);
         if ($result) {
             isset($first) && $this->setTagItem($filename);
@@ -162,11 +166,11 @@ class File extends Driver
     /**
      * 自增缓存（针对数值缓存）
      * @access public
-     * @param string    $name 缓存变量名
-     * @param int       $step 步长
+     * @param string $name 缓存变量名
+     * @param int $step 步长
      * @return false|int
      */
-    public function inc($name, $step = 1)
+    public function inc(string $name, $step = 1)
     {
         if ($this->has($name)) {
             $value = $this->get($name) + $step;
@@ -179,11 +183,11 @@ class File extends Driver
     /**
      * 自减缓存（针对数值缓存）
      * @access public
-     * @param string    $name 缓存变量名
-     * @param int       $step 步长
+     * @param string $name 缓存变量名
+     * @param int $step 步长
      * @return false|int
      */
-    public function dec($name, $step = 1)
+    public function dec(string $name, $step = 1)
     {
         if ($this->has($name)) {
             $value = $this->get($name) - $step;
@@ -199,7 +203,7 @@ class File extends Driver
      * @param string $name 缓存变量名
      * @return boolean
      */
-    public function rm($name)
+    public function rm(string $name): bool
     {
         return $this->unlink($this->getCacheKey($name));
     }
@@ -210,7 +214,7 @@ class File extends Driver
      * @param string $tag 标签名
      * @return boolean
      */
-    public function clear($tag = null)
+    public function clear($tag = null): bool
     {
         if ($tag) {
             // 指定标签清除
@@ -221,7 +225,7 @@ class File extends Driver
             $this->rm('tag_' . md5($tag));
             return true;
         }
-        $files = (array) glob($this->options['path'] . ($this->options['prefix'] ? $this->options['prefix'] . DS : '') . '*');
+        $files = (array)glob($this->options['path'] . ($this->options['prefix'] ? $this->options['prefix'] . DS : '') . '*');
         foreach ($files as $path) {
             if (is_dir($path)) {
                 array_map('unlink', glob($path . '/*.php'));
@@ -237,10 +241,9 @@ class File extends Driver
      * 判断文件是否存在后，删除
      * @param $path
      * @return bool
-     * @author byron sampson <xiaobo.sun@qq.com>
      * @return boolean
      */
-    private function unlink($path)
+    private function unlink($path): bool
     {
         return is_file($path) && unlink($path);
     }

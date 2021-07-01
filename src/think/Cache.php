@@ -1,13 +1,18 @@
 <?php
+
+declare(strict_types=1);
+
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK IT ]
+// | The teamones framework runs on the workerman high performance framework
 // +----------------------------------------------------------------------
 // | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
 // | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
 // +----------------------------------------------------------------------
+
 namespace think;
 
 use think\cache\Driver;
@@ -20,16 +25,16 @@ use think\exception\InvalidArgumentException;
 class Cache
 {
 
-    protected static $instance = [];
-    public static $readTimes = 0;
-    public static $writeTimes = 0;
+    protected static array $instance = [];
+    public static int $readTimes = 0;
+    public static int $writeTimes = 0;
 
     /**
      * 操作句柄
      * @var Driver
      * @access protected
      */
-    protected static $handler;
+    protected static Driver $handler;
 
     /**
      * 连接缓存
@@ -38,7 +43,7 @@ class Cache
      * @param bool|string $name 缓存连接标识 true 强制重新连接
      * @return Driver
      */
-    public static function connect(array $options = [], $name = false)
+    public static function connect(array $options = [], $name = false): Driver
     {
         $type = !empty($options['type']) ? $options['type'] : 'File';
         if (false === $name) {
@@ -67,7 +72,7 @@ class Cache
      * @param array $options 配置数组
      * @return void
      */
-    public static function init(array $options = [])
+    public static function init(array $options = []): void
     {
         if (is_null(self::$handler)) {
             // 自动初始化缓存
@@ -87,7 +92,7 @@ class Cache
      * @param string $name 缓存标识
      * @return Driver
      */
-    public static function store($name = '')
+    public static function store($name = ''): Driver
     {
         if ('' !== $name && 'complex' == C('cache.type')) {
             self::connect(C('cache.' . $name), strtolower($name));
@@ -101,7 +106,7 @@ class Cache
      * @param string $name 缓存变量名
      * @return bool
      */
-    public static function has($name)
+    public static function has(string $name): bool
     {
         self::init();
         self::$readTimes++;
@@ -115,7 +120,7 @@ class Cache
      * @param mixed $default 默认值
      * @return mixed
      */
-    public static function get($name, $default = false)
+    public static function get(string $name, $default = false)
     {
         self::init();
         self::$readTimes++;
@@ -130,7 +135,7 @@ class Cache
      * @param int|null $expire 有效时间 0为永久
      * @return boolean
      */
-    public static function set($name, $value, $expire = null)
+    public static function set(string $name, $value, $expire = null): bool
     {
         self::init();
         self::$writeTimes++;
@@ -144,7 +149,7 @@ class Cache
      * @param int $step 步长
      * @return false|int
      */
-    public static function inc($name, $step = 1)
+    public static function inc(string $name, $step = 1)
     {
         self::init();
         self::$writeTimes++;
@@ -158,7 +163,7 @@ class Cache
      * @param int $step 步长
      * @return false|int
      */
-    public static function dec($name, $step = 1)
+    public static function dec(string $name, $step = 1)
     {
         self::init();
         self::$writeTimes++;
@@ -171,7 +176,7 @@ class Cache
      * @param string $name 缓存标识
      * @return boolean
      */
-    public static function rm($name)
+    public static function rm(string $name): bool
     {
         self::init();
         self::$writeTimes++;
@@ -184,7 +189,7 @@ class Cache
      * @param string $tag 标签名
      * @return boolean
      */
-    public static function clear($tag = null)
+    public static function clear($tag = null): bool
     {
         self::init();
         self::$writeTimes++;
@@ -197,7 +202,7 @@ class Cache
      * @param string $name 缓存变量名
      * @return mixed
      */
-    public static function pull($name)
+    public static function pull(string $name)
     {
         self::init();
         self::$readTimes++;
@@ -242,7 +247,7 @@ class Cache
      * @param int $expire 有效时间 0为永久
      * @return mixed
      */
-    public static function remember($name, $value, $expire = null)
+    public static function remember(string $name, $value, $expire = null)
     {
         self::init();
         self::$readTimes++;
@@ -257,7 +262,7 @@ class Cache
      * @param bool $overlay 是否覆盖
      * @return Driver
      */
-    public static function tag($name, $keys = null, $overlay = false)
+    public static function tag(string $name, $keys = null, $overlay = false): Driver
     {
         self::init();
         return self::$handler->tag($name, $keys, $overlay);
