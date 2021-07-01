@@ -292,7 +292,7 @@ class Loader
      */
     private static function initStorage()
     {
-        Storage::connect(STORAGE_TYPE);
+        Storage::connect();
     }
 
     /**

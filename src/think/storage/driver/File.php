@@ -1,13 +1,18 @@
 <?php
+
+declare(strict_types=1);
+
 // +----------------------------------------------------------------------
-// | TOPThink [ WE CAN DO IT JUST THINK ]
+// | The teamones framework runs on the workerman high performance framework
 // +----------------------------------------------------------------------
-// | Copyright (c) 2013 http://topthink.com All rights reserved.
+// | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
 // | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
 // +----------------------------------------------------------------------
+
 namespace think\storage\driver;
 
 use think\exception\ErrorCode;
@@ -17,7 +22,7 @@ use think\Storage;
 class File extends Storage
 {
 
-    private $contents = [];
+    private array $contents = [];
 
     /**
      * 架构函数
@@ -32,9 +37,9 @@ class File extends Storage
      * @access public
      * @param string $filename 文件名
      * @param string $type
-     * @return bool
+     * @return false|mixed
      */
-    public function read($filename, $type = '')
+    public function read(string $filename, string $type = '')
     {
         return $this->get($filename, 'content', $type);
     }
@@ -48,7 +53,7 @@ class File extends Storage
      * @return bool
      * @throws \Exception
      */
-    public function put($filename, $content, $type = '')
+    public function put(string $filename, string $content, string $type = ''): bool
     {
         $dir = dirname($filename);
         if (!is_dir($dir)) {
@@ -71,7 +76,7 @@ class File extends Storage
      * @return bool
      * @throws \Exception
      */
-    public function append($filename, $content, $type = '')
+    public function append(string $filename, string $content, string $type = ''): bool
     {
         if (is_file($filename)) {
             $content = $this->read($filename, $type) . $content;
@@ -86,9 +91,9 @@ class File extends Storage
      * @param array $vars 传入变量
      * @return void
      */
-    public function load($filename, $vars = null)
+    public function load(string $filename, $vars = []): void
     {
-        if (!is_null($vars)) {
+        if (!empty($vars) && is_array($vars)) {
             extract($vars, EXTR_OVERWRITE);
         }
         include $filename;
@@ -101,7 +106,7 @@ class File extends Storage
      * @param string $type
      * @return bool
      */
-    public function has($filename, $type = '')
+    public function has(string $filename, string $type = ''): bool
     {
         return is_file($filename);
     }
@@ -111,12 +116,12 @@ class File extends Storage
      * @access public
      * @param string $filename 文件名
      * @param string $type
-     * @return boolean
+     * @return bool
      */
-    public function unlink($filename, $type = '')
+    public function unlink(string $filename, $type = ''): bool
     {
         unset($this->contents[$filename]);
-        return is_file($filename) ? unlink($filename) : false;
+        return is_file($filename) && unlink($filename);
     }
 
     /**
@@ -125,9 +130,9 @@ class File extends Storage
      * @param string $filename 文件名
      * @param string $name 信息名 mtime或者content
      * @param string $type
-     * @return boolean
+     * @return false|mixed
      */
-    public function get($filename, $name, $type = '')
+    public function get(string $filename, string $name, $type = '')
     {
         if (!isset($this->contents[$filename])) {
             if (!is_file($filename)) {
