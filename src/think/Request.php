@@ -1,12 +1,16 @@
 <?php
+
+declare(strict_types=1);
+
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK ]
+// | The teamones framework runs on the workerman high performance framework
 // +----------------------------------------------------------------------
-// | Copyright (c) 2006~2018 http://thinkphp.cn All rights reserved.
+// | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
 // | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
 // +----------------------------------------------------------------------
 
 namespace think;
@@ -17,102 +21,102 @@ use Workerman\Protocols\Http;
 class Request extends \Workerman\Protocols\Http\Request
 {
 
-    protected $method;
+    protected string $method;
     /**
      * @var string 域名（含协议和端口）
      */
-    protected $domain;
+    protected string $domain;
 
     /**
      * @var string URL地址
      */
-    protected $url;
+    protected string $url;
 
     /**
      * @var string 基础URL
      */
-    protected $baseUrl;
+    protected string $baseUrl;
 
     /**
      * @var string
      */
-    public $app = null;
+    public string $app = '';
 
     /**
      * @var string
      */
-    protected $module = null;
+    protected string $module = '';
 
     /**
      * @var string
      */
-    public $controller = null;
+    public string $controller = '';
 
     /**
      * @var string
      */
-    public $action = null;
+    public string $action = '';
 
     /**
      * @var array 当前调度信息
      */
-    protected $dispatch = [];
+    protected array $dispatch = [];
 
     /**
      * @var array 请求参数
      */
-    protected $param = [];
-    protected $get = [];
-    protected $post = [];
-    protected $route = [];
-    protected $put;
+    protected array $param = [];
+    protected ?array $get = [];
+    protected ?array $post = [];
+    protected array $route = [];
+    protected array $put = [];
 
-    protected $content;
+    protected string $content;
 
     /**
      * @var string pathinfo（不含后缀）
      */
-    protected $path;
+    protected string $path;
 
     /**
      * @var array 当前路由信息
      */
-    protected $routeInfo = [];
+    protected array $routeInfo = [];
 
 
     // php://input
-    protected $input;
+    protected string $input;
 
 
     // 全局过滤规则
     protected $filter;
 
     // Hook扩展方法
-    protected static $hook = [];
+    protected static array $hook = [];
 
     // 请求批次号
-    public $batchNumber = '';
+    public string $batchNumber = '';
 
     // 当前模块的 code
-    public $moduleCode = '';
+    public string $moduleCode = '';
 
     // 当前请求绑定的project_id
-    public $projectId = 0;
+    public int $projectId = 0;
 
     // 当前请求绑定的tenant_id
-    public $tenantId = 0;
+    public int $tenantId = 0;
 
     // 当前请求绑定的user_uuid
-    public $userUUID = "";
+    public string $userUUID = "";
 
     // 当前请求绑定的user_id
-    public $userId = 0;
+    public int $userId = 0;
 
     // 当前请求绑定的 union_user_id
-    public $unionUserId = 0;
+    public int $unionUserId = 0;
 
     // 当前请求绑定的x-userinfo
-    public $xuserinfo = "";
+    public string $xuserinfo = "";
 
 
     /**
@@ -155,7 +159,7 @@ class Request extends \Workerman\Protocols\Http\Request
      * @param mixed $callback callable
      * @return void
      */
-    public static function hook($method, $callback = null)
+    public static function hook($method, $callback = null): bool
     {
         if (is_array($method)) {
             self::$hook = array_merge(self::$hook, $method);
@@ -168,7 +172,7 @@ class Request extends \Workerman\Protocols\Http\Request
      * 获取用户信息缓存
      * @param string $unionId
      * @param array $XUserInfoBase
-     * @return bool
+     * @return false|mixed
      */
     public function getUserInfoCache($unionId = '', $XUserInfoBase = [])
     {
@@ -190,7 +194,7 @@ class Request extends \Workerman\Protocols\Http\Request
     /**
      * 设置用户信息缓存
      * @param $unionId
-     * @param $XUserInfoBase
+     * @param $userData
      */
     public function setUserInfoCache($unionId, $userData)
     {
@@ -203,7 +207,7 @@ class Request extends \Workerman\Protocols\Http\Request
      * @param string $batchNumber
      * @return string
      */
-    public function getBatchNumber($batchNumber = '')
+    public function getBatchNumber($batchNumber = ''): string
     {
         if (!empty($batchNumber)) {
             $this->batchNumber = $batchNumber;
@@ -216,7 +220,7 @@ class Request extends \Workerman\Protocols\Http\Request
      * @param string $moduleCode
      * @return string
      */
-    public function getModuleCode($moduleCode = '')
+    public function getModuleCode($moduleCode = ''): string
     {
         if (!empty($moduleCode)) {
             $this->moduleCode = $moduleCode;
@@ -229,7 +233,7 @@ class Request extends \Workerman\Protocols\Http\Request
      * @param int $projectId
      * @return int
      */
-    public function getProjectId($projectId = 0)
+    public function getProjectId($projectId = 0): int
     {
         if (!empty($projectId)) {
             $this->projectId = $projectId;
@@ -242,7 +246,7 @@ class Request extends \Workerman\Protocols\Http\Request
      * @param int $tenantId
      * @return int
      */
-    public function getTenantId($tenantId = 0)
+    public function getTenantId($tenantId = 0): int
     {
         if (!empty($tenantId)) {
             $this->tenantId = $tenantId;
@@ -253,9 +257,9 @@ class Request extends \Workerman\Protocols\Http\Request
     /**
      * 获取当前系统操作的用户UUID
      * @param string $userUUID
-     * @return int|string
+     * @return string
      */
-    public function getUserUUID($userUUID = '')
+    public function getUserUUID($userUUID = ''): string
     {
         if (!empty($userUUID)) {
             $this->userUUID = $userUUID;
@@ -269,7 +273,7 @@ class Request extends \Workerman\Protocols\Http\Request
      * @param int $userId
      * @return int
      */
-    public function getUserId($userId = 0)
+    public function getUserId($userId = 0): int
     {
         if (!empty($userId)) {
             $this->userId = $userId;
@@ -280,9 +284,9 @@ class Request extends \Workerman\Protocols\Http\Request
     /**
      * 获取当前系统操作的全局用户ID
      * @param int $unionUserId
-     * @return int|mixed|null
+     * @return int
      */
-    public function getUnionUserId($unionUserId = 0)
+    public function getUnionUserId($unionUserId = 0): int
     {
         if (!empty($unionUserId)) {
             $this->unionUserId = $unionUserId;
@@ -296,7 +300,7 @@ class Request extends \Workerman\Protocols\Http\Request
      * @param string $xUserInfo
      * @return string
      */
-    public function getXUserInfo($xUserInfo = '')
+    public function getXUserInfo($xUserInfo = ''): string
     {
         if (!empty($xUserInfo)) {
             $this->xuserinfo = $xUserInfo;
@@ -306,9 +310,8 @@ class Request extends \Workerman\Protocols\Http\Request
 
     /**
      * 设置或获取当前包含协议的域名
-     * @access public
-     * @param string $domain 域名
-     * @return string
+     * @param null $domain
+     * @return $this|string
      */
     public function domain($domain = null)
     {
@@ -324,7 +327,7 @@ class Request extends \Workerman\Protocols\Http\Request
     /**
      * 设置或获取当前完整URL 包括QUERY_STRING
      * @param null $url
-     * @return $this|mixed|null
+     * @return $this|string
      */
     public function url($url = null)
     {
@@ -339,9 +342,8 @@ class Request extends \Workerman\Protocols\Http\Request
 
     /**
      * 设置或获取当前URL 不含QUERY_STRING
-     * @access public
-     * @param string $url URL地址
-     * @return string
+     * @param null $url
+     * @return $this|false|string
      */
     public function baseUrl($url = null)
     {
@@ -360,7 +362,7 @@ class Request extends \Workerman\Protocols\Http\Request
      * @access public
      * @return string
      */
-    public function ext()
+    public function ext(): string
     {
         return pathinfo($this->path(), PATHINFO_EXTENSION);
     }
@@ -370,9 +372,8 @@ class Request extends \Workerman\Protocols\Http\Request
      * @access public
      * @return string
      */
-    public function path()
+    public function path(): string
     {
-        $suffix = C('URL_HTML_SUFFIX');
         $path = parent::path();
         $this->path = substr_replace($path, "", 0, 1);
         return $this->path;
@@ -384,7 +385,7 @@ class Request extends \Workerman\Protocols\Http\Request
      * @access public
      * @return bool
      */
-    public function isGet()
+    public function isGet(): bool
     {
         return $this->method() == 'GET';
     }
@@ -394,7 +395,7 @@ class Request extends \Workerman\Protocols\Http\Request
      * @access public
      * @return bool
      */
-    public function isPost()
+    public function isPost(): bool
     {
         return $this->method() == 'POST';
     }
@@ -404,7 +405,7 @@ class Request extends \Workerman\Protocols\Http\Request
      * @access public
      * @return bool
      */
-    public function isPut()
+    public function isPut(): bool
     {
         return $this->method() == 'PUT';
     }
@@ -414,7 +415,7 @@ class Request extends \Workerman\Protocols\Http\Request
      * @access public
      * @return bool
      */
-    public function isDelete()
+    public function isDelete(): bool
     {
         return $this->method() == 'DELETE';
     }
@@ -424,7 +425,7 @@ class Request extends \Workerman\Protocols\Http\Request
      * @access public
      * @return bool
      */
-    public function isHead()
+    public function isHead(): bool
     {
         return $this->method() == 'HEAD';
     }
@@ -434,7 +435,7 @@ class Request extends \Workerman\Protocols\Http\Request
      * @access public
      * @return bool
      */
-    public function isPatch()
+    public function isPatch(): bool
     {
         return $this->method() == 'PATCH';
     }
@@ -444,7 +445,7 @@ class Request extends \Workerman\Protocols\Http\Request
      * @access public
      * @return bool
      */
-    public function isOptions()
+    public function isOptions(): bool
     {
         return $this->method() == 'OPTIONS';
     }
@@ -820,6 +821,7 @@ class Request extends \Workerman\Protocols\Http\Request
     /**
      * 替换过滤条件中的方法名
      * @param $val
+     * @param $key
      */
     public function parserFilterCondition(&$val, $key)
     {
@@ -848,18 +850,22 @@ class Request extends \Workerman\Protocols\Http\Request
 
     /**
      * 设置或获取当前的过滤规则
-     * @param mixed $filter 过滤规则
-     * @return mixed
+     * @param null $filter
+     * @return array|string|null
      */
     public function filter($filter = null)
     {
-        if (is_null($filter)) {
-            return $this->filter;
-        } else {
+        if (!empty($filter)) {
             $this->filter = $filter;
         }
+        return $this->filter;
     }
 
+    /**
+     * @param $filter
+     * @param $default
+     * @return array|false|string[]
+     */
     protected function getFilter($filter, $default)
     {
         if (is_null($filter)) {
@@ -878,13 +884,11 @@ class Request extends \Workerman\Protocols\Http\Request
     }
 
     /**
-     * 递归过滤给定的值
-     * @param mixed $value 键值
-     * @param mixed $key 键名
-     * @param array $filters 过滤方法+默认值
-     * @return mixed
+     * @param $value
+     * @param $key
+     * @param array $filters
      */
-    private function filterValue(&$value, $key, $filters)
+    private function filterValue(&$value, $key, array $filters): void
     {
         $default = array_pop($filters);
         foreach ($filters as $filter) {
@@ -910,13 +914,12 @@ class Request extends \Workerman\Protocols\Http\Request
                 }
             }
         }
-        return $this->filterExp($value);
+        $this->filterExp($value);
     }
 
     /**
      * 过滤表单中的表达式
-     * @param string $value
-     * @return void
+     * @param $value
      */
     public function filterExp(&$value)
     {
@@ -924,16 +927,14 @@ class Request extends \Workerman\Protocols\Http\Request
         if (is_string($value) && preg_match('/^(EXP|NEQ|GT|EGT|LT|ELT|OR|XOR|LIKE|NOTLIKE|NOT LIKE|NOT BETWEEN|NOTBETWEEN|BETWEEN|NOT EXISTS|NOTEXISTS|EXISTS|NOT NULL|NOTNULL|NULL|BETWEEN TIME|NOT BETWEEN TIME|NOTBETWEEN TIME|NOTIN|NOT IN|IN)$/i', $value)) {
             $value .= ' ';
         }
-        // TODO 其他安全过滤
     }
 
     /**
      * 强制类型转换
-     * @param string $data
-     * @param string $type
-     * @return mixed
+     * @param $data
+     * @param $type
      */
-    private function typeCast(&$data, $type)
+    private function typeCast(&$data, $type): void
     {
         switch (strtolower($type)) {
             // 数组
@@ -969,9 +970,9 @@ class Request extends \Workerman\Protocols\Http\Request
      * @param string $name 变量名
      * @param string $type 变量类型
      * @param bool $checkEmpty 是否检测空值
-     * @return mixed
+     * @return bool
      */
-    public function has($name, $type = 'param', $checkEmpty = false)
+    public function has(string $name, $type = 'param', $checkEmpty = false): bool
     {
         if (empty($this->$type)) {
             $param = $this->$type();
@@ -986,7 +987,7 @@ class Request extends \Workerman\Protocols\Http\Request
                 return false;
             }
         }
-        return ($checkEmpty && '' === $param) ? false : true;
+        return !(($checkEmpty && '' === $param));
     }
 
 
@@ -994,7 +995,7 @@ class Request extends \Workerman\Protocols\Http\Request
      * @param array $keys
      * @return array
      */
-    public function only(array $keys)
+    public function only(array $keys): array
     {
         $all = $this->all();
         $result = [];
@@ -1008,7 +1009,7 @@ class Request extends \Workerman\Protocols\Http\Request
 
     /**
      * @param array $keys
-     * @return mixed|null
+     * @return array|mixed|null
      */
     public function except(array $keys)
     {
@@ -1024,7 +1025,7 @@ class Request extends \Workerman\Protocols\Http\Request
      * @access public
      * @return bool
      */
-    public function isSsl()
+    public function isSsl(): bool
     {
         return (bool)$this->header('X_FORWARDED_PROTO');
     }
@@ -1033,7 +1034,7 @@ class Request extends \Workerman\Protocols\Http\Request
     /**
      * @return bool
      */
-    public function isAjax()
+    public function isAjax(): bool
     {
         return $this->header('X-Requested-With') === 'XMLHttpRequest';
     }
@@ -1041,17 +1042,16 @@ class Request extends \Workerman\Protocols\Http\Request
     /**
      * @return bool
      */
-    public function isPjax()
+    public function isPjax(): bool
     {
         return (bool)$this->header('X-PJAX');
     }
 
     /**
      * 获取客户端IP地址
-     * @param string $type
      * @return string
      */
-    public function ip()
+    public function ip(): string
     {
         return $this->getRealIp();
     }
@@ -1059,7 +1059,7 @@ class Request extends \Workerman\Protocols\Http\Request
     /**
      * @return string
      */
-    public function getRemoteIp()
+    public function getRemoteIp(): string
     {
         return App::connection()->getRemoteIp();
     }
@@ -1067,7 +1067,7 @@ class Request extends \Workerman\Protocols\Http\Request
     /**
      * @return int
      */
-    public function getRemotePort()
+    public function getRemotePort(): int
     {
         return App::connection()->getRemotePort();
     }
@@ -1075,7 +1075,7 @@ class Request extends \Workerman\Protocols\Http\Request
     /**
      * @return string
      */
-    public function getLocalIp()
+    public function getLocalIp(): string
     {
         return App::connection()->getLocalIp();
     }
@@ -1083,7 +1083,7 @@ class Request extends \Workerman\Protocols\Http\Request
     /**
      * @return int
      */
-    public function getLocalPort()
+    public function getLocalPort(): int
     {
         return App::connection()->getLocalPort();
     }
@@ -1093,7 +1093,7 @@ class Request extends \Workerman\Protocols\Http\Request
      * 检测是否使用手机访问
      * @return bool
      */
-    public function isMobile()
+    public function isMobile(): bool
     {
         return (bool)($this->header('X_WAP_PROFILE') || $this->header('PROFILE'));
     }
@@ -1104,17 +1104,16 @@ class Request extends \Workerman\Protocols\Http\Request
      * @access public
      * @return string
      */
-    public function scheme()
+    public function scheme(): string
     {
         return $this->isSsl() ? 'https' : 'http';
     }
 
     /**
      * 当前请求URL地址中的port参数
-     * @access public
-     * @return integer
+     * @return string|null
      */
-    public function port()
+    public function port(): ?string
     {
         return $this->header('host');
     }
@@ -1133,7 +1132,7 @@ class Request extends \Workerman\Protocols\Http\Request
      * @access public
      * @return integer
      */
-    public function remotePort()
+    public function remotePort(): int
     {
         return $this->getRemotePort();
     }
@@ -1144,7 +1143,7 @@ class Request extends \Workerman\Protocols\Http\Request
      * @access public
      * @return string
      */
-    public function contentType()
+    public function contentType(): string
     {
         $contentType = $this->header('content-type', '');
         if ($contentType) {
@@ -1164,7 +1163,7 @@ class Request extends \Workerman\Protocols\Http\Request
      * @param array $route 路由名称
      * @return array
      */
-    public function routeInfo($route = [])
+    public function routeInfo($route = []): array
     {
         if (!empty($route)) {
             $this->routeInfo = $route;
@@ -1179,7 +1178,7 @@ class Request extends \Workerman\Protocols\Http\Request
      * @param array $dispatch 调度信息
      * @return array
      */
-    public function dispatch($dispatch = null)
+    public function dispatch($dispatch = null): array
     {
         if (!is_null($dispatch)) {
             $this->dispatch = $dispatch;
@@ -1205,9 +1204,8 @@ class Request extends \Workerman\Protocols\Http\Request
 
     /**
      * 设置或者获取当前的控制器名
-     * @access public
-     * @param string $controller 控制器名
-     * @return string|class
+     * @param null $controller
+     * @return $this|string
      */
     public function controller($controller = null)
     {
@@ -1222,9 +1220,8 @@ class Request extends \Workerman\Protocols\Http\Request
 
     /**
      * 设置或者获取当前的操作名
-     * @access public
-     * @param string $action 操作名
-     * @return string|class
+     * @param null $action
+     * @return $this|string
      */
     public function action($action = null)
     {
@@ -1242,7 +1239,7 @@ class Request extends \Workerman\Protocols\Http\Request
      * @access public
      * @return string
      */
-    public function getContent()
+    public function getContent(): string
     {
         if (is_null($this->content)) {
             $this->content = $this->input;
@@ -1255,7 +1252,7 @@ class Request extends \Workerman\Protocols\Http\Request
      * @access public
      * @return string
      */
-    public function getInput()
+    public function getInput(): string
     {
         return $this->input;
     }
@@ -1264,7 +1261,7 @@ class Request extends \Workerman\Protocols\Http\Request
      * @param bool $safe_mode
      * @return string
      */
-    public function getRealIp($safe_mode = true)
+    public function getRealIp($safe_mode = true): string
     {
         $remote_ip = $this->getRemoteIp();
         if ($safe_mode && !static::isIntranetIp($remote_ip)) {
@@ -1279,7 +1276,7 @@ class Request extends \Workerman\Protocols\Http\Request
     /**
      * @return string
      */
-    public function fullUrl()
+    public function fullUrl(): string
     {
         return '//' . $this->host() . $this->uri();
     }
@@ -1288,7 +1285,7 @@ class Request extends \Workerman\Protocols\Http\Request
     /**
      * @return bool
      */
-    public function expectsJson()
+    public function expectsJson(): bool
     {
         return ($this->isAjax() && !$this->isPjax()) || $this->acceptJson();
     }
@@ -1296,7 +1293,7 @@ class Request extends \Workerman\Protocols\Http\Request
     /**
      * @return bool
      */
-    public function acceptJson()
+    public function acceptJson(): bool
     {
         return false !== strpos($this->header('accept'), 'json');
     }
@@ -1305,7 +1302,7 @@ class Request extends \Workerman\Protocols\Http\Request
      * @param string $ip
      * @return bool
      */
-    public static function isIntranetIp($ip)
+    public static function isIntranetIp($ip): bool
     {
         $reserved_ips = [
             '167772160' => 184549375,  /*    10.0.0.0 -  10.255.255.255 */
