@@ -1,13 +1,18 @@
 <?php
+
+declare(strict_types=1);
+
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK IT ]
+// | The teamones framework runs on the workerman high performance framework
 // +----------------------------------------------------------------------
 // | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
 // | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
 // +----------------------------------------------------------------------
+
 namespace think;
 
 /**
@@ -19,7 +24,7 @@ class Exception extends \Exception
      * 保存异常页面显示的额外Debug数据
      * @var array
      */
-    protected $data = [];
+    protected array $data = [];
 
     /**
      * 设置异常额外的Debug数据
@@ -37,7 +42,7 @@ class Exception extends \Exception
      * @param string $label 数据分类，用于异常页面显示
      * @param array $data 需要显示的数据，必须为关联数组
      */
-    final protected function setData($label, array $data)
+    final protected function setData(string $label, array $data): void
     {
         $this->data[$label] = $data;
     }
@@ -47,7 +52,7 @@ class Exception extends \Exception
      * 主要用于输出到异常页面便于调试
      * @return array 由setData设置的Debug数据
      */
-    final public function getData()
+    final public function getData(): array
     {
         return $this->data;
     }
