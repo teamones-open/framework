@@ -1,13 +1,18 @@
 <?php
+
+declare(strict_types=1);
+
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK IT ]
+// | The teamones framework runs on the workerman high performance framework
 // +----------------------------------------------------------------------
 // | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
 // | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
 // +----------------------------------------------------------------------
+
 namespace think;
 
 use think\exception\ErrorCode;
@@ -21,7 +26,7 @@ class Controller
      * 控制器参数
      * @access protected
      */
-    protected $config = [];
+    protected array $config = [];
 
     /**
      * 架构函数 取得模板对象实例
@@ -55,7 +60,6 @@ class Controller
             }
         } else {
             StrackE(__CLASS__ . ':' . $method . L('_METHOD_NOT_EXIST_'), ErrorCode::METHOD_NOT_EXIST);
-            return;
         }
     }
 
