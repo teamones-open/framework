@@ -1,12 +1,16 @@
 <?php
+
+declare(strict_types=1);
+
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK ]
+// | The teamones framework runs on the workerman high performance framework
 // +----------------------------------------------------------------------
-// | Copyright (c) 2006~2018 http://thinkphp.cn All rights reserved.
+// | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
 // | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
 // +----------------------------------------------------------------------
 
 namespace think;
@@ -27,43 +31,43 @@ class Response
      * 当前contentType
      * @var string
      */
-    protected $contentType = 'text/html';
+    protected string $contentType = 'text/html';
 
     /**
      * 字符集
      * @var string
      */
-    protected $charset = 'utf-8';
+    protected string $charset = 'utf-8';
 
     /**
      * 状态码
      * @var integer
      */
-    protected $code = 200;
+    protected int $code = 200;
 
     /**
      * 是否允许请求缓存
      * @var bool
      */
-    protected $allowCache = true;
+    protected bool $allowCache = true;
 
     /**
      * 输出参数
      * @var array
      */
-    protected $options = [];
+    protected array $options = [];
 
     /**
      * header参数
      * @var array
      */
-    protected $header = [];
+    protected array $header = [];
 
     /**
      * 输出内容
      * @var string
      */
-    protected $content = null;
+    protected string $content = '';
 
 
     /**
@@ -98,7 +102,7 @@ class Response
      * @param array $options 输出参数
      * @return Response
      */
-    public static function create($data = '', $type = '', $code = 200, array $header = [], $options = [])
+    public static function create($data = '', $type = '', $code = 200, array $header = [], $options = []): Response
     {
         $class = false !== strpos($type, '\\') ? $type : '\\think\\response\\' . ucfirst(strtolower($type));
 
@@ -142,8 +146,9 @@ class Response
 
     /**
      * 渲染输出数据
+     * @return \Workerman\Protocols\Http\Response
      */
-    public function renderWorkermanData()
+    public function renderWorkermanData(): \Workerman\Protocols\Http\Response
     {
         // 处理输出数据
         $data = $this->getContent();
@@ -168,7 +173,7 @@ class Response
      * @param string $data 要处理的数据
      * @return void
      */
-    protected function sendData($data)
+    protected function sendData(string $data)
     {
         echo $data;
     }
@@ -179,7 +184,7 @@ class Response
      * @param mixed $options 输出参数
      * @return $this
      */
-    public function options($options = [])
+    public function options($options = []): Response
     {
         $this->options = array_merge($this->options, $options);
 
@@ -192,7 +197,7 @@ class Response
      * @param mixed $data 输出数据
      * @return $this
      */
-    public function data($data)
+    public function data($data): Response
     {
         $this->data = $data;
 
@@ -205,7 +210,7 @@ class Response
      * @param bool $cache 允许请求缓存
      * @return $this
      */
-    public function allowCache($cache)
+    public function allowCache($cache): Response
     {
         $this->allowCache = $cache;
 
@@ -219,7 +224,7 @@ class Response
      * @param string $value 参数值
      * @return $this
      */
-    public function header($name, $value = null)
+    public function header($name, $value = null): Response
     {
         if (is_array($name)) {
             $this->header = array_merge($this->header, $name);
@@ -236,7 +241,7 @@ class Response
      * @param mixed $content
      * @return $this
      */
-    public function content($content)
+    public function content($content): Response
     {
         if (null !== $content && !is_string($content) && !is_numeric($content) && !is_callable([
                 $content,
@@ -254,10 +259,10 @@ class Response
     /**
      * 发送HTTP状态
      * @access public
-     * @param integer $code 状态码
+     * @param int $code 状态码
      * @return $this
      */
-    public function code($code)
+    public function code(int $code): Response
     {
         $this->code = $code;
 
@@ -270,7 +275,7 @@ class Response
      * @param string $time
      * @return $this
      */
-    public function lastModified($time)
+    public function lastModified(string $time): Response
     {
         $this->header['Last-Modified'] = $time;
 
@@ -283,7 +288,7 @@ class Response
      * @param string $time
      * @return $this
      */
-    public function expires($time)
+    public function expires(string $time): Response
     {
         $this->header['Expires'] = $time;
 
@@ -296,7 +301,7 @@ class Response
      * @param string $eTag
      * @return $this
      */
-    public function eTag($eTag)
+    public function eTag(string $eTag): Response
     {
         $this->header['ETag'] = $eTag;
 
@@ -309,7 +314,7 @@ class Response
      * @param string $cache 缓存设置
      * @return $this
      */
-    public function cacheControl($cache)
+    public function cacheControl(string $cache): Response
     {
         $this->header['Cache-control'] = $cache;
 
@@ -321,7 +326,7 @@ class Response
      * @access public
      * @return $this
      */
-    public function noCache()
+    public function noCache(): Response
     {
         $this->header['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0';
         $this->header['Pragma'] = 'no-cache';
@@ -336,7 +341,7 @@ class Response
      * @param string $charset 输出编码
      * @return $this
      */
-    public function contentType($contentType, $charset = 'utf-8')
+    public function contentType(string $contentType, string $charset = 'utf-8'): Response
     {
         $this->header['Content-Type'] = $contentType . '; charset=' . $charset;
 
@@ -349,10 +354,10 @@ class Response
      * @param string $name 头部名称
      * @return mixed
      */
-    public function getHeader($name = '')
+    public function getHeader(string $name = '')
     {
         if (!empty($name)) {
-            return isset($this->header[$name]) ? $this->header[$name] : null;
+            return $this->header[$name] ?? null;
         }
 
         return $this->header;
@@ -370,10 +375,9 @@ class Response
 
     /**
      * 获取输出数据
-     * @access public
-     * @return mixed
+     * @return string
      */
-    public function getContent()
+    public function getContent(): string
     {
 
         $content = $this->output($this->data);
@@ -387,16 +391,15 @@ class Response
         }
 
         $this->content = (string)$content;
-        
+
         return $this->content;
     }
 
     /**
      * 获取状态码
-     * @access public
-     * @return integer
+     * @return int
      */
-    public function getCode()
+    public function getCode(): int
     {
         return $this->code;
     }

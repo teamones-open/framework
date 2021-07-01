@@ -1,12 +1,16 @@
 <?php
+
+declare(strict_types=1);
+
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK ]
+// | The teamones framework runs on the workerman high performance framework
 // +----------------------------------------------------------------------
-// | Copyright (c) 2006~2018 http://thinkphp.cn All rights reserved.
+// | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
 // | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
 // +----------------------------------------------------------------------
 
 namespace think\response;
@@ -17,17 +21,17 @@ use think\Response;
 class Json extends Response
 {
     // 输出参数
-    protected $options = [
+    protected array $options = [
         'json_encode_param' => JSON_UNESCAPED_UNICODE,
     ];
 
-    protected $contentType = 'application/json';
+    protected string $contentType = 'application/json';
 
     /**
      * 处理数据
      * @access protected
      * @param  mixed $data 要处理的数据
-     * @return mixed
+     * @return mixed|string
      * @throws \Exception
      */
     protected function output($data)
