@@ -254,10 +254,6 @@ class Loader
             C(load_config(CONF_PATH . 'config_' . APP_MODE . CONF_EXT));
         }
 
-
-
-
-
         // 读取当前应用状态对应的配置文件
         if (APP_STATUS && is_file(CONF_PATH . APP_STATUS . CONF_EXT)) {
             C(include CONF_PATH . APP_STATUS . CONF_EXT);

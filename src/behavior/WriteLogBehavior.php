@@ -12,6 +12,7 @@ declare(strict_types=1);
 // | Author: liu21st <liu21st@gmail.com>
 // | Reviser: weijer <weiwei163@foxmail.com>
 // +----------------------------------------------------------------------
+
 namespace behavior;
 
 // 创建Lite运行文件
