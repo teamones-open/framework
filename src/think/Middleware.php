@@ -1,75 +1,77 @@
 <?php
-namespace think;
 
-/**
- * This file is part of webman.
- *
- * Licensed under The MIT License
- * For full copyright and license information, please see the MIT-LICENSE.txt
- * Redistributions of files must retain the above copyright notice.
- *
- * @author    walkor<walkor@workerman.net>
- * @copyright walkor<walkor@workerman.net>
- * @link      http://www.workerman.net/
- * @license   http://www.opensource.org/licenses/mit-license.php MIT License
- */
+declare(strict_types=1);
+
+// +----------------------------------------------------------------------
+// | The teamones framework runs on the workerman high performance framework
+// +----------------------------------------------------------------------
+// | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
+// +----------------------------------------------------------------------
+// | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
+// +----------------------------------------------------------------------
+
+namespace think;
 
 class Middleware
 {
     /**
      * @var array
      */
-    protected static $_instances = [];
+    protected static array $_instances = [];
 
     /**
-     * @param $all_middlewares
+     * @param $allMiddlewares
      */
-    public static function load($all_middlewares)
+    public static function load($allMiddlewares)
     {
-        foreach ($all_middlewares as $app_name => $middlewares) {
-            foreach ($middlewares as $class_name) {
-                if (\method_exists($class_name, 'process')) {
-                    static::$_instances[$app_name][] = [App::container()->get($class_name), 'process'];
+        foreach ($allMiddlewares as $appName => $middlewares) {
+            foreach ($middlewares as $className) {
+                if (\method_exists($className, 'process')) {
+                    static::$_instances[$appName][] = [App::container()->get($className), 'process'];
                 } else {
                     // @todo Log
-                    echo "middleware $class_name::process not exsits\n";
+                    echo "middleware $className::process not exsits\n";
                 }
             }
         }
     }
 
     /**
-     * @param $app_name
-     * @param bool $with_global_middleware
+     * @param string $appName
+     * @param bool $withGlobalMiddleware
      * @return array
      */
-    public static function getMiddleware($app_name, $with_global_middleware = true)
+    public static function getMiddleware(string $appName, $withGlobalMiddleware = true): array
     {
-        $global_middleware = $with_global_middleware && isset(static::$_instances['']) ? static::$_instances[''] : [];
-        if ($app_name === '') {
-            return \array_reverse($global_middleware);
+        $globalMiddleware = $withGlobalMiddleware && isset(static::$_instances['']) ? static::$_instances[''] : [];
+        if ($appName === '') {
+            return \array_reverse($globalMiddleware);
         }
-        $app_middleware = static::$_instances[$app_name] ?? [];
-        return \array_reverse(\array_merge($global_middleware, $app_middleware));
+        $appMiddleware = static::$_instances[$appName] ?? [];
+        return \array_reverse(\array_merge($globalMiddleware, $appMiddleware));
     }
 
     /**
+     * @param string $appName
      * @return array
      */
-    public static function getRouteMiddleware($app_name)
+    public static function getRouteMiddleware(string $appName): array
     {
-        if ($app_name === '') {
+        if ($appName === '') {
             return [];
         }
-        return static::$_instances[$app_name] ?? [];
+        return static::$_instances[$appName] ?? [];
     }
 
     /**
-     * @param $app_name
+     * @param string $appName
      * @return bool
      */
-    public static function hasMiddleware($app_name)
+    public static function hasMiddleware(string $appName): bool
     {
-        return isset(static::$_instances[$app_name]);
+        return isset(static::$_instances[$appName]);
     }
 }
