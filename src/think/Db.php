@@ -1,12 +1,16 @@
 <?php
+
+declare(strict_types=1);
+
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK IT ]
+// | The teamones framework runs on the workerman high performance framework
 // +----------------------------------------------------------------------
 // | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
 // | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
 // +----------------------------------------------------------------------
 
 namespace think;
@@ -37,19 +41,19 @@ class Db
      * 数据库连接实例
      * @var array
      */
-    private static $instance = [];
+    private static array $instance = [];
 
     /**
      * 当前数据库连接实例
-     * @var null
+     * @var ?object
      */
-    private static $_instance = null;
+    private static ?object $_instance = null;
 
     /**
      * 数据库配置
      * @var array
      */
-    protected static $config = [];
+    protected static array $config = [];
 
     /**
      * 取得数据库类实例
@@ -88,7 +92,7 @@ class Db
     public static function clearInstance(): void
     {
         // 解析连接参数 支持数组和字符串
-        self::$_instance = [];
+        self::$instance = [];
         self::$_instance = null;
     }
 
@@ -113,7 +117,7 @@ class Db
             return self::$config;
         }
 
-        return isset(self::$config[$name]) ? self::$config[$name] : null;
+        return self::$config[$name] ?? null;
     }
 
     /**
@@ -137,15 +141,15 @@ class Db
                 'hostname' => $config['db_host'],
                 'hostport' => $config['db_port'],
                 'database' => $config['db_name'],
-                'dsn' => isset($config['db_dsn']) ? $config['db_dsn'] : null,
-                'params' => isset($config['db_params']) ? $config['db_params'] : null,
-                'charset' => isset($config['db_charset']) ? $config['db_charset'] : 'utf8',
-                'deploy' => isset($config['db_deploy_type']) ? $config['db_deploy_type'] : 0,
-                'rw_separate' => isset($config['db_rw_separate']) ? $config['db_rw_separate'] : false,
-                'master_num' => isset($config['db_master_num']) ? $config['db_master_num'] : 1,
-                'slave_no' => isset($config['db_slave_no']) ? $config['db_slave_no'] : '',
-                'debug' => isset($config['db_debug']) ? $config['db_debug'] : APP_DEBUG,
-                'lite' => isset($config['db_lite']) ? $config['db_lite'] : false,
+                'dsn' => $config['db_dsn'] ?? null,
+                'params' => $config['db_params'] ?? null,
+                'charset' => $config['db_charset'] ?? 'utf8',
+                'deploy' => $config['db_deploy_type'] ?? 0,
+                'rw_separate' => $config['db_rw_separate'] ?? false,
+                'master_num' => $config['db_master_num'] ?? 1,
+                'slave_no' => $config['db_slave_no'] ?? '',
+                'debug' => $config['db_debug'] ?? APP_DEBUG,
+                'lite' => $config['db_lite'] ?? false,
             ];
         } else {
             $databaseConfig = C('database');
@@ -187,7 +191,7 @@ class Db
      * @param string $dsnStr
      * @return array|bool
      */
-    private static function parseDsn($dsnStr)
+    private static function parseDsn(string $dsnStr)
     {
         if (empty($dsnStr)) {
             return false;
@@ -198,12 +202,12 @@ class Db
         }
         $dsn = [
             'type' => $info['scheme'],
-            'username' => isset($info['user']) ? $info['user'] : '',
-            'password' => isset($info['pass']) ? $info['pass'] : '',
-            'hostname' => isset($info['host']) ? $info['host'] : '',
-            'hostport' => isset($info['port']) ? $info['port'] : '',
+            'username' => $info['user'] ?? '',
+            'password' => $info['pass'] ?? '',
+            'hostname' => $info['host'] ?? '',
+            'hostport' => $info['port'] ?? '',
             'database' => isset($info['path']) ? substr($info['path'], 1) : '',
-            'charset' => isset($info['fragment']) ? $info['fragment'] : 'utf8',
+            'charset' => $info['fragment'] ?? 'utf8',
         ];
 
         if (isset($info['query'])) {
