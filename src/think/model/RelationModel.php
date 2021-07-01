@@ -151,6 +151,7 @@ class RelationModel extends Model
      * @param $pkName
      * @param $data
      * @param $options
+     * @throws \Exception
      */
     protected function _after_insert($pk, $pkName, $data, $options)
     {
@@ -180,6 +181,7 @@ class RelationModel extends Model
      * @param $data
      * @param $options
      * @param $writeEvent
+     * @throws \Exception
      */
     protected function _after_update($result, $pkName, $data, $options, $writeEvent)
     {

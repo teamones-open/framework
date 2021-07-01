@@ -42,11 +42,10 @@ class Redis extends Driver
 
     /**
      * 判断缓存
-     * @access public
-     * @param string $name 缓存变量名
+     * @param string $name
      * @return bool
      */
-    public function has($name)
+    public function has($name = ''): bool
     {
         return RedisHandler::get($this->getCacheKey($name)) ? true : false;
     }
@@ -58,7 +57,7 @@ class Redis extends Driver
      * @param mixed $default 默认值
      * @return mixed
      */
-    public function get($name, $default = false)
+    public function get($name = '', $default = false)
     {
         $value = RedisHandler::get($this->getCacheKey($name));
 
@@ -67,7 +66,8 @@ class Redis extends Driver
         }
 
         $jsonData = json_decode($value, true);
-        // 检测是否为JSON数据 true 返回JSON解析数组, false返回源数据 byron sampson<xiaobo.sun@qq.com>
+
+        // 检测是否为JSON数据 true 返回JSON解析数组, false返回源数据
         return (null === $jsonData) ? $value : $jsonData;
     }
 
@@ -128,22 +128,20 @@ class Redis extends Driver
 
     /**
      * 删除缓存
-     * @access public
-     * @param string $name 缓存变量名
-     * @return boolean
+     * @param string $name
+     * @return int
      */
-    public function rm($name)
+    public function rm($name): int
     {
         return RedisHandler::del($this->getCacheKey($name));
     }
 
     /**
      * 清除缓存
-     * @access public
-     * @param string $tag 标签名
-     * @return boolean
+     * @param null $tag
+     * @return mixed
      */
-    public function clear($tag = null)
+    public function clear($tag = null): mixed
     {
         if ($tag) {
             // 指定标签清除
@@ -160,10 +158,8 @@ class Redis extends Driver
 
     /**
      * 追加（数组）缓存数据
-     * @access public
-     * @param string $name 缓存标识
-     * @param mixed $value 数据
-     * @return void
+     * @param string $name
+     * @param $value
      */
     public function push(string $name, $value): void
     {

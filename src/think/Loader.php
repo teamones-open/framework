@@ -1,12 +1,14 @@
 <?php
+declare(strict_types=1);
 // +----------------------------------------------------------------------
 // | ThinkPHP [ WE CAN DO IT JUST THINK ]
 // +----------------------------------------------------------------------
-// | Copyright (c) 2006~2017 http://thinkphp.cn All rights reserved.
+// | Copyright (c) 2006~2018 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
 // | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
 // +----------------------------------------------------------------------
 
 namespace think;
@@ -41,7 +43,11 @@ class Loader
 
     private static $configCacheFile = "";
     private static $configCache = [];
-    private static $configCacheRefresh = false;
+
+    /**
+     * @var bool
+     */
+    private static bool $configCacheRefresh = false;
 
     /**
      * 查找文件

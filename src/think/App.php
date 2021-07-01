@@ -27,92 +27,87 @@ class App
     /**
      * @var bool 是否初始化过
      */
-    protected static $init = false;
+    protected static bool $init = false;
 
     /**
      * @var string 当前模块路径
      */
-    public static $modulePath;
+    public static string $modulePath;
 
     /**
      * @var string 应用类库命名空间
      */
-    public static $namespace = 'App';
+    public static string $namespace = 'App';
 
     /**
      * @var bool 应用类库后缀
      */
-    public static $suffix = false;
+    public static bool $suffix = false;
 
     /**
      * @var bool 应用路由检测
      */
-    protected static $routeCheck;
+    protected static bool $routeCheck;
 
     /**
      * @var bool 严格路由检测
      */
-    protected static $routeMust;
+    protected static bool $routeMust;
 
     /**
      * @var bool
      */
-    protected static $_supportStaticFiles = true;
+    protected static bool $_supportStaticFiles = true;
 
     /**
      * @var bool
      */
-    protected static $_supportPHPFiles = false;
+    protected static bool $_supportPHPFiles = false;
 
     /**
      * @var array
      */
-    protected static $_callbacks = [];
+    protected static array $_callbacks = [];
 
     /**
-     * @var Worker
+     * @var Worker|null
      */
-    protected static $_worker = null;
+    protected static ?Worker $_worker = null;
 
     /**
-     * @var ContainerInterface
+     * @var ContainerInterface|null
      */
-    protected static $_container = null;
+    protected static ?ContainerInterface $_container = null;
 
     /**
-     * @var Logger
+     * @var Logger|null
      */
-    protected static $_logger = null;
-
-    /**
-     * @var string
-     */
-    protected static $_publicPath = '';
+    protected static ?Logger $_logger = null;
 
     /**
      * @var string
      */
-    protected static $_configPath = '';
+    protected static string $_publicPath = '';
 
     /**
-     * @var TcpConnection
+     * @var TcpConnection|null
      */
-    protected static $_connection = null;
+    protected static ?TcpConnection $_connection = null;
 
     /**
-     * @var Request
+     * @var Request|null
      */
-    protected static $_request = null;
-
-    /**
-     * @var int
-     */
-    protected static $_maxRequestCount = 1000000;
+    protected static ?Request $_request = null;
 
     /**
      * @var int
      */
-    protected static $_gracefulStopTimer = null;
+    protected static int $_maxRequestCount = 1000000;
+
+    /**
+     * @var int|null
+     */
+    protected static ?int $_gracefulStopTimer = null;
 
 
     /**
@@ -131,9 +126,9 @@ class App
         static::$_publicPath = $public_path;
         static::loadController($app_path . C("DEFAULT_MODULE"));
 
-        $max_requst_count = (int)C('SERVER.max_request');
-        if ($max_requst_count > 0) {
-            static::$_maxRequestCount = $max_requst_count;
+        $maxRequestCount = (int)C('SERVER.max_request');
+        if ($maxRequestCount > 0) {
+            static::$_maxRequestCount = $maxRequestCount;
         }
         static::$_supportStaticFiles = true;
         static::$_supportPHPFiles = false;
@@ -156,8 +151,6 @@ class App
 
         // 加载动态应用公共文件和配置
         load_ext_file(COMMON_PATH);
-
-        return;
     }
 
 
@@ -166,7 +159,7 @@ class App
      * @return mixed
      * @throws Exception
      */
-    public static function initCommon()
+    public static function initCommon(): mixed
     {
         if (empty(self::$init)) {
             self::init();
@@ -179,22 +172,20 @@ class App
 
     /**
      * 执行模块
-     * @access public
-     * @param array $result 模块/控制器/操作
-     * @param array $config 配置参数
-     * @param bool $convert 是否自动转换控制器和操作名
-     * @return mixed
-     * @throws \ReflectionException
+     * @param $result
+     * @param $config
+     * @param null $convert
+     * @return array
      */
-    public static function module($result, $config, $convert = null)
+    public static function module($result, $config, $convert = null): array
     {
         if (is_string($result)) {
             $result = explode('/', $result);
         }
 
+        $module = strip_tags($result[0] ?: $config['DEFAULT_MODULE']);
         if ($config['MULTI_MODULE']) {
             // 多模块部署
-            $module = strip_tags($result[0] ?: $config['DEFAULT_MODULE']);
             $bind = Route::getBind('module');
             $available = false;
 
@@ -222,7 +213,6 @@ class App
             }
         } else {
             // 单一模块部署
-            $module = strip_tags($result[0] ?: $config['DEFAULT_MODULE']);
             static::$_request->module($module);
         }
 
@@ -254,10 +244,10 @@ class App
      * URL路由检测（根据PATH_INFO)
      * @param Request $request
      * @param array $config
-     * @return array|bool|false
+     * @return array|bool
      * @throws \Exception
      */
-    public static function routeCheck(Request $request, array $config)
+    public static function routeCheck(Request $request, array $config): bool|array
     {
         $path = $request->path();
 
@@ -290,17 +280,16 @@ class App
      * 执行应用程序
      * @param $dispatch
      * @param $config
-     * @return mixed
-     * @throws \ReflectionException
+     * @return array
      */
-    public static function analysisModule($dispatch, $config)
+    public static function analysisModule($dispatch, $config): array
     {
         if ($dispatch['type'] === 'module') {
             // 模块/控制器/操作
             return self::module(
                 $dispatch['module'],
                 $config,
-                isset($dispatch['convert']) ? $dispatch['convert'] : null
+                $dispatch['convert'] ?? null
             );
         }
 
@@ -315,7 +304,7 @@ class App
      * @return array
      * @throws \ReflectionException
      */
-    private static function bindParams($reflect, $vars = [])
+    private static function bindParams($reflect, $vars = []): array
     {
         if (empty($vars)) {
             // 自动获取请求变量
@@ -366,13 +355,12 @@ class App
 
     /**
      * 调用反射执行类的实例化 支持依赖注入
-     * @access public
-     * @param string $class 类名
-     * @param array $vars 变量
+     * @param $class
+     * @param array $vars
      * @return object
      * @throws \ReflectionException
      */
-    public static function invokeClass($class, $vars = [])
+    public static function invokeClass($class, $vars = []): object
     {
         $reflect = new \ReflectionClass($class);
 
@@ -389,13 +377,12 @@ class App
 
     /**
      * 调用反射执行类的方法 支持参数绑定
-     * @access public
-     * @param string|array $method 方法
-     * @param array $vars 变量
+     * @param $method
+     * @param array $vars
      * @return mixed
      * @throws \ReflectionException
      */
-    public static function invokeMethod($method, $vars = [])
+    public static function invokeMethod($method, $vars = []): mixed
     {
         if (is_array($method)) {
             $class = is_object($method[0]) ? $method[0] : self::invokeClass($method[0]);
@@ -407,7 +394,7 @@ class App
         $args = self::bindParams($reflect, $vars);
 
         APP_DEBUG && Log::record('[ RUN ] ' . $reflect->class . '->' . $reflect->name . '[ ' . $reflect->getFileName() . ' ]', Log::INFO);
-        return $reflect->invokeArgs(isset($class) ? $class : null, $args);
+        return $reflect->invokeArgs($class ?? null, $args);
     }
 
     /**
@@ -415,7 +402,7 @@ class App
      * @param \think\Request $request
      * @return null
      */
-    public function onMessage(TcpConnection $connection, $request)
+    public function onMessage(TcpConnection $connection, Request $request)
     {
         static $request_count = 0;
 
@@ -506,7 +493,7 @@ class App
      * @param $request
      * @return string|Response
      */
-    protected static function exceptionResponse(\Throwable $e, $request)
+    protected static function exceptionResponse(\Throwable $e, $request): string|Response
     {
         try {
             /** @var ExceptionHandlerInterface $exception_handler */
@@ -529,7 +516,7 @@ class App
      * @param null $route
      * @return \Closure|mixed
      */
-    protected static function getCallback($app, $call, $args = null, $withGlobalMiddleware = true, $route = null)
+    protected static function getCallback($app, $call, $args = null, $withGlobalMiddleware = true, $route = null): mixed
     {
         $args = $args === null ? null : \array_values($args);
         $middleware = Middleware::getMiddleware($app, $withGlobalMiddleware);
@@ -576,33 +563,33 @@ class App
     }
 
     /**
-     * @return ContainerInterface
+     * @return ContainerInterface|null
      */
-    public static function container()
+    public static function container(): ?ContainerInterface
     {
         return static::$_container;
     }
 
     /**
-     * @return Request
+     * @return Request|null
      */
-    public static function request()
+    public static function request(): ?Request
     {
         return static::$_request;
     }
 
     /**
-     * @return TcpConnection
+     * @return TcpConnection|null
      */
-    public static function connection()
+    public static function connection(): ?TcpConnection
     {
         return static::$_connection;
     }
 
     /**
-     * @return Worker
+     * @return Worker|null
      */
-    public static function worker()
+    public static function worker(): ?Worker
     {
         return static::$_worker;
     }
@@ -615,7 +602,7 @@ class App
      * @return mixed
      * @throws \ReflectionException
      */
-    protected static function exec($key, Request $request, $dispatch, $config)
+    protected static function exec($key, Request $request, $dispatch, $config): mixed
     {
         list($app, $controller, $action) = self::analysisModule($dispatch, $config);
 
@@ -682,8 +669,8 @@ class App
                 if (is_dir($file)) {
                     continue;
                 }
-                $fileinfo = new \SplFileInfo($file);
-                $ext = $fileinfo->getExtension();
+                $fileInfo = new \SplFileInfo($file);
+                $ext = $fileInfo->getExtension();
                 if (\strpos($file, '/controller/') !== false && $ext === 'php') {
                     require_once $file;
                 }
