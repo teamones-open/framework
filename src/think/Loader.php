@@ -1,12 +1,16 @@
 <?php
+
+declare(strict_types=1);
+
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK ]
+// | The teamones framework runs on the workerman high performance framework
 // +----------------------------------------------------------------------
-// | Copyright (c) 2006~2017 http://thinkphp.cn All rights reserved.
+// | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
 // | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
 // +----------------------------------------------------------------------
 
 namespace think;
@@ -16,37 +20,25 @@ use think\exception\ErrorCode;
 
 class Loader
 {
-    protected static $_instance = [];
+    protected static array $_instance = [];
 
     // 类名映射
-    protected static $_map = [];
-
-    // 命名空间别名
-    protected static $namespaceAlias = [];
+    protected static array $_map = [];
 
     // PSR-4
-    private static $prefixLengthsPsr4 = [];
-    private static $prefixDirsPsr4 = [];
-    private static $fallbackDirsPsr4 = [];
+    private static array $prefixLengthsPsr4 = [];
+    private static array $prefixDirsPsr4 = [];
+    private static array $fallbackDirsPsr4 = [];
 
     // PSR-0
-    private static $prefixesPsr0 = [];
-    private static $fallbackDirsPsr0 = [];
-
-    /**
-     * 需要加载的文件
-     * @var array
-     */
-    private static $files = [];
-
-    private static $configCacheFile = "";
+    private static array $prefixesPsr0 = [];
+    private static array $fallbackDirsPsr0 = [];
     private static $configCache = [];
-    private static $configCacheRefresh = false;
 
     /**
      * 查找文件
      * @param $class
-     * @return bool
+     * @return false|mixed|string
      */
     private static function findFile($class)
     {
@@ -115,7 +107,7 @@ class Loader
      * @param $class
      * @param string $map
      */
-    public static function addClassMap($class, $map = '')
+    public static function addClassMap($class, $map = ''): void
     {
         if (is_array($class)) {
             self::$_map = array_merge(self::$_map, $class);
@@ -129,7 +121,7 @@ class Loader
      * @param $namespace
      * @param string $path
      */
-    public static function addNamespace($namespace, $path = '')
+    public static function addNamespace($namespace, $path = ''): void
     {
         if (is_array($namespace)) {
             foreach ($namespace as $prefix => $paths) {
@@ -309,12 +301,12 @@ class Loader
             $GLOBALS['_startUseMems'] = memory_get_usage();
         }
 
-        if(!defined('APP_PATH')) {
+        if (!defined('APP_PATH')) {
             // 需要在 start.php 入口定义
             define('APP_PATH', '');
         }
 
-        if(!defined('APP_DEBUG')) {
+        if (!defined('APP_DEBUG')) {
             // 需要在 start.php 入口定义
             define('APP_DEBUG', false);
         }
@@ -386,7 +378,6 @@ class Loader
             if (is_file(ROOT_PATH . '.env')) {
                 $env = parse_ini_file(ROOT_PATH . '.env', true);
                 self::$configCache['env'] = $env;
-                self::$configCacheRefresh = true;
             }
         }
 
@@ -409,10 +400,9 @@ class Loader
 
     /**
      * 注册自动加载机制
-     * @param string $autoload
      * @throws Exception
      */
-    public static function register($autoload = '')
+    public static function register()
     {
         // 加载变量
         self::loadConstant();
@@ -438,7 +428,7 @@ class Loader
      * @param bool $ucfirst 首字母是否大写（驼峰规则）
      * @return string
      */
-    public static function parseName($name, $type = 0, $ucfirst = true)
+    public static function parseName(string $name, $type = 0, $ucfirst = true): string
     {
         if ($type) {
             $name = preg_replace_callback('/_([a-zA-Z])/', function ($match) {
@@ -458,7 +448,7 @@ class Loader
      * @param bool $appendSuffix
      * @return string
      */
-    public static function parseClass($module, $layer, $name, $appendSuffix = false)
+    public static function parseClass(string $module, string $layer, string $name, $appendSuffix = false): string
     {
         $array = explode('\\', str_replace(['/', '.'], '\\', $name));
 
@@ -477,7 +467,7 @@ class Loader
      * @param bool $appendSuffix 是否添加类名后缀
      * @return array
      */
-    protected static function getModuleAndClass($name, $layer, $appendSuffix)
+    protected static function getModuleAndClass(string $name, string $layer, bool $appendSuffix): array
     {
         $request = \request();
         $requestModule = null;
@@ -512,7 +502,7 @@ class Loader
      * @return object
      * @throws ClassNotFoundException
      */
-    public static function model($name = '', $layer = 'model', $appendSuffix = false, $common = 'common')
+    public static function model($name = '', $layer = 'model', $appendSuffix = false, $common = 'common'): object
     {
         $uid = $name . $layer;
 
@@ -546,7 +536,7 @@ class Loader
      * @return object
      * @throws \ReflectionException
      */
-    public static function controller($name, $layer = 'controller', $appendSuffix = false, $empty = '')
+    public static function controller(string $name, $layer = 'controller', $appendSuffix = false, $empty = ''): object
     {
         list($module, $class) = self::getModuleAndClass($name, $layer, $appendSuffix);
 
@@ -573,7 +563,7 @@ class Loader
      * @return bool|mixed
      * @throws \ReflectionException
      */
-    public static function action($url, $vars = [], $layer = 'controller', $appendSuffix = false)
+    public static function action(string $url, $vars = [], $layer = 'controller', $appendSuffix = false)
     {
         $info = pathinfo($url);
         $action = $info['basename'];
@@ -600,7 +590,7 @@ class Loader
      * @param string $method 类的静态方法名
      * @return object
      */
-    public static function instance($class, $method = '')
+    public static function instance(string $class, $method = ''): object
     {
         $identify = $class . $method;
         if (!isset(self::$_instance[$identify])) {
