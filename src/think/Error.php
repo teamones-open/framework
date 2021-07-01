@@ -1,12 +1,16 @@
 <?php
+
+declare(strict_types=1);
+
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK ]
+// | The teamones framework runs on the workerman high performance framework
 // +----------------------------------------------------------------------
-// | Copyright (c) 2006~2017 http://thinkphp.cn All rights reserved.
+// | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
-// | Author: 麦当苗儿 <zuojiazi@vip.qq.com> <http://zjzit.cn>
+// | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
 // +----------------------------------------------------------------------
 
 namespace think;
@@ -50,14 +54,14 @@ class Error
 
     /**
      * Error Handler
-     * @param  integer $errno 错误编号
-     * @param  integer $errstr 详细错误信息
-     * @param  string $errfile 出错的文件
-     * @param  integer $errline 出错行号
-     * @param  array $errcontext
+     * @param integer $errno 错误编号
+     * @param integer $errstr 详细错误信息
+     * @param string $errfile 出错的文件
+     * @param integer $errline 出错行号
+     * @param array $errcontext
      * @throws ErrorException
      */
-    public static function appError($errno, $errstr, $errfile = '', $errline = 0, $errcontext = [])
+    public static function appError(int $errno, int $errstr, $errfile = '', $errline = 0, $errcontext = [])
     {
         $exception = new ErrorException($errno, $errstr, $errfile, $errline, $errcontext);
         if (error_reporting() & $errno) {
@@ -87,10 +91,10 @@ class Error
     /**
      * 确定错误类型是否致命
      *
-     * @param  int $type
+     * @param int $type
      * @return bool
      */
-    protected static function isFatal($type)
+    protected static function isFatal(int $type): bool
     {
         return in_array($type, [E_ERROR, E_NOTICE, E_CORE_ERROR, E_COMPILE_ERROR, E_PARSE]);
     }
@@ -100,7 +104,7 @@ class Error
      *
      * @return Handle
      */
-    public static function getExceptionHandler()
+    public static function getExceptionHandler(): Handle
     {
         static $handle;
         if (!$handle) {
