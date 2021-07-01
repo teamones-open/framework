@@ -1,12 +1,16 @@
 <?php
+
+declare(strict_types=1);
+
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK ]
+// | The teamones framework runs on the workerman high performance framework
 // +----------------------------------------------------------------------
-// | Copyright (c) 2006~2018 http://thinkphp.cn All rights reserved.
+// | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
-// | Author: zhangyajun <448901948@qq.com>
+// | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
 // +----------------------------------------------------------------------
 
 namespace think;
@@ -23,14 +27,18 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
      * 数据集数据
      * @var array
      */
-    protected $items = [];
+    protected array $items = [];
 
     public function __construct($items = [])
     {
         $this->items = $this->convertToArray($items);
     }
 
-    public static function make($items = [])
+    /**
+     * @param array $items
+     * @return Collection
+     */
+    public static function make($items = []): Collection
     {
         return new static($items);
     }
@@ -40,19 +48,25 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
      * @access public
      * @return bool
      */
-    public function isEmpty()
+    public function isEmpty(): bool
     {
         return empty($this->items);
     }
 
-    public function toArray()
+    /**
+     * @return array|array[]|\array[][]
+     */
+    public function toArray(): array
     {
         return array_map(function ($value) {
             return ($value instanceof Model || $value instanceof self) ? $value->toArray() : $value;
         }, $this->items);
     }
 
-    public function all()
+    /**
+     * @return array
+     */
+    public function all(): array
     {
         return $this->items;
     }
@@ -61,10 +75,10 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
      * 合并数组
      *
      * @access public
-     * @param  mixed $items
+     * @param mixed $items
      * @return static
      */
-    public function merge($items)
+    public function merge($items): Collection
     {
         return new static(array_merge($this->items, $this->convertToArray($items)));
     }
@@ -73,10 +87,10 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
      * 比较数组，返回差集
      *
      * @access public
-     * @param  mixed $items
+     * @param mixed $items
      * @return static
      */
-    public function diff($items)
+    public function diff($items): Collection
     {
         return new static(array_diff($this->items, $this->convertToArray($items)));
     }
@@ -87,7 +101,7 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
      * @access public
      * @return static
      */
-    public function flip()
+    public function flip(): Collection
     {
         return new static(array_flip($this->items));
     }
@@ -96,10 +110,10 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
      * 比较数组，返回交集
      *
      * @access public
-     * @param  mixed $items
+     * @param mixed $items
      * @return static
      */
-    public function intersect($items)
+    public function intersect($items): Collection
     {
         return new static(array_intersect($this->items, $this->convertToArray($items)));
     }
@@ -110,16 +124,14 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
      * @access public
      * @return static
      */
-    public function keys()
+    public function keys(): Collection
     {
         return new static(array_keys($this->items));
     }
 
     /**
      * 删除数组的最后一个元素（出栈）
-     *
-     * @access public
-     * @return mixed
+     * @return mixed|null
      */
     public function pop()
     {
@@ -130,8 +142,8 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
      * 通过使用用户自定义函数，以字符串返回数组
      *
      * @access public
-     * @param  callable $callback
-     * @param  mixed $initial
+     * @param callable $callback
+     * @param mixed $initial
      * @return mixed
      */
     public function reduce(callable $callback, $initial = null)
@@ -145,7 +157,7 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
      * @access public
      * @return static
      */
-    public function reverse()
+    public function reverse(): Collection
     {
         return new static(array_reverse($this->items));
     }
@@ -164,8 +176,8 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
     /**
      * 在数组结尾插入一个元素
      * @access public
-     * @param  mixed $value
-     * @param  mixed $key
+     * @param mixed $value
+     * @param mixed $key
      * @return void
      */
     public function push($value, $key = null)
@@ -181,11 +193,11 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
      * 把一个数组分割为新的数组块.
      *
      * @access public
-     * @param  int $size
-     * @param  bool $preserveKeys
+     * @param int $size
+     * @param bool $preserveKeys
      * @return static
      */
-    public function chunk($size, $preserveKeys = false)
+    public function chunk(int $size, $preserveKeys = false): Collection
     {
         $chunks = [];
 
@@ -216,10 +228,10 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
      * 给每个元素执行个回调
      *
      * @access public
-     * @param  callable $callback
+     * @param callable $callback
      * @return $this
      */
-    public function each(callable $callback)
+    public function each(callable $callback): Collection
     {
         foreach ($this->items as $key => $item) {
             $result = $callback($item, $key);
@@ -237,10 +249,10 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
     /**
      * 用回调函数过滤数组中的元素
      * @access public
-     * @param  callable|null $callback
+     * @param callable|null $callback
      * @return static
      */
-    public function filter(callable $callback = null)
+    public function filter(callable $callback = null): Collection
     {
         if ($callback) {
             return new static(array_filter($this->items, $callback));
@@ -256,7 +268,7 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
      * @param mixed $indexKey 作为索引值的列
      * @return array
      */
-    public function column($columnKey, $indexKey = null)
+    public function column($columnKey, $indexKey = null): array
     {
         return array_column($this->items, $columnKey, $indexKey);
     }
@@ -265,10 +277,10 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
      * 对数组排序
      *
      * @access public
-     * @param  callable|null $callback
+     * @param callable|null $callback
      * @return static
      */
-    public function sort(callable $callback = null)
+    public function sort(callable $callback = null): Collection
     {
         $items = $this->items;
 
@@ -288,7 +300,7 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
      * @access public
      * @return static
      */
-    public function shuffle()
+    public function shuffle(): Collection
     {
         $items = $this->items;
 
@@ -301,27 +313,39 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
      * 截取数组
      *
      * @access public
-     * @param  int $offset
-     * @param  int $length
-     * @param  bool $preserveKeys
+     * @param int $offset
+     * @param int $length
+     * @param bool $preserveKeys
      * @return static
      */
-    public function slice($offset, $length = null, $preserveKeys = false)
+    public function slice(int $offset, $length = null, $preserveKeys = false): Collection
     {
         return new static(array_slice($this->items, $offset, $length, $preserveKeys));
     }
 
-    // ArrayAccess
-    public function offsetExists($offset)
+    /**
+     * ArrayAccess
+     * @param mixed $offset
+     * @return bool
+     */
+    public function offsetExists($offset): bool
     {
         return array_key_exists($offset, $this->items);
     }
 
+    /**
+     * @param mixed $offset
+     * @return mixed
+     */
     public function offsetGet($offset)
     {
         return $this->items[$offset];
     }
 
+    /**
+     * @param mixed $offset
+     * @param mixed $value
+     */
     public function offsetSet($offset, $value)
     {
         if (is_null($offset)) {
@@ -331,25 +355,37 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
         }
     }
 
+    /**
+     * @param mixed $offset
+     */
     public function offsetUnset($offset)
     {
         unset($this->items[$offset]);
     }
 
-    //Countable
-    public function count()
+    /**
+     * Countable
+     * @return int
+     */
+    public function count(): int
     {
         return count($this->items);
     }
 
-    //IteratorAggregate
-    public function getIterator()
+    /**
+     * IteratorAggregate
+     * @return ArrayIterator
+     */
+    public function getIterator(): ArrayIterator
     {
         return new ArrayIterator($this->items);
     }
 
-    //JsonSerializable
-    public function jsonSerialize()
+    /**
+     * JsonSerializable
+     * @return array|array[]|\array[][]
+     */
+    public function jsonSerialize(): array
     {
         return $this->toArray();
     }
@@ -357,14 +393,17 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
     /**
      * 转换当前数据集为JSON字符串
      * @access public
-     * @param  integer $options json参数
+     * @param integer $options json参数
      * @return string
      */
-    public function toJson($options = JSON_UNESCAPED_UNICODE)
+    public function toJson($options = JSON_UNESCAPED_UNICODE): string
     {
         return json_encode($this->toArray(), $options);
     }
 
+    /**
+     * @return string
+     */
     public function __toString()
     {
         return $this->toJson();
@@ -374,10 +413,10 @@ class Collection implements ArrayAccess, Countable, IteratorAggregate, JsonSeria
      * 转换成数组
      *
      * @access public
-     * @param  mixed $items
+     * @param mixed $items
      * @return array
      */
-    protected function convertToArray($items)
+    protected function convertToArray($items): array
     {
         if ($items instanceof self) {
             return $items->all();
