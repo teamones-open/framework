@@ -1,5 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
+// +----------------------------------------------------------------------
+// | The teamones framework runs on the workerman high performance framework
+// +----------------------------------------------------------------------
+// | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
+// +----------------------------------------------------------------------
+// | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
+// +----------------------------------------------------------------------
+
 namespace think;
 
 use Illuminate\Redis\RedisManager;
@@ -189,14 +202,14 @@ use Illuminate\Redis\RedisManager;
 class RedisHandler
 {
     /**
-     * @var RedisManager
+     * @var ?RedisManager
      */
-    protected static $_manager = null;
+    protected static ?RedisManager $_manager = null;
 
     /**
      * @return RedisManager
      */
-    public static function instance()
+    public static function instance(): ?RedisManager
     {
         if (empty(static::$_manager)) {
 
@@ -205,7 +218,7 @@ class RedisHandler
                 static::$_manager = \support\bootstrap\Redis::$_manager;
             } else {
                 $config = config('redis');
-                static::$_manager = new RedisManager('', 'phpredis', $config);
+                static::$_manager = new RedisManager(null, 'phpredis', $config);
             }
         }
         return static::$_manager;
