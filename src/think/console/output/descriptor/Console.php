@@ -1,17 +1,22 @@
 <?php
+
+declare(strict_types=1);
+
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK ]
+// | The teamones framework runs on the workerman high performance framework
 // +----------------------------------------------------------------------
-// | Copyright (c) 2006~2015 http://thinkphp.cn All rights reserved.
+// | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
-// | Author: yunwuxin <448901948@qq.com>
+// | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
 // +----------------------------------------------------------------------
 
 namespace think\console\output\descriptor;
 
 use think\Console as ThinkConsole;
+use think\Console\Command;
 
 class Console
 {
@@ -21,12 +26,12 @@ class Console
     /**
      * @var ThinkConsole
      */
-    private $console;
+    private ThinkConsole $console;
 
     /**
      * @var null|string
      */
-    private $namespace;
+    private ?string $namespace;
 
     /**
      * @var array
@@ -36,28 +41,28 @@ class Console
     /**
      * @var Command[]
      */
-    private $commands;
+    private array $commands;
 
     /**
      * @var Command[]
      */
-    private $aliases;
+    private array $aliases;
 
     /**
      * 构造方法
      * @param ThinkConsole $console
-     * @param string|null  $namespace
+     * @param string|null $namespace
      */
     public function __construct(ThinkConsole $console, $namespace = null)
     {
-        $this->console   = $console;
+        $this->console = $console;
         $this->namespace = $namespace;
     }
 
     /**
      * @return array
      */
-    public function getNamespaces()
+    public function getNamespaces(): array
     {
         if (null === $this->namespaces) {
             $this->inspectConsole();
@@ -69,7 +74,7 @@ class Console
     /**
      * @return Command[]
      */
-    public function getCommands()
+    public function getCommands(): array
     {
         if (null === $this->commands) {
             $this->inspectConsole();
@@ -83,18 +88,18 @@ class Console
      * @return Command
      * @throws \InvalidArgumentException
      */
-    public function getCommand($name)
+    public function getCommand($name): Command
     {
         if (!isset($this->commands[$name]) && !isset($this->aliases[$name])) {
             throw new \InvalidArgumentException(sprintf('Command %s does not exist.', $name));
         }
 
-        return isset($this->commands[$name]) ? $this->commands[$name] : $this->aliases[$name];
+        return $this->commands[$name] ?? $this->aliases[$name];
     }
 
     private function inspectConsole()
     {
-        $this->commands   = [];
+        $this->commands = [];
         $this->namespaces = [];
 
         $all = $this->console->all($this->namespace ? $this->console->findNamespace($this->namespace) : null);
@@ -124,7 +129,7 @@ class Console
      * @param array $commands
      * @return array
      */
-    private function sortCommands(array $commands)
+    private function sortCommands(array $commands): array
     {
         $namespacedCommands = [];
         foreach ($commands as $name => $command) {

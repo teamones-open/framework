@@ -1,12 +1,16 @@
 <?php
+
+declare(strict_types=1);
+
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK ]
+// | The teamones framework runs on the workerman high performance framework
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016 http://thinkphp.cn All rights reserved.
+// | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
-// | Author: 刘志淳 <chun@engineer.com>
+// | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
 // +----------------------------------------------------------------------
 
 namespace think\console\command;
@@ -19,16 +23,21 @@ use think\Console\Output;
 abstract class Make extends Command
 {
 
-    protected $type;
+    protected string $type;
 
-    abstract protected function getStub();
+    abstract protected function getStub(): string;
 
     protected function configure()
     {
         $this->addArgument('name', Argument::REQUIRED, "The name of the class");
     }
 
-    protected function execute(Input $input, Output $output)
+    /**
+     * @param Input $input
+     * @param Output $output
+     * @return false
+     */
+    protected function execute(Input $input, Output $output): bool
     {
 
         $name = trim($input->getArgument('name'));
@@ -49,6 +58,7 @@ abstract class Make extends Command
         file_put_contents($pathname, $this->buildClass($classname));
 
         $output->writeln('<info>' . $this->type . ' created successfully.</info>');
+        return true;
 
     }
 
@@ -68,14 +78,22 @@ abstract class Make extends Command
 
     }
 
-    protected function getPathName($name)
+    /**
+     * @param string $name
+     * @return string
+     */
+    protected function getPathName(string $name): string
     {
         $name = str_replace(C('APP_NAMESPACE') . '\\', '', $name);
 
         return APP_PATH . str_replace('\\', '/', $name) . '.php';
     }
 
-    protected function getClassName($name)
+    /**
+     * @param string $name
+     * @return string
+     */
+    protected function getClassName(string $name): string
     {
         $appNamespace = C('APP_NAMESPACE');
 
@@ -100,7 +118,12 @@ abstract class Make extends Command
         return $this->getNamespace($appNamespace, $module) . '\\' . $name;
     }
 
-    protected function getNamespace($appNamespace, $module)
+    /**
+     * @param string $appNamespace
+     * @param string $module
+     * @return string
+     */
+    protected function getNamespace(string $appNamespace, string $module): string
     {
         return $module ? ($appNamespace . '\\' . $module) : $appNamespace;
     }

@@ -37,7 +37,7 @@ class Command
     protected $input;
 
     /** @var  Output */
-    protected $output;
+    protected Output $output;
 
     /**
      * 构造方法

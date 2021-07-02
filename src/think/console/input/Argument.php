@@ -1,12 +1,16 @@
 <?php
+
+declare(strict_types=1);
+
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK ]
+// | The teamones framework runs on the workerman high performance framework
 // +----------------------------------------------------------------------
-// | Copyright (c) 2006~2015 http://thinkphp.cn All rights reserved.
+// | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
-// | Author: yunwuxin <448901948@qq.com>
+// | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
 // +----------------------------------------------------------------------
 
 namespace think\console\input;
@@ -18,20 +22,20 @@ class Argument
     const OPTIONAL = 2;
     const IS_ARRAY = 4;
 
-    private $name;
-    private $mode;
+    private string $name;
+    private ?int $mode;
     private $default;
-    private $description;
+    private string $description;
 
     /**
      * 构造方法
-     * @param string $name        参数名
-     * @param int    $mode        参数类型: self::REQUIRED 或者 self::OPTIONAL
+     * @param string $name 参数名
+     * @param int $mode 参数类型: self::REQUIRED 或者 self::OPTIONAL
      * @param string $description 描述
-     * @param mixed  $default     默认值 (仅 self::OPTIONAL 类型有效)
+     * @param mixed $default 默认值 (仅 self::OPTIONAL 类型有效)
      * @throws \InvalidArgumentException
      */
-    public function __construct($name, $mode = null, $description = '', $default = null)
+    public function __construct(string $name, $mode = null, $description = '', $default = null)
     {
         if (null === $mode) {
             $mode = self::OPTIONAL;
@@ -39,8 +43,8 @@ class Argument
             throw new \InvalidArgumentException(sprintf('Argument mode "%s" is not valid.', $mode));
         }
 
-        $this->name        = $name;
-        $this->mode        = $mode;
+        $this->name = $name;
+        $this->mode = $mode;
         $this->description = $description;
 
         $this->setDefault($default);
@@ -50,7 +54,7 @@ class Argument
      * 获取参数名
      * @return string
      */
-    public function getName()
+    public function getName(): string
     {
         return $this->name;
     }
@@ -59,7 +63,7 @@ class Argument
      * 是否必须
      * @return bool
      */
-    public function isRequired()
+    public function isRequired(): bool
     {
         return self::REQUIRED === (self::REQUIRED & $this->mode);
     }
@@ -68,7 +72,7 @@ class Argument
      * 该参数是否接受数组
      * @return bool
      */
-    public function isArray()
+    public function isArray(): bool
     {
         return self::IS_ARRAY === (self::IS_ARRAY & $this->mode);
     }
@@ -108,7 +112,7 @@ class Argument
      * 获取描述
      * @return string
      */
-    public function getDescription()
+    public function getDescription(): string
     {
         return $this->description;
     }

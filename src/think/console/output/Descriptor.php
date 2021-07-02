@@ -1,12 +1,16 @@
 <?php
+
+declare(strict_types=1);
+
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK ]
+// | The teamones framework runs on the workerman high performance framework
 // +----------------------------------------------------------------------
-// | Copyright (c) 2006~2015 http://thinkphp.cn All rights reserved.
+// | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
-// | Author: yunwuxin <448901948@qq.com>
+// | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
 // +----------------------------------------------------------------------
 
 namespace think\console\output;
@@ -25,7 +29,7 @@ class Descriptor
     /**
      * @var Output
      */
-    protected $output;
+    protected Output $output;
 
     /**
      * {@inheritdoc}
@@ -58,9 +62,9 @@ class Descriptor
     /**
      * 输出内容
      * @param string $content
-     * @param bool   $decorated
+     * @param bool $decorated
      */
-    protected function write($content, $decorated = false)
+    protected function write(string $content, $decorated = false)
     {
         $this->output->write($content, false, $decorated ? Output::OUTPUT_NORMAL : Output::OUTPUT_RAW);
     }
@@ -68,8 +72,7 @@ class Descriptor
     /**
      * 描述参数
      * @param InputArgument $argument
-     * @param array         $options
-     * @return string|mixed
+     * @param array $options
      */
     protected function describeInputArgument(InputArgument $argument, array $options = [])
     {
@@ -82,7 +85,7 @@ class Descriptor
             $default = '';
         }
 
-        $totalWidth   = isset($options['total_width']) ? $options['total_width'] : strlen($argument->getName());
+        $totalWidth = $options['total_width'] ?? strlen($argument->getName());
         $spacingWidth = $totalWidth - strlen($argument->getName()) + 2;
 
         $this->writeText(sprintf("  <info>%s</info>%s%s%s", $argument->getName(), str_repeat(' ', $spacingWidth), // + 17 = 2 spaces + <info> + </info> + 2 spaces
@@ -92,8 +95,7 @@ class Descriptor
     /**
      * 描述选项
      * @param InputOption $option
-     * @param array       $options
-     * @return string|mixed
+     * @param array $options
      */
     protected function describeInputOption(InputOption $option, array $options = [])
     {
@@ -115,8 +117,8 @@ class Descriptor
             }
         }
 
-        $totalWidth = isset($options['total_width']) ? $options['total_width'] : $this->calculateTotalWidthForOptions([$option]);
-        $synopsis   = sprintf('%s%s', $option->getShortcut() ? sprintf('-%s, ', $option->getShortcut()) : '    ', sprintf('--%s%s', $option->getName(), $value));
+        $totalWidth = $options['total_width'] ?? $this->calculateTotalWidthForOptions([$option]);
+        $synopsis = sprintf('%s%s', $option->getShortcut() ? sprintf('-%s, ', $option->getShortcut()) : '    ', sprintf('--%s%s', $option->getName(), $value));
 
         $spacingWidth = $totalWidth - strlen($synopsis) + 2;
 
@@ -127,8 +129,7 @@ class Descriptor
     /**
      * 描述输入
      * @param InputDefinition $definition
-     * @param array           $options
-     * @return string|mixed
+     * @param array $options
      */
     protected function describeInputDefinition(InputDefinition $definition, array $options = [])
     {
@@ -172,8 +173,7 @@ class Descriptor
     /**
      * 描述指令
      * @param Command $command
-     * @param array   $options
-     * @return string|mixed
+     * @param array $options
      */
     protected function describeCommand(Command $command, array $options = [])
     {
@@ -206,14 +206,13 @@ class Descriptor
 
     /**
      * 描述控制台
-     * @param Console $console
-     * @param array   $options
-     * @return string|mixed
+     * @param console $console
+     * @param array $options
      */
     protected function describeConsole(Console $console, array $options = [])
     {
-        $describedNamespace = isset($options['namespace']) ? $options['namespace'] : null;
-        $description        = new ConsoleDescription($console, $describedNamespace);
+        $describedNamespace = $options['namespace'] ?? null;
+        $description = new ConsoleDescription($console, $describedNamespace);
 
         if (isset($options['raw_text']) && $options['raw_text']) {
             $width = $this->getColumnWidth($description->getCommands());
@@ -254,7 +253,7 @@ class Descriptor
                     $this->writeText("\n");
                     $spacingWidth = $width - strlen($name);
                     $this->writeText(sprintf("  <info>%s</info>%s%s", $name, str_repeat(' ', $spacingWidth), $description->getCommand($name)
-                            ->getDescription()), $options);
+                        ->getDescription()), $options);
                 }
             }
 
@@ -268,7 +267,7 @@ class Descriptor
     private function writeText($content, array $options = [])
     {
         $this->write(isset($options['raw_text'])
-            && $options['raw_text'] ? strip_tags($content) : $content, isset($options['raw_output']) ? !$options['raw_output'] : true);
+        && $options['raw_text'] ? strip_tags($content) : $content, !isset($options['raw_output']) || !$options['raw_output']);
     }
 
     /**
@@ -276,7 +275,7 @@ class Descriptor
      * @param mixed $default
      * @return string
      */
-    private function formatDefaultValue($default)
+    private function formatDefaultValue($default): string
     {
         return json_encode($default, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     }
@@ -285,7 +284,7 @@ class Descriptor
      * @param Command[] $commands
      * @return int
      */
-    private function getColumnWidth(array $commands)
+    private function getColumnWidth(array $commands): int
     {
         $width = 0;
         foreach ($commands as $command) {
@@ -299,7 +298,7 @@ class Descriptor
      * @param InputOption[] $options
      * @return int
      */
-    private function calculateTotalWidthForOptions($options)
+    private function calculateTotalWidthForOptions(array $options): int
     {
         $totalWidth = 0;
         foreach ($options as $option) {

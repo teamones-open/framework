@@ -1,12 +1,16 @@
 <?php
+
+declare(strict_types=1);
+
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK ]
+// | The teamones framework runs on the workerman high performance framework
 // +----------------------------------------------------------------------
-// | Copyright (c) 2006~2015 http://thinkphp.cn All rights reserved.
+// | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
-// | Author: yunwuxin <448901948@qq.com>
+// | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
 // +----------------------------------------------------------------------
 
 namespace think\console\input;
@@ -17,17 +21,17 @@ class Definition
     /**
      * @var Argument[]
      */
-    private $arguments;
+    private array $arguments;
 
-    private $requiredCount;
-    private $hasAnArrayArgument = false;
-    private $hasOptional;
+    private int $requiredCount;
+    private bool $hasAnArrayArgument = false;
+    private bool $hasOptional;
 
     /**
      * @var Option[]
      */
-    private $options;
-    private $shortcuts;
+    private array $options;
+    private array $shortcuts;
 
     /**
      * 构造方法
@@ -46,7 +50,7 @@ class Definition
     public function setDefinition(array $definition)
     {
         $arguments = [];
-        $options   = [];
+        $options = [];
         foreach ($definition as $item) {
             if ($item instanceof Option) {
                 $options[] = $item;
@@ -65,9 +69,9 @@ class Definition
      */
     public function setArguments($arguments = [])
     {
-        $this->arguments          = [];
-        $this->requiredCount      = 0;
-        $this->hasOptional        = false;
+        $this->arguments = [];
+        $this->requiredCount = 0;
+        $this->hasOptional = false;
         $this->hasAnArrayArgument = false;
         $this->addArguments($arguments);
     }
@@ -124,7 +128,7 @@ class Definition
      * @return Argument 参数
      * @throws \InvalidArgumentException
      */
-    public function getArgument($name)
+    public function getArgument($name): Argument
     {
         if (!$this->hasArgument($name)) {
             throw new \InvalidArgumentException(sprintf('The "%s" argument does not exist.', $name));
@@ -141,7 +145,7 @@ class Definition
      * @return bool
      * @api
      */
-    public function hasArgument($name)
+    public function hasArgument($name): bool
     {
         $arguments = is_int($name) ? array_values($this->arguments) : $this->arguments;
 
@@ -152,7 +156,7 @@ class Definition
      * 获取所有的参数
      * @return Argument[] 参数数组
      */
-    public function getArguments()
+    public function getArguments(): array
     {
         return $this->arguments;
     }
@@ -161,7 +165,7 @@ class Definition
      * 获取参数数量
      * @return int
      */
-    public function getArgumentCount()
+    public function getArgumentCount(): int
     {
         return $this->hasAnArrayArgument ? PHP_INT_MAX : count($this->arguments);
     }
@@ -170,7 +174,7 @@ class Definition
      * 获取必填的参数的数量
      * @return int
      */
-    public function getArgumentRequiredCount()
+    public function getArgumentRequiredCount(): int
     {
         return $this->requiredCount;
     }
@@ -179,7 +183,7 @@ class Definition
      * 获取参数默认值
      * @return array
      */
-    public function getArgumentDefaults()
+    public function getArgumentDefaults(): array
     {
         $values = [];
         foreach ($this->arguments as $argument) {
@@ -195,7 +199,7 @@ class Definition
      */
     public function setOptions($options = [])
     {
-        $this->options   = [];
+        $this->options = [];
         $this->shortcuts = [];
         $this->addOptions($options);
     }
@@ -249,7 +253,7 @@ class Definition
      * @throws \InvalidArgumentException
      * @api
      */
-    public function getOption($name)
+    public function getOption(string $name): Option
     {
         if (!$this->hasOption($name)) {
             throw new \InvalidArgumentException(sprintf('The "--%s" option does not exist.', $name));
@@ -264,7 +268,7 @@ class Definition
      * @return bool
      * @api
      */
-    public function hasOption($name)
+    public function hasOption(string $name): bool
     {
         return isset($this->options[$name]);
     }
@@ -274,7 +278,7 @@ class Definition
      * @return Option[]
      * @api
      */
-    public function getOptions()
+    public function getOptions(): array
     {
         return $this->options;
     }
@@ -284,7 +288,7 @@ class Definition
      * @param string $name 短名称
      * @return bool
      */
-    public function hasShortcut($name)
+    public function hasShortcut(string $name): bool
     {
         return isset($this->shortcuts[$name]);
     }
@@ -294,7 +298,7 @@ class Definition
      * @param string $shortcut 短名称
      * @return Option
      */
-    public function getOptionForShortcut($shortcut)
+    public function getOptionForShortcut(string $shortcut): Option
     {
         return $this->getOption($this->shortcutToName($shortcut));
     }
@@ -303,7 +307,7 @@ class Definition
      * 获取所有选项的默认值
      * @return array
      */
-    public function getOptionDefaults()
+    public function getOptionDefaults(): array
     {
         $values = [];
         foreach ($this->options as $option) {
@@ -319,7 +323,7 @@ class Definition
      * @return string
      * @throws \InvalidArgumentException
      */
-    private function shortcutToName($shortcut)
+    private function shortcutToName(string $shortcut): string
     {
         if (!isset($this->shortcuts[$shortcut])) {
             throw new \InvalidArgumentException(sprintf('The "-%s" option does not exist.', $shortcut));
@@ -333,7 +337,7 @@ class Definition
      * @param bool $short 是否简洁介绍
      * @return string
      */
-    public function getSynopsis($short = false)
+    public function getSynopsis($short = false): string
     {
         $elements = [];
 
@@ -346,7 +350,7 @@ class Definition
                     $value = sprintf(' %s%s%s', $option->isValueOptional() ? '[' : '', strtoupper($option->getName()), $option->isValueOptional() ? ']' : '');
                 }
 
-                $shortcut   = $option->getShortcut() ? sprintf('-%s|', $option->getShortcut()) : '';
+                $shortcut = $option->getShortcut() ? sprintf('-%s|', $option->getShortcut()) : '';
                 $elements[] = sprintf('[%s--%s%s]', $shortcut, $option->getName(), $value);
             }
         }

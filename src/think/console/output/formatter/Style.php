@@ -1,12 +1,16 @@
 <?php
+
+declare(strict_types=1);
+
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK ]
+// | The teamones framework runs on the workerman high performance framework
 // +----------------------------------------------------------------------
-// | Copyright (c) 2006~2015 http://thinkphp.cn All rights reserved.
+// | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
-// | Author: yunwuxin <448901948@qq.com>
+// | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
 // +----------------------------------------------------------------------
 
 namespace think\console\output\formatter;
@@ -14,43 +18,43 @@ namespace think\console\output\formatter;
 class Style
 {
 
-    private static $availableForegroundColors = [
-        'black'   => ['set' => 30, 'unset' => 39],
-        'red'     => ['set' => 31, 'unset' => 39],
-        'green'   => ['set' => 32, 'unset' => 39],
-        'yellow'  => ['set' => 33, 'unset' => 39],
-        'blue'    => ['set' => 34, 'unset' => 39],
+    private static array $availableForegroundColors = [
+        'black' => ['set' => 30, 'unset' => 39],
+        'red' => ['set' => 31, 'unset' => 39],
+        'green' => ['set' => 32, 'unset' => 39],
+        'yellow' => ['set' => 33, 'unset' => 39],
+        'blue' => ['set' => 34, 'unset' => 39],
         'magenta' => ['set' => 35, 'unset' => 39],
-        'cyan'    => ['set' => 36, 'unset' => 39],
-        'white'   => ['set' => 37, 'unset' => 39],
+        'cyan' => ['set' => 36, 'unset' => 39],
+        'white' => ['set' => 37, 'unset' => 39],
     ];
-    private static $availableBackgroundColors = [
-        'black'   => ['set' => 40, 'unset' => 49],
-        'red'     => ['set' => 41, 'unset' => 49],
-        'green'   => ['set' => 42, 'unset' => 49],
-        'yellow'  => ['set' => 43, 'unset' => 49],
-        'blue'    => ['set' => 44, 'unset' => 49],
+    private static array $availableBackgroundColors = [
+        'black' => ['set' => 40, 'unset' => 49],
+        'red' => ['set' => 41, 'unset' => 49],
+        'green' => ['set' => 42, 'unset' => 49],
+        'yellow' => ['set' => 43, 'unset' => 49],
+        'blue' => ['set' => 44, 'unset' => 49],
         'magenta' => ['set' => 45, 'unset' => 49],
-        'cyan'    => ['set' => 46, 'unset' => 49],
-        'white'   => ['set' => 47, 'unset' => 49],
+        'cyan' => ['set' => 46, 'unset' => 49],
+        'white' => ['set' => 47, 'unset' => 49],
     ];
-    private static $availableOptions = [
-        'bold'       => ['set' => 1, 'unset' => 22],
+    private static array $availableOptions = [
+        'bold' => ['set' => 1, 'unset' => 22],
         'underscore' => ['set' => 4, 'unset' => 24],
-        'blink'      => ['set' => 5, 'unset' => 25],
-        'reverse'    => ['set' => 7, 'unset' => 27],
-        'conceal'    => ['set' => 8, 'unset' => 28],
+        'blink' => ['set' => 5, 'unset' => 25],
+        'reverse' => ['set' => 7, 'unset' => 27],
+        'conceal' => ['set' => 8, 'unset' => 28],
     ];
 
-    private $foreground;
-    private $background;
-    private $options = [];
+    private ?string $foreground;
+    private ?string $background;
+    private array $options = [];
 
     /**
      * 初始化输出的样式
      * @param string|null $foreground 字体颜色
      * @param string|null $background 背景色
-     * @param array       $options    格式
+     * @param array $options 格式
      * @api
      */
     public function __construct($foreground = null, $background = null, array $options = [])
@@ -114,7 +118,7 @@ class Style
      * @throws \InvalidArgumentException When the option name isn't defined
      * @api
      */
-    public function setOption($option)
+    public function setOption(string $option)
     {
         if (!isset(static::$availableOptions[$option])) {
             throw new \InvalidArgumentException(sprintf('Invalid option specified: "%s". Expected one of (%s)', $option, implode(', ', array_keys(static::$availableOptions))));
@@ -130,7 +134,7 @@ class Style
      * @param string $option 格式名
      * @throws \InvalidArgumentException
      */
-    public function unsetOption($option)
+    public function unsetOption(string $option)
     {
         if (!isset(static::$availableOptions[$option])) {
             throw new \InvalidArgumentException(sprintf('Invalid option specified: "%s". Expected one of (%s)', $option, implode(', ', array_keys(static::$availableOptions))));
@@ -160,22 +164,22 @@ class Style
      * @param string $text 文字
      * @return string
      */
-    public function apply($text)
+    public function apply(string $text): string
     {
-        $setCodes   = [];
+        $setCodes = [];
         $unsetCodes = [];
 
         if (null !== $this->foreground) {
-            $setCodes[]   = $this->foreground['set'];
+            $setCodes[] = $this->foreground['set'];
             $unsetCodes[] = $this->foreground['unset'];
         }
         if (null !== $this->background) {
-            $setCodes[]   = $this->background['set'];
+            $setCodes[] = $this->background['set'];
             $unsetCodes[] = $this->background['unset'];
         }
         if (count($this->options)) {
             foreach ($this->options as $option) {
-                $setCodes[]   = $option['set'];
+                $setCodes[] = $option['set'];
                 $unsetCodes[] = $option['unset'];
             }
         }

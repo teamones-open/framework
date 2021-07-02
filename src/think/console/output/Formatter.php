@@ -1,13 +1,18 @@
 <?php
+
+declare(strict_types=1);
+
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK ]
+// | The teamones framework runs on the workerman high performance framework
 // +----------------------------------------------------------------------
-// | Copyright (c) 2006~2015 http://thinkphp.cn All rights reserved.
+// | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
-// | Author: yunwuxin <448901948@qq.com>
+// | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
 // +----------------------------------------------------------------------
+
 namespace think\console\output;
 
 use think\console\output\formatter\Stack as StyleStack;
@@ -16,16 +21,20 @@ use think\console\output\formatter\Style;
 class Formatter
 {
 
-    private $decorated = false;
-    private $styles    = [];
-    private $styleStack;
+    private bool $decorated = false;
+    private array $styles = [];
+
+    /**
+     * @var StyleStack
+     */
+    private StyleStack $styleStack;
 
     /**
      * 转义
      * @param string $text
      * @return string
      */
-    public static function escape($text)
+    public static function escape(string $text): string
     {
         return preg_replace('/([^\\\\]?)</is', '$1\\<', $text);
     }
@@ -49,26 +58,26 @@ class Formatter
      * 设置外观标识
      * @param bool $decorated 是否美化文字
      */
-    public function setDecorated($decorated)
+    public function setDecorated(bool $decorated)
     {
-        $this->decorated = (bool) $decorated;
+        $this->decorated = (bool)$decorated;
     }
 
     /**
      * 获取外观标识
      * @return bool
      */
-    public function isDecorated()
+    public function isDecorated(): bool
     {
         return $this->decorated;
     }
 
     /**
      * 添加一个新样式
-     * @param string $name  样式名
-     * @param Style  $style 样式实例
+     * @param string $name 样式名
+     * @param Style $style 样式实例
      */
-    public function setStyle($name, Style $style)
+    public function setStyle(string $name, Style $style)
     {
         $this->styles[strtolower($name)] = $style;
     }
@@ -78,7 +87,7 @@ class Formatter
      * @param string $name
      * @return bool
      */
-    public function hasStyle($name)
+    public function hasStyle(string $name): bool
     {
         return isset($this->styles[strtolower($name)]);
     }
@@ -89,7 +98,7 @@ class Formatter
      * @return Style
      * @throws \InvalidArgumentException
      */
-    public function getStyle($name)
+    public function getStyle(string $name): Style
     {
         if (!$this->hasStyle($name)) {
             throw new \InvalidArgumentException(sprintf('Undefined style: %s', $name));
@@ -103,14 +112,14 @@ class Formatter
      * @param string $message 文字
      * @return string
      */
-    public function format($message)
+    public function format(string $message): string
     {
-        $offset   = 0;
-        $output   = '';
+        $offset = 0;
+        $output = '';
         $tagRegex = '[a-z][a-z0-9_=;-]*';
         preg_match_all("#<(($tagRegex) | /($tagRegex)?)>#isx", $message, $matches, PREG_OFFSET_CAPTURE);
         foreach ($matches[0] as $i => $match) {
-            $pos  = $match[1];
+            $pos = $match[1];
             $text = $match[0];
 
             if (0 != $pos && '\\' == $message[$pos - 1]) {
@@ -123,7 +132,7 @@ class Formatter
             if ($open = '/' != $text[1]) {
                 $tag = $matches[1][$i][0];
             } else {
-                $tag = isset($matches[3][$i][0]) ? $matches[3][$i][0] : '';
+                $tag = $matches[3][$i][0] ?? '';
             }
 
             if (!$open && !$tag) {
@@ -146,7 +155,7 @@ class Formatter
     /**
      * @return StyleStack
      */
-    public function getStyleStack()
+    public function getStyleStack(): StyleStack
     {
         return $this->styleStack;
     }
@@ -156,7 +165,7 @@ class Formatter
      * @param string $string
      * @return Style|bool
      */
-    private function createStyleFromString($string)
+    private function createStyleFromString(string $string)
     {
         if (isset($this->styles[$string])) {
             return $this->styles[$string];
@@ -191,7 +200,7 @@ class Formatter
      * @param string $text 文字
      * @return string
      */
-    private function applyCurrentStyle($text)
+    private function applyCurrentStyle(string $text): string
     {
         return $this->isDecorated() && strlen($text) > 0 ? $this->styleStack->getCurrent()->apply($text) : $text;
     }

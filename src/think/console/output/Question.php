@@ -1,12 +1,16 @@
 <?php
+
+declare(strict_types=1);
+
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK ]
+// | The teamones framework runs on the workerman high performance framework
 // +----------------------------------------------------------------------
-// | Copyright (c) 2006~2015 http://thinkphp.cn All rights reserved.
+// | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
-// | Author: yunwuxin <448901948@qq.com>
+// | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
 // +----------------------------------------------------------------------
 
 namespace think\console\output;
@@ -14,10 +18,10 @@ namespace think\console\output;
 class Question
 {
 
-    private $question;
-    private $attempts;
-    private $hidden         = false;
-    private $hiddenFallback = true;
+    private string $question;
+    private ?int $attempts;
+    private bool $hidden = false;
+    private bool $hiddenFallback = true;
     private $autocompleterValues;
     private $validator;
     private $default;
@@ -26,19 +30,19 @@ class Question
     /**
      * 构造方法
      * @param string $question 问题
-     * @param mixed  $default  默认答案
+     * @param mixed $default 默认答案
      */
-    public function __construct($question, $default = null)
+    public function __construct(string $question, $default = null)
     {
         $this->question = $question;
-        $this->default  = $default;
+        $this->default = $default;
     }
 
     /**
      * 获取问题
      * @return string
      */
-    public function getQuestion()
+    public function getQuestion(): string
     {
         return $this->question;
     }
@@ -56,7 +60,7 @@ class Question
      * 是否隐藏答案
      * @return bool
      */
-    public function isHidden()
+    public function isHidden(): bool
     {
         return $this->hidden;
     }
@@ -66,13 +70,13 @@ class Question
      * @param bool $hidden
      * @return Question
      */
-    public function setHidden($hidden)
+    public function setHidden(bool $hidden): Question
     {
         if ($this->autocompleterValues) {
             throw new \LogicException('A hidden question cannot use the autocompleter.');
         }
 
-        $this->hidden = (bool) $hidden;
+        $this->hidden = (bool)$hidden;
 
         return $this;
     }
@@ -81,7 +85,7 @@ class Question
      * 不能被隐藏是否撤销
      * @return bool
      */
-    public function isHiddenFallback()
+    public function isHiddenFallback(): bool
     {
         return $this->hiddenFallback;
     }
@@ -91,9 +95,9 @@ class Question
      * @param bool $fallback
      * @return Question
      */
-    public function setHiddenFallback($fallback)
+    public function setHiddenFallback($fallback): Question
     {
-        $this->hiddenFallback = (bool) $fallback;
+        $this->hiddenFallback = (bool)$fallback;
 
         return $this;
     }
@@ -114,7 +118,7 @@ class Question
      * @throws \InvalidArgumentException
      * @throws \LogicException
      */
-    public function setAutocompleterValues($values)
+    public function setAutocompleterValues($values): Question
     {
         if (is_array($values) && $this->isAssoc($values)) {
             $values = array_merge(array_keys($values), array_values($values));
@@ -137,10 +141,10 @@ class Question
 
     /**
      * 设置答案的验证器
-     * @param null|callable $validator
+     * @param callable|null $validator
      * @return Question The current instance
      */
-    public function setValidator($validator)
+    public function setValidator(?callable $validator): Question
     {
         $this->validator = $validator;
 
@@ -151,18 +155,18 @@ class Question
      * 获取验证器
      * @return null|callable
      */
-    public function getValidator()
+    public function getValidator(): ?callable
     {
         return $this->validator;
     }
 
     /**
      * 设置最大重试次数
-     * @param null|int $attempts
+     * @param int|null $attempts
      * @return Question
      * @throws \InvalidArgumentException
      */
-    public function setMaxAttempts($attempts)
+    public function setMaxAttempts(?int $attempts): Question
     {
         if (null !== $attempts && $attempts < 1) {
             throw new \InvalidArgumentException('Maximum number of attempts must be a positive value.');
@@ -177,7 +181,7 @@ class Question
      * 获取最大重试次数
      * @return null|int
      */
-    public function getMaxAttempts()
+    public function getMaxAttempts(): ?int
     {
         return $this->attempts;
     }
@@ -187,7 +191,7 @@ class Question
      * @param string|\Closure $normalizer
      * @return Question
      */
-    public function setNormalizer($normalizer)
+    public function setNormalizer($normalizer): Question
     {
         $this->normalizer = $normalizer;
 
@@ -204,8 +208,12 @@ class Question
         return $this->normalizer;
     }
 
-    protected function isAssoc($array)
+    /**
+     * @param $array
+     * @return bool
+     */
+    protected function isAssoc($array): bool
     {
-        return (bool) count(array_filter(array_keys($array), 'is_string'));
+        return (bool)count(array_filter(array_keys($array), 'is_string'));
     }
 }

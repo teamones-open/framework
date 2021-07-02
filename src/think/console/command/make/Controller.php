@@ -1,12 +1,16 @@
 <?php
+
+declare(strict_types=1);
+
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK ]
+// | The teamones framework runs on the workerman high performance framework
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016 http://thinkphp.cn All rights reserved.
+// | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
-// | Author: 刘志淳 <chun@engineer.com>
+// | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
 // +----------------------------------------------------------------------
 
 namespace think\console\command\make;
@@ -17,7 +21,7 @@ use think\console\input\Option;
 class Controller extends Make
 {
 
-    protected $type = "Controller";
+    protected string $type = "Controller";
 
     protected function configure()
     {
@@ -30,7 +34,7 @@ class Controller extends Make
     /**
      * @return string
      */
-    protected function getStub()
+    protected function getStub(): string
     {
         if ($this->input->getOption('plain')) {
             return __DIR__ . '/stubs/controller.plain.stub';
@@ -43,19 +47,19 @@ class Controller extends Make
      * @param $name
      * @return string
      */
-    protected function getClassName($name)
+    protected function getClassName($name): string
     {
         return parent::getClassName($name) . (C('controller_suffix') ? ucfirst(C('url_controller_layer')) : '');
     }
 
     /**
-     * @param $appNamespace
-     * @param $module
+     * @param string $appNamespace
+     * @param string $module
      * @return string
      */
-    protected function getNamespace($appNamespace, $module)
+    protected function getNamespace(string $appNamespace, string $module): string
     {
-        return parent::getNamespace($appNamespace, $module) . '\Controller';
+        return parent::getNamespace($appNamespace, $module) . '\controller';
     }
 
 }

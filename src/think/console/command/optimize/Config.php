@@ -1,13 +1,18 @@
 <?php
+
+declare(strict_types=1);
+
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK IT ]
+// | The teamones framework runs on the workerman high performance framework
 // +----------------------------------------------------------------------
-// | Copyright (c) 2006-2016 http://thinkphp.cn All rights reserved.
+// | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
-// | Author: yunwuxin <448901948@qq.com>
+// | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
 // +----------------------------------------------------------------------
+
 namespace think\console\command\optimize;
 
 use think\console\Command;
@@ -18,7 +23,7 @@ use think\console\Output;
 class Config extends Command
 {
     /** @var  Output */
-    protected $output;
+    protected Output $output;
 
     protected function configure()
     {
@@ -57,7 +62,7 @@ class Config extends Command
      * @return string
      * @throws \think\Exception
      */
-    protected function buildCacheContent($module)
+    protected function buildCacheContent($module): string
     {
         $content = '';
         $path    = realpath(APP_PATH . $module) . DS;

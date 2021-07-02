@@ -1,221 +1,205 @@
 <?php
+
+declare(strict_types=1);
+
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK IT ]
+// | The teamones framework runs on the workerman high performance framework
 // +----------------------------------------------------------------------
 // | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
 // | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
 // +----------------------------------------------------------------------
+
 namespace think;
 
-/**
- * 用于Teamones的自动生成
- */
 class Build
 {
-
-    protected static $controller = '<?php
-namespace [MODULE]\Controller;
-
-use Think\Controller;
-
-class [CONTROLLER]Controller extends Controller
-{
-    public function index()
-    {
-        [CONTENT]
-    }
-}';
-
-    protected static $model = '<?php
-namespace [MODULE]\Model;
-
-use think\Model;
-
-class [MODEL]Model extends Model
-{
-
-}';
-
     /**
-     * 检测应用目录是否需要自动创建
-     * @param $module
-     * @throws \Exception
+     * 根据传入的 build 资料创建目录和文件
+     * @access public
+     * @param array $build build 列表
+     * @param string $namespace 应用类库命名空间
+     * @param bool $suffix 类库后缀
+     * @return void
+     * @throws Exception
      */
-    public static function checkDir($module)
+    public static function run(array $build = [], $namespace = 'app', $suffix = false)
     {
-        if (!is_dir(APP_PATH . $module)) {
-            // 创建模块的目录结构
-            self::buildAppDir($module);
-        } elseif (!is_dir(LOG_PATH)) {
-            // 检查缓存目录
-            self::buildRuntime();
+        // 锁定
+        $lock = APP_PATH . 'build.lock';
+
+        // 如果锁定文件不可写(不存在)则进行处理，否则表示已经有程序在处理了
+        if (!is_writable($lock)) {
+            if (!touch($lock)) {
+                throw new Exception(
+                    '应用目录[' . APP_PATH . ']不可写，目录无法自动生成！<BR>请手动生成项目目录~',
+                    10006
+                );
+            }
+
+            foreach ($build as $module => $list) {
+                if ('__dir__' == $module) {
+                    // 创建目录列表
+                    self::buildDir($list);
+                } elseif ('__file__' == $module) {
+                    // 创建文件列表
+                    self::buildFile($list);
+                } else {
+                    // 创建模块
+                    self::module($module, $list, $namespace, $suffix);
+                }
+            }
+
+            // 解除锁定
+            unlink($lock);
         }
     }
 
     /**
-     * 创建应用和模块的目录结构
-     * @param $module
-     * @throws \Exception
+     * 创建目录
+     * @access protected
+     * @param array $list 目录列表
+     * @return void
      */
-    public static function buildAppDir($module)
+    protected static function buildDir(array $list)
     {
-        // 没有创建的话自动创建
-        if (!is_dir(APP_PATH)) {
-            mkdir(APP_PATH, 0755, true);
+        foreach ($list as $dir) {
+            // 目录不存在则创建目录
+            !is_dir(APP_PATH . $dir) && mkdir(APP_PATH . $dir, 0755, true);
+        }
+    }
+
+    /**
+     * 创建文件
+     * @access protected
+     * @param array $list 文件列表
+     * @return void
+     */
+    protected static function buildFile(array $list)
+    {
+        foreach ($list as $file) {
+            // 先创建目录
+            if (!is_dir(APP_PATH . dirname($file))) {
+                mkdir(APP_PATH . dirname($file), 0755, true);
+            }
+
+            // 再创建文件
+            if (!is_file(APP_PATH . $file)) {
+                file_put_contents(
+                    APP_PATH . $file,
+                    'php' == pathinfo($file, PATHINFO_EXTENSION) ? "<?php\n" : ''
+                );
+            }
+        }
+    }
+
+    /**
+     * 创建模块
+     * @access public
+     * @param string $module 模块名
+     * @param array $list build 列表
+     * @param string $namespace 应用类库命名空间
+     * @param bool $suffix 类库后缀
+     * @return void
+     */
+    public static function module($module = '', $list = [], $namespace = 'app', $suffix = false)
+    {
+        $module = $module ?: '';
+
+        // 创建模块目录
+        !is_dir(APP_PATH . $module) && mkdir(APP_PATH . $module);
+
+        // 如果不是 runtime 目录则需要创建配置文件和公共文件、创建模块的默认页面
+        if (basename(RUNTIME_PATH) != $module) {
+            self::buildCommon($module);
         }
 
-        if (is_writeable(APP_PATH)) {
-            $dirs = [
-                COMMON_PATH,
-                COMMON_PATH . 'common/',
-                CONF_PATH,
-                APP_PATH . $module . '/',
-                APP_PATH . $module . '/common/',
-                APP_PATH . $module . '/controller/',
-                APP_PATH . $module . '/model/',
-                APP_PATH . $module . '/config/',
-                RUNTIME_PATH,
-                CACHE_PATH,
-                CACHE_PATH . $module . '/',
-                LOG_PATH,
-                LOG_PATH . $module . '/',
-                TEMP_PATH,
-                DATA_PATH,
+        // 未指定文件和目录，则创建默认的模块目录和文件
+        if (empty($list)) {
+            $list = [
+                '__file__' => ['config.php', 'common.php'],
+                '__dir__' => ['controller', 'model', 'view'],
             ];
-            foreach ($dirs as $dir) {
-                if (!is_dir($dir)) {
-                    mkdir($dir, 0755, true);
+        }
+
+        // 创建子目录和文件
+        foreach ($list as $path => $file) {
+            $modulePath = APP_PATH . $module . DS;
+
+            if ('__dir__' == $path) {
+                // 生成子目录
+                foreach ($file as $dir) {
+                    self::checkDirBuild($modulePath . $dir);
                 }
-
-            }
-            // 写入目录安全文件
-            self::buildDirSecure($dirs);
-            // 写入应用配置文件
-            if (!is_file(CONF_PATH . 'config' . CONF_EXT)) {
-                file_put_contents(CONF_PATH . 'config' . CONF_EXT, '.php' == CONF_EXT ? "<?php\nreturn array(\n\t//'配置项'=>'配置值'\n);" : '');
-            }
-
-            // 写入模块配置文件
-            if (!is_file(APP_PATH . $module . '/config/config' . CONF_EXT)) {
-                file_put_contents(APP_PATH . $module . '/config/config' . CONF_EXT, '.php' == CONF_EXT ? "<?php\nreturn array(\n\t//'配置项'=>'配置值'\n);" : '');
-            }
-
-            // 自动生成控制器类
-            self::buildController($module, defined('BUILD_CONTROLLER_LIST') ? BUILD_CONTROLLER_LIST : C('DEFAULT_CONTROLLER'));
-
-            // 自动生成模型类
-            if (defined('BUILD_MODEL_LIST')) {
-                self::buildModel($module, BUILD_MODEL_LIST);
-            }
-        } else {
-            header('Content-Type:text/html; charset=utf-8');
-            StrackE("应用目录[  " . APP_PATH . " ]不可写，目录无法自动生成！<BR>请手动生成项目目录~");
-        }
-    }
-
-    /**
-     * 检查缓存目录(Runtime) 如果不存在则自动创建
-     * @return bool
-     * @throws \Exception
-     */
-    public static function buildRuntime()
-    {
-        if (!is_dir(RUNTIME_PATH)) {
-            mkdir(RUNTIME_PATH);
-        } elseif (!is_writeable(RUNTIME_PATH)) {
-            header('Content-Type:text/html; charset=utf-8');
-
-            StrackE('目录 [ ' . RUNTIME_PATH . ' ] 不可写！');
-        }
-        mkdir(CACHE_PATH); // 模板缓存目录
-        if (!is_dir(LOG_PATH)) {
-            mkdir(LOG_PATH);
-        }
-        // 日志目录
-        if (!is_dir(TEMP_PATH)) {
-            mkdir(TEMP_PATH);
-        }
-        // 数据缓存目录
-        if (!is_dir(DATA_PATH)) {
-            mkdir(DATA_PATH);
-        }
-        // 数据文件目录
-        return true;
-    }
-
-    /**
-     * 创建控制器类
-     * @param $module
-     * @param $controllers
-     */
-    public static function buildController($module, $controllers)
-    {
-        $list = is_array($controllers) ? $controllers : explode(',', $controllers);
-        $hello = '$this->show(\'<style type="text/css">*{ padding: 0; margin: 0; } div{ padding: 4px 48px;} body{ background: #fff; font-family: "微软雅黑"; color: #333;font-size:24px} h1{ font-size: 100px; font-weight: normal; margin-bottom: 12px; } p{ line-height: 1.8em; font-size: 36px } a,a:hover{color:blue;}</style><div style="padding: 24px 48px;"> <h1>:)</h1><p>欢迎使用 <b>ThinkPHP</b>！</p><br/>版本 V{$Think.version}</div><script type="text/javascript" src="http://ad.topthink.com/Public/static/client.js"></script><thinkad id="ad_55e75dfae343f5a1"></thinkad><script type="text/javascript" src="http://tajs.qq.com/stats?sId=9347272" charset="UTF-8"></script>\',\'utf-8\');';
-
-        foreach ($list as $controller) {
-            $hello = C('DEFAULT_CONTROLLER') == $controller ? $hello : '';
-            $file = APP_PATH . $module . '/Controller/' . $controller . 'Controller' . EXT;
-            if (!is_file($file)) {
-                $content = str_replace(['[MODULE]', '[CONTROLLER]', '[CONTENT]'], [$module, $controller, $hello], self::$controller);
-                if (!C('APP_USE_NAMESPACE')) {
-                    $content = preg_replace('/namespace\s(.*?);/', '', $content, 1);
+            } elseif ('__file__' == $path) {
+                // 生成（空白）文件
+                foreach ($file as $name) {
+                    if (!is_file($modulePath . $name)) {
+                        file_put_contents(
+                            $modulePath . $name,
+                            'php' == pathinfo($name, PATHINFO_EXTENSION) ? "<?php\n" : ''
+                        );
+                    }
                 }
-                $dir = dirname($file);
-                if (!is_dir($dir)) {
-                    mkdir($dir, 0755, true);
+            } else {
+                // 生成相关 MVC 文件
+                foreach ($file as $val) {
+                    $val = trim($val);
+                    $filename = $modulePath . $path . DS . $val . ($suffix ? ucfirst($path) : '') . EXT;
+                    $space = $namespace . '\\' . ($module ? $module . '\\' : '') . $path;
+                    $class = $val . ($suffix ? ucfirst($path) : '');
+
+                    switch ($path) {
+                        case 'controller': // 控制器
+                            $content = "<?php\nnamespace {$space};\n\nclass {$class}\n{\n\n}";
+                            break;
+                        case 'model': // 模型
+                            $content = "<?php\nnamespace {$space};\n\nuse think\Model;\n\nclass {$class} extends Model\n{\n\n}";
+                            break;
+                        default:
+                            // 其他文件
+                            $content = "<?php\nnamespace {$space};\n\nclass {$class}\n{\n\n}";
+                    }
+
+                    if (!is_file($filename)) {
+                        file_put_contents($filename, $content);
+                    }
                 }
-                file_put_contents($file, $content);
             }
         }
     }
 
     /**
-     * 创建模型类
-     * @param $module
-     * @param Null $models
+     * 创建模块的公共文件
+     * @access protected
+     * @param string $module 模块名
+     * @return void
      */
-    public static function buildModel($module, $models = null)
+    protected static function buildCommon(string $module)
     {
-        $list = is_array($models) ? $models : explode(',', $models);
-        foreach ($list as $model) {
-            $file = APP_PATH . $module . '/model/' . $model . 'Model' . EXT;
-            if (!is_file($file)) {
-                $content = str_replace(['[MODULE]', '[MODEL]'], [$module, $model], self::$model);
-                if (!C('APP_USE_NAMESPACE')) {
-                    $content = preg_replace('/namespace\s(.*?);/', '', $content, 1);
-                }
-                $dir = dirname($file);
-                if (!is_dir($dir)) {
-                    mkdir($dir, 0755, true);
-                }
-                file_put_contents($file, $content);
-            }
+        $config = CONF_PATH . ($module ? $module . DS : '') . 'config.php';
+
+        self::checkDirBuild(dirname($config));
+
+        if (!is_file($config)) {
+            file_put_contents($config, "<?php\n//配置文件\nreturn [\n\n];");
         }
+
+        $common = APP_PATH . ($module ? $module . DS : '') . 'common.php';
+        if (!is_file($common)) file_put_contents($common, "<?php\n");
     }
 
     /**
-     * 生成目录安全文件
-     * @param array $dirs
+     * 创建目录
+     * @access protected
+     * @param string $dirname 目录名称
+     * @return void
      */
-    public static function buildDirSecure($dirs = [])
+    protected static function checkDirBuild(string $dirname)
     {
-        // 目录安全写入（默认开启）
-        defined('BUILD_DIR_SECURE') or define('BUILD_DIR_SECURE', true);
-        if (BUILD_DIR_SECURE) {
-            defined('DIR_SECURE_FILENAME') or define('DIR_SECURE_FILENAME', 'index.html');
-            defined('DIR_SECURE_CONTENT') or define('DIR_SECURE_CONTENT', ' ');
-            // 自动写入目录安全文件
-            $content = DIR_SECURE_CONTENT;
-            $files = explode(',', DIR_SECURE_FILENAME);
-            foreach ($files as $filename) {
-                foreach ($dirs as $dir) {
-                    file_put_contents($dir . $filename, $content);
-                }
-            }
-        }
+        !is_dir($dirname) && mkdir($dirname, 0755, true);
     }
 }

@@ -1,12 +1,16 @@
 <?php
+
+declare(strict_types=1);
+
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK ]
+// | The teamones framework runs on the workerman high performance framework
 // +----------------------------------------------------------------------
-// | Copyright (c) 2016 http://thinkphp.cn All rights reserved.
+// | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
-// | Author: 刘志淳 <chun@engineer.com>
+// | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
 // +----------------------------------------------------------------------
 
 namespace think\console\command\make;
@@ -15,7 +19,7 @@ use think\console\command\Make;
 
 class Model extends Make
 {
-    protected $type = "Model";
+    protected string $type = "Model";
 
     protected function configure()
     {
@@ -27,18 +31,18 @@ class Model extends Make
     /**
      * @return string
      */
-    protected function getStub()
+    protected function getStub(): string
     {
         return __DIR__ . '/stubs/model.stub';
     }
 
     /**
-     * @param $appNamespace
-     * @param $module
+     * @param string $appNamespace
+     * @param string $module
      * @return string
      */
-    protected function getNamespace($appNamespace, $module)
+    protected function getNamespace(string $appNamespace, string $module): string
     {
-        return parent::getNamespace($appNamespace, $module) . '\Model';
+        return parent::getNamespace($appNamespace, $module) . '\model';
     }
 }

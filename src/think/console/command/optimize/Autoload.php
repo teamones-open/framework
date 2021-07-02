@@ -1,13 +1,18 @@
 <?php
+
+declare(strict_types=1);
+
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK IT ]
+// | The teamones framework runs on the workerman high performance framework
 // +----------------------------------------------------------------------
-// | Copyright (c) 2006-2016 http://thinkphp.cn All rights reserved.
+// | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
-// | Author: yunwuxin <448901948@qq.com>
+// | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
 // +----------------------------------------------------------------------
+
 namespace think\console\command\optimize;
 
 use think\App;
@@ -28,20 +33,18 @@ class Autoload extends Command
     {
 
         $classmapFile = <<<EOF
-<?php
-/**
- * 类库映射
- */
- 
-return [
-
+                            <?php
+                            /**
+                             * 类库映射
+                             */
+                            return [
 EOF;
 
         $namespacesToScan = [
             App::$namespace . '\\' => realpath(rtrim(APP_PATH)),
-            'think\\'              => LIB_PATH . 'think',
-            'behavior\\'           => LIB_PATH . 'behavior',
-            ''                     => realpath(rtrim(EXTEND_PATH))
+            'think\\' => LIB_PATH . 'think',
+            'behavior\\' => LIB_PATH . 'behavior',
+            '' => realpath(rtrim(EXTEND_PATH))
         ];
 
         krsort($namespacesToScan);
@@ -53,7 +56,7 @@ EOF;
             }
 
             $namespaceFilter = $namespace === '' ? null : $namespace;
-            $classMap        = $this->addClassMapCode($dir, $namespaceFilter, $classMap);
+            $classMap = $this->addClassMapCode($dir, $namespaceFilter, $classMap);
         }
 
         ksort($classMap);
@@ -101,19 +104,19 @@ EOF;
      * @param $path
      * @return string
      */
-    protected function getPathCode($path)
+    protected function getPathCode($path): string
     {
 
-        $baseDir    = '';
-        $appPath    = $this->normalizePath(realpath(APP_PATH));
-        $libPath    = $this->normalizePath(realpath(LIB_PATH));
-        $path       = $this->normalizePath($path);
+        $baseDir = '';
+        $appPath = $this->normalizePath(realpath(APP_PATH));
+        $libPath = $this->normalizePath(realpath(LIB_PATH));
+        $path = $this->normalizePath($path);
 
         if (strpos($path, $libPath . '/') === 0) {
-            $path    = substr($path, strlen(LIB_PATH));
+            $path = substr($path, strlen(LIB_PATH));
             $baseDir = 'LIB_PATH';
         } elseif (strpos($path, $appPath . '/') === 0) {
-            $path    = substr($path, strlen($appPath) + 1);
+            $path = substr($path, strlen($appPath) + 1);
             $baseDir = 'APP_PATH';
         }
 
@@ -128,21 +131,21 @@ EOF;
      * @param $path
      * @return string
      */
-    protected function normalizePath($path)
+    protected function normalizePath($path): string
     {
-        $parts    = [];
-        $path     = strtr($path, '\\', '/');
-        $prefix   = '';
+        $parts = [];
+        $path = strtr($path, '\\', '/');
+        $prefix = '';
         $absolute = false;
 
         if (preg_match('{^([0-9a-z]+:(?://(?:[a-z]:)?)?)}i', $path, $match)) {
             $prefix = $match[1];
-            $path   = substr($path, strlen($prefix));
+            $path = substr($path, strlen($prefix));
         }
 
         if (substr($path, 0, 1) === '/') {
             $absolute = true;
-            $path     = substr($path, 1);
+            $path = substr($path, 1);
         }
 
         $up = false;
@@ -152,7 +155,7 @@ EOF;
                 $up = !(empty($parts) || '..' === end($parts));
             } elseif ('.' !== $chunk && '' !== $chunk) {
                 $parts[] = $chunk;
-                $up      = '..' !== $chunk;
+                $up = '..' !== $chunk;
             }
         }
 
@@ -164,7 +167,7 @@ EOF;
      * @param null $namespace
      * @return array
      */
-    protected function createMap($path, $namespace = null)
+    protected function createMap($path, $namespace = null): array
     {
         if (is_string($path)) {
             if (is_file($path)) {
@@ -224,7 +227,7 @@ EOF;
      * @param $path
      * @return array
      */
-    protected function findClasses($path)
+    protected function findClasses($path): array
     {
         $extraTypes = '|trait';
 
@@ -276,7 +279,7 @@ EOF;
             )
         }ix', $contents, $matches);
 
-        $classes   = [];
+        $classes = [];
         $namespace = '';
 
         for ($i = 0, $len = count($matches['type']); $i < $len; $i++) {

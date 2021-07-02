@@ -1,12 +1,16 @@
 <?php
+
+declare(strict_types=1);
+
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK IT ]
+// | The teamones framework runs on the workerman high performance framework
 // +----------------------------------------------------------------------
-// | Copyright (c) 2006-2016 http://thinkphp.cn All rights reserved.
+// | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
-// | Author: yunwuxin <448901948@qq.com>
+// | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
 // +----------------------------------------------------------------------
 
 namespace think\console\output;
@@ -18,23 +22,23 @@ use think\console\output\question\Confirmation;
 
 class Ask
 {
-    private static $stty;
+    private static ?bool $stty = null;
 
-    private static $shell;
+    private static string $shell;
 
     /** @var  Input */
-    protected $input;
+    protected Input $input;
 
     /** @var  Output */
-    protected $output;
+    protected Output $output;
 
     /** @var  Question */
-    protected $question;
+    protected Question $question;
 
     public function __construct(Input $input, Output $output, Question $question)
     {
-        $this->input    = $input;
-        $this->output   = $output;
+        $this->input = $input;
+        $this->output = $output;
         $this->question = $question;
     }
 
@@ -61,11 +65,14 @@ class Ask
         return $this->validateAttempts($interviewer);
     }
 
+    /**
+     * @return false|mixed|string
+     */
     protected function doAsk()
     {
         $this->writePrompt();
 
-        $inputStream  = STDIN;
+        $inputStream = STDIN;
         $autocomplete = $this->question->getAutocompleterValues();
 
         if (null === $autocomplete || !$this->hasSttyAvailable()) {
@@ -100,14 +107,18 @@ class Ask
         return $ret;
     }
 
+    /**
+     * @param $inputStream
+     * @return false|mixed|string
+     */
     private function autocomplete($inputStream)
     {
         $autocomplete = $this->question->getAutocompleterValues();
-        $ret          = '';
+        $ret = '';
 
-        $i          = 0;
-        $ofs        = -1;
-        $matches    = $autocomplete;
+        $i = 0;
+        $ofs = -1;
+        $matches = $autocomplete;
         $numMatches = count($matches);
 
         $sttyMode = shell_exec('stty -g');
@@ -124,8 +135,8 @@ class Ask
                 }
 
                 if ($i === 0) {
-                    $ofs        = -1;
-                    $matches    = $autocomplete;
+                    $ofs = -1;
+                    $matches = $autocomplete;
                     $numMatches = count($matches);
                 } else {
                     $numMatches = 0;
@@ -170,7 +181,7 @@ class Ask
                 ++$i;
 
                 $numMatches = 0;
-                $ofs        = 0;
+                $ofs = 0;
 
                 foreach ($autocomplete as $value) {
                     if (0 === strpos($value, $ret) && $i !== strlen($value)) {
@@ -193,7 +204,11 @@ class Ask
         return $ret;
     }
 
-    protected function getHiddenResponse($inputStream)
+    /**
+     * @param $inputStream
+     * @return string
+     */
+    protected function getHiddenResponse($inputStream): string
     {
         if ('\\' === DIRECTORY_SEPARATOR) {
             $exe = __DIR__ . '/../bin/hiddeninput.exe';
@@ -228,7 +243,7 @@ class Ask
         if (false !== $shell = $this->getShell()) {
             $readCmd = $shell === 'csh' ? 'set mypassword = $<' : 'read -r mypassword';
             $command = sprintf("/usr/bin/env %s -c 'stty -echo; %s; stty echo; echo \$mypassword'", $shell, $readCmd);
-            $value   = rtrim(shell_exec($command));
+            $value = rtrim(shell_exec($command));
             $this->output->writeln('');
 
             return $value;
@@ -245,7 +260,7 @@ class Ask
     protected function validateAttempts($interviewer)
     {
         /** @var \Exception $error */
-        $error    = null;
+        $error = null;
         $attempts = $this->question->getMaxAttempts();
         while (null === $attempts || $attempts--) {
             if (null !== $error) {
@@ -266,7 +281,7 @@ class Ask
      */
     protected function writePrompt()
     {
-        $text    = $this->question->getQuestion();
+        $text = $this->question->getQuestion();
         $default = $this->question->getDefault();
 
         switch (true) {
@@ -294,7 +309,7 @@ class Ask
 
             case $this->question instanceof Choice:
                 $choices = $this->question->getChoices();
-                $text    = sprintf(' <info>%s</info> [<comment>%s</comment>]:', $text, $choices[$default]);
+                $text = sprintf(' <info>%s</info> [<comment>%s</comment>]:', $text, $choices[$default]);
 
                 break;
 
@@ -315,13 +330,16 @@ class Ask
         $this->output->write(' > ');
     }
 
-    private function getShell()
+    /**
+     * @return string
+     */
+    private function getShell(): string
     {
         if (null !== self::$shell) {
             return self::$shell;
         }
 
-        self::$shell = false;
+        self::$shell = '';
 
         if (file_exists('/usr/bin/env')) {
             $test = "/usr/bin/env %s -c 'echo OK' 2> /dev/null";
@@ -336,7 +354,10 @@ class Ask
         return self::$shell;
     }
 
-    private function hasSttyAvailable()
+    /**
+     * @return bool
+     */
+    private function hasSttyAvailable(): bool
     {
         if (null !== self::$stty) {
             return self::$stty;

@@ -1,12 +1,16 @@
 <?php
+
+declare(strict_types=1);
+
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK ]
+// | The teamones framework runs on the workerman high performance framework
 // +----------------------------------------------------------------------
-// | Copyright (c) 2006~2015 http://thinkphp.cn All rights reserved.
+// | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
-// | Author: yunwuxin <448901948@qq.com>
+// | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
 // +----------------------------------------------------------------------
 
 namespace think\console;
@@ -50,12 +54,12 @@ class Output
     const OUTPUT_RAW = 1;
     const OUTPUT_PLAIN = 2;
 
-    private $verbosity = self::VERBOSITY_NORMAL;
+    private int $verbosity = self::VERBOSITY_NORMAL;
 
     /** @var Buffer|Console|Nothing */
     private $handle = null;
 
-    protected $styles = [
+    protected array $styles = [
         'info',
         'error',
         'comment',
@@ -152,7 +156,11 @@ class Output
         return $answer;
     }
 
-    protected function block($style, $message)
+    /**
+     * @param string $style
+     * @param string $message
+     */
+    protected function block(string $style, string $message)
     {
         $this->writeln("<{$style}>{$message}</$style>");
     }
@@ -171,7 +179,7 @@ class Output
      * @param string $messages
      * @param int $type
      */
-    public function writeln($messages, $type = self::OUTPUT_NORMAL)
+    public function writeln(string $messages, $type = self::OUTPUT_NORMAL)
     {
         $this->write($messages, true, $type);
     }
@@ -182,11 +190,14 @@ class Output
      * @param bool $newline
      * @param int $type
      */
-    public function write($messages, $newline = false, $type = self::OUTPUT_NORMAL)
+    public function write(string $messages, $newline = false, $type = self::OUTPUT_NORMAL)
     {
         $this->handle->write($messages, $newline, $type);
     }
 
+    /**
+     * @param Exception $e
+     */
     public function renderException(\Exception $e)
     {
         $this->handle->renderException($e);
@@ -203,27 +214,27 @@ class Output
     /**
      * {@inheritdoc}
      */
-    public function getVerbosity()
+    public function getVerbosity(): int
     {
         return $this->verbosity;
     }
 
-    public function isQuiet()
+    public function isQuiet(): bool
     {
         return self::VERBOSITY_QUIET === $this->verbosity;
     }
 
-    public function isVerbose()
+    public function isVerbose(): bool
     {
         return self::VERBOSITY_VERBOSE <= $this->verbosity;
     }
 
-    public function isVeryVerbose()
+    public function isVeryVerbose(): bool
     {
         return self::VERBOSITY_VERY_VERBOSE <= $this->verbosity;
     }
 
-    public function isDebug()
+    public function isDebug(): bool
     {
         return self::VERBOSITY_DEBUG <= $this->verbosity;
     }

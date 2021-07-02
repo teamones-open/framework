@@ -1,13 +1,18 @@
 <?php
+
+declare(strict_types=1);
+
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK IT ]
+// | The teamones framework runs on the workerman high performance framework
 // +----------------------------------------------------------------------
-// | Copyright (c) 2006-2016 http://thinkphp.cn All rights reserved.
+// | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
-// | Author: yunwuxin <448901948@qq.com>
+// | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
 // +----------------------------------------------------------------------
+
 namespace think\console\command\optimize;
 
 use think\App;
@@ -20,7 +25,7 @@ use think\Db;
 class Schema extends Command
 {
     /** @var  Output */
-    protected $output;
+    protected Output $output;
 
     protected function configure()
     {
@@ -104,6 +109,10 @@ class Schema extends Command
         }
     }
 
+    /**
+     * @param $tables
+     * @param $db
+     */
     protected function buildDataBaseSchema($tables, $db)
     {
         if ('' == $db) {

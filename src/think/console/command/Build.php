@@ -1,17 +1,21 @@
 <?php
+
+declare(strict_types=1);
+
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK ]
+// | The teamones framework runs on the workerman high performance framework
 // +----------------------------------------------------------------------
-// | Copyright (c) 2006~2015 http://thinkphp.cn All rights reserved.
+// | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
-// | Author: yunwuxin <448901948@qq.com>
+// | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
 // +----------------------------------------------------------------------
 
 namespace think\console\command;
 
-use think\console\command;
+use think\console\Command;
 use think\console\Input;
 use think\console\input\Option;
 use think\console\Output;
@@ -36,13 +40,13 @@ class Build extends Command
      * @param Input $input
      * @param Output $output
      * @return int|void|null
-     * @throws \Exception
+     * @throws \think\Exception
      */
     protected function execute(Input $input, Output $output)
     {
         if ($input->hasOption('module')) {
-            \think\Build::buildModel($input->getOption('module'));
-            $output->writeln("Successed");
+            \think\Build::module($input->getOption('module'));
+            $output->writeln("Successes");
             return;
         }
 
@@ -55,8 +59,8 @@ class Build extends Command
             $output->writeln("Build Config Is Empty");
             return;
         }
-        \think\Build::buildAppDir($build);
-        $output->writeln("Successed");
+        \think\Build::run($build);
+        $output->writeln("Successes");
 
     }
 }

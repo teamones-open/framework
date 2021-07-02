@@ -1,12 +1,16 @@
 <?php
+
+declare(strict_types=1);
+
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK ]
+// | The teamones framework runs on the workerman high performance framework
 // +----------------------------------------------------------------------
-// | Copyright (c) 2006~2015 http://thinkphp.cn All rights reserved.
+// | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
-// | Author: yunwuxin <448901948@qq.com>
+// | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
 // +----------------------------------------------------------------------
 
 namespace think\console\output\formatter;
@@ -17,12 +21,12 @@ class Stack
     /**
      * @var Style[]
      */
-    private $styles;
+    private array $styles;
 
     /**
      * @var Style
      */
-    private $emptyStyle;
+    private Style $emptyStyle;
 
     /**
      * 构造方法
@@ -57,7 +61,7 @@ class Stack
      * @return Style
      * @throws \InvalidArgumentException
      */
-    public function pop(Style $style = null)
+    public function pop(Style $style = null): Style
     {
         if (empty($this->styles)) {
             return $this->emptyStyle;
@@ -68,7 +72,7 @@ class Stack
         }
 
         /**
-         * @var int   $index
+         * @var int $index
          * @var Style $stackedStyle
          */
         foreach (array_reverse($this->styles, true) as $index => $stackedStyle) {
@@ -86,7 +90,7 @@ class Stack
      * 计算堆栈的当前样式。
      * @return Style
      */
-    public function getCurrent()
+    public function getCurrent(): Style
     {
         if (empty($this->styles)) {
             return $this->emptyStyle;
@@ -99,7 +103,7 @@ class Stack
      * @param Style $emptyStyle
      * @return Stack
      */
-    public function setEmptyStyle(Style $emptyStyle)
+    public function setEmptyStyle(Style $emptyStyle): Stack
     {
         $this->emptyStyle = $emptyStyle;
 
@@ -109,7 +113,7 @@ class Stack
     /**
      * @return Style
      */
-    public function getEmptyStyle()
+    public function getEmptyStyle(): Style
     {
         return $this->emptyStyle;
     }

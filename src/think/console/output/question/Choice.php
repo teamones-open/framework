@@ -1,12 +1,16 @@
 <?php
+
+declare(strict_types=1);
+
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK ]
+// | The teamones framework runs on the workerman high performance framework
 // +----------------------------------------------------------------------
-// | Copyright (c) 2006~2015 http://thinkphp.cn All rights reserved.
+// | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
-// | Author: yunwuxin <448901948@qq.com>
+// | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
 // +----------------------------------------------------------------------
 
 namespace think\console\output\question;
@@ -16,10 +20,10 @@ use think\console\output\Question;
 class Choice extends Question
 {
 
-    private $choices;
-    private $multiselect  = false;
-    private $prompt       = ' > ';
-    private $errorMessage = 'Value "%s" is invalid';
+    private array $choices;
+    private bool $multiselect  = false;
+    private string $prompt       = ' > ';
+    private string $errorMessage = 'Value "%s" is invalid';
 
     /**
      * 构造方法
@@ -40,7 +44,7 @@ class Choice extends Question
      * 可选项
      * @return array
      */
-    public function getChoices()
+    public function getChoices(): array
     {
         return $this->choices;
     }
@@ -50,7 +54,7 @@ class Choice extends Question
      * @param bool $multiselect
      * @return self
      */
-    public function setMultiselect($multiselect)
+    public function setMultiselect(bool $multiselect): Choice
     {
         $this->multiselect = $multiselect;
         $this->setValidator($this->getDefaultValidator());
@@ -58,7 +62,10 @@ class Choice extends Question
         return $this;
     }
 
-    public function isMultiselect()
+    /**
+     * @return bool
+     */
+    public function isMultiselect(): bool
     {
         return $this->multiselect;
     }
@@ -67,7 +74,7 @@ class Choice extends Question
      * 获取提示
      * @return string
      */
-    public function getPrompt()
+    public function getPrompt(): string
     {
         return $this->prompt;
     }
@@ -77,7 +84,7 @@ class Choice extends Question
      * @param string $prompt
      * @return self
      */
-    public function setPrompt($prompt)
+    public function setPrompt(string $prompt): Choice
     {
         $this->prompt = $prompt;
 
@@ -89,7 +96,7 @@ class Choice extends Question
      * @param string $errorMessage
      * @return self
      */
-    public function setErrorMessage($errorMessage)
+    public function setErrorMessage(string $errorMessage): Choice
     {
         $this->errorMessage = $errorMessage;
         $this->setValidator($this->getDefaultValidator());
