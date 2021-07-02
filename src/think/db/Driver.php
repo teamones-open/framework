@@ -1,13 +1,18 @@
 <?php
+
+declare(strict_types=1);
+
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK IT ]
+// | The teamones framework runs on the workerman high performance framework
 // +----------------------------------------------------------------------
 // | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
 // | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
 // +----------------------------------------------------------------------
+
 namespace think\db;
 
 use PDO;
@@ -19,43 +24,43 @@ abstract class Driver
      * PDO操作实例
      * @var \PDOStatement
      */
-    protected $PDOStatement = null;
+    protected ?\PDOStatement $PDOStatement = null;
 
     /**
      * 当前连接ID
      * @var \PDO
      */
-    protected $_linkID = null;
+    protected ?PDO $_linkID = null;
 
     // 当前操作所属的模型名
-    protected $model = '_think_';
+    protected string $model = '_think_';
 
     // 当前SQL指令
-    protected $queryStr = '';
+    protected string $queryStr = '';
 
     // 模型SQL
-    protected $modelSql = [];
+    protected array $modelSql = [];
 
     // 最后插入ID
-    protected $lastInsID = null;
+    protected ?string $lastInsID = null;
 
     // 返回或者影响记录数
-    protected $numRows = 0;
+    protected int $numRows = 0;
 
     // 事物操作PDO实例
-    protected $transPDO = null;
+    protected bool $transPDO = false;
 
     // 事务指令数
-    protected $transTimes = 0;
+    protected int $transTimes = 0;
 
     // 错误信息
-    protected $error = '';
+    protected string $error = '';
 
     // 数据库连接ID 支持多个连接
-    protected $linkID = [];
+    protected array $linkID = [];
 
     // 数据库连接参数配置
-    protected $config = [
+    protected array $config = [
         'type' => '', // 数据库类型
         'hostname' => '127.0.0.1', // 服务器地址
         'database' => '', // 数据库名
@@ -75,7 +80,7 @@ abstract class Driver
     ];
 
     // 数据库表达式
-    protected $exp = [
+    protected array $exp = [
         'eq' => '=',
         'neq' => '<>',
         'gt' => '>',
@@ -93,16 +98,16 @@ abstract class Driver
     ];
 
     // 查询表达式
-    protected $selectSql = 'SELECT%DISTINCT% %FIELD% FROM %TABLE%%FORCE%%JOIN%%WHERE%%GROUP%%HAVING%%ORDER%%LIMIT% %UNION%%LOCK%%COMMENT%';
+    protected string $selectSql = 'SELECT%DISTINCT% %FIELD% FROM %TABLE%%FORCE%%JOIN%%WHERE%%GROUP%%HAVING%%ORDER%%LIMIT% %UNION%%LOCK%%COMMENT%';
 
     // 查询次数
-    protected $queryTimes = 0;
+    protected int $queryTimes = 0;
 
     // 执行次数
-    protected $executeTimes = 0;
+    protected int $executeTimes = 0;
 
     // PDO连接参数
-    protected $options = [
+    protected array $options = [
         PDO::ATTR_CASE => PDO::CASE_LOWER,
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_ORACLE_NULLS => PDO::NULL_NATURAL,
@@ -114,7 +119,7 @@ abstract class Driver
      * 服务器断线标识字符
      * @var array
      */
-    protected $breakMatchStr = [
+    protected array $breakMatchStr = [
         'server has gone away',
         'no connection to the server',
         'Lost connection',
@@ -149,7 +154,7 @@ abstract class Driver
     ];
 
     // 参数绑定
-    protected $bind = [];
+    protected array $bind = [];
 
     /**
      * Driver constructor.
@@ -209,7 +214,7 @@ abstract class Driver
      */
     protected function parseDsn($config): string
     {
-
+        return '';
     }
 
     /**
@@ -231,7 +236,7 @@ abstract class Driver
      * @throws PDOException
      * @throws \Throwable
      */
-    public function query($str, $fetchSql = false, $master = false)
+    public function query(string $str, $fetchSql = false, $master = false)
     {
         $this->initConnect($master);
         if (!$this->_linkID) {
@@ -308,7 +313,7 @@ abstract class Driver
      * @throws PDOException
      * @throws \Throwable
      */
-    public function execute($str, $fetchSql = false)
+    public function execute(string $str, $fetchSql = false)
     {
         $this->initConnect(true);
         if (!$this->_linkID) {
@@ -415,7 +420,7 @@ abstract class Driver
      * @return bool
      * @throws \Exception
      */
-    public function commit()
+    public function commit(): bool
     {
         if ($this->transTimes == 1) {
             $result = $this->_linkID->commit();
@@ -435,7 +440,7 @@ abstract class Driver
      * @return bool
      * @throws \Exception
      */
-    public function rollback()
+    public function rollback(): bool
     {
         if ($this->transTimes == 1) {
             $result = $this->_linkID->rollback();
@@ -455,7 +460,7 @@ abstract class Driver
      * @access private
      * @return array
      */
-    private function getResult()
+    private function getResult(): array
     {
         //返回数据集
         $result = $this->PDOStatement->fetchAll(PDO::FETCH_ASSOC);
@@ -469,7 +474,7 @@ abstract class Driver
      * @param boolean $execute 是否包含所有查询
      * @return integer
      */
-    public function getQueryTimes($execute = false)
+    public function getQueryTimes($execute = false): int
     {
         return $execute ? $this->queryTimes + $this->executeTimes : $this->queryTimes;
     }
@@ -479,7 +484,7 @@ abstract class Driver
      * @access public
      * @return integer
      */
-    public function getExecuteTimes()
+    public function getExecuteTimes(): int
     {
         return $this->executeTimes;
     }
@@ -488,12 +493,14 @@ abstract class Driver
      * 关闭数据库
      * @access public
      */
-    public function close()
+    public function close(): Driver
     {
-        $this->linkID = null;
+        // 清空连接对象
+        $this->linkID = [];
 
         // 释放查询
         $this->free();
+
         /**
          * 释放事务计数
          * 事务是不能跨连接执行的 避免下一次事务被污染
@@ -508,7 +515,7 @@ abstract class Driver
      * @param \PDOException|\Exception $e 异常对象
      * @return bool
      */
-    protected function isBreak($e)
+    protected function isBreak($e): bool
     {
         $error = $e->getMessage();
 
@@ -525,7 +532,7 @@ abstract class Driver
      * @return string
      * @throws \Exception
      */
-    public function error()
+    public function error(): string
     {
         if ($this->PDOStatement) {
             $error = $this->PDOStatement->errorInfo();
@@ -551,7 +558,7 @@ abstract class Driver
      * @param bool $lock
      * @return string
      */
-    protected function parseLock($lock = false)
+    protected function parseLock($lock = false): string
     {
         return $lock ? ' FOR UPDATE ' : '';
     }
@@ -562,7 +569,7 @@ abstract class Driver
      * @param array $data
      * @return string
      */
-    protected function parseSet($data)
+    protected function parseSet(array $data): string
     {
         $set = [];
         foreach ($data as $key => $val) {
@@ -591,7 +598,7 @@ abstract class Driver
      * @param mixed $value 绑定值
      * @return void
      */
-    protected function bindParam($name, $value)
+    protected function bindParam(string $name, $value)
     {
         $this->bind[':' . $name] = $value;
     }
@@ -635,7 +642,7 @@ abstract class Driver
      * @param mixed $fields
      * @return string
      */
-    protected function parseField($fields)
+    protected function parseField($fields): string
     {
         if (is_string($fields) && '' !== $fields) {
             $fields = explode(',', $fields);
@@ -665,7 +672,7 @@ abstract class Driver
      * @param mixed $tables
      * @return string
      */
-    protected function parseTable($tables)
+    protected function parseTable($tables): string
     {
         if (is_array($tables)) {
             // 支持别名定义
@@ -691,7 +698,7 @@ abstract class Driver
      * @return string
      * @throws \Exception
      */
-    protected function parseWhere($where)
+    protected function parseWhere($where): string
     {
         $whereStr = '';
         if (is_string($where)) {
@@ -757,7 +764,7 @@ abstract class Driver
      * @return string
      * @throws \Exception
      */
-    protected function parseWhereItem($key, $val)
+    protected function parseWhereItem($key, $val): string
     {
         $whereStr = '';
         if (is_array($val)) {
@@ -844,7 +851,7 @@ abstract class Driver
      * @return string
      * @throws \Exception
      */
-    protected function parseThinkWhere($key, $val)
+    protected function parseThinkWhere($key, $val): string
     {
         $whereStr = '';
         switch ($key) {
@@ -880,7 +887,7 @@ abstract class Driver
      * @param $limit
      * @return string
      */
-    protected function parseLimit($limit)
+    protected function parseLimit($limit): string
     {
         return (!empty($limit) && false === strpos($limit, '(')) ? ' LIMIT ' . $limit . ' ' : '';
     }
@@ -891,7 +898,7 @@ abstract class Driver
      * @param mixed $join
      * @return string
      */
-    protected function parseJoin($join)
+    protected function parseJoin($join): string
     {
         $joinStr = '';
         if (!empty($join)) {
@@ -906,7 +913,7 @@ abstract class Driver
      * @param mixed $order
      * @return string
      */
-    protected function parseOrder($order)
+    protected function parseOrder($order): string
     {
         if (empty($order)) {
             return '';
@@ -945,7 +952,7 @@ abstract class Driver
      * @param mixed $group
      * @return string
      */
-    protected function parseGroup($group)
+    protected function parseGroup($group): string
     {
         return !empty($group) ? ' GROUP BY ' . $group : '';
     }
@@ -956,7 +963,7 @@ abstract class Driver
      * @param string $having
      * @return string
      */
-    protected function parseHaving($having)
+    protected function parseHaving(string $having): string
     {
         return !empty($having) ? ' HAVING ' . $having : '';
     }
@@ -967,7 +974,7 @@ abstract class Driver
      * @param string $comment
      * @return string
      */
-    protected function parseComment($comment)
+    protected function parseComment(string $comment): string
     {
         return !empty($comment) ? ' /* ' . $comment . ' */' : '';
     }
@@ -978,7 +985,7 @@ abstract class Driver
      * @param mixed $distinct
      * @return string
      */
-    protected function parseDistinct($distinct)
+    protected function parseDistinct($distinct): string
     {
         return !empty($distinct) ? ' DISTINCT ' : '';
     }
@@ -990,7 +997,7 @@ abstract class Driver
      * @return string
      * @throws \Exception
      */
-    protected function parseUnion($union)
+    protected function parseUnion($union): string
     {
         if (empty($union)) {
             return '';
@@ -1022,7 +1029,7 @@ abstract class Driver
      * @param mixed $index
      * @return string
      */
-    protected function parseForce($index)
+    protected function parseForce($index): string
     {
         if (empty($index)) {
             return '';
@@ -1039,7 +1046,7 @@ abstract class Driver
      * @param mixed $duplicate
      * @return string
      */
-    protected function parseDuplicate($duplicate)
+    protected function parseDuplicate($duplicate): string
     {
         return '';
     }
@@ -1131,7 +1138,7 @@ abstract class Driver
         }
         $sql = 'INSERT INTO ' . $this->parseTable($options['table']) . ' (' . implode(',', $fields) . ') ' . implode(' UNION ALL ', $values);
         $sql .= $this->parseComment(!empty($options['comment']) ? $options['comment'] : '');
-        return $this->execute($sql, !empty($options['fetch_sql']) ? true : false);
+        return $this->execute($sql, !empty($options['fetch_sql']));
     }
 
     /**
@@ -1144,7 +1151,7 @@ abstract class Driver
      * @throws PDOException
      * @throws \Throwable
      */
-    public function selectInsert($fields, $table, $options = [])
+    public function selectInsert(string $fields, string $table, $options = [])
     {
         // 防止内存溢出，执行操作前清空sql历史记录
         $this->modelSql = [];
@@ -1157,7 +1164,7 @@ abstract class Driver
         $fields = array_map([$this, 'parseKey'], $fields);
         $sql = 'INSERT INTO ' . $this->parseTable($table) . ' (' . implode(',', $fields) . ') ';
         $sql .= $this->buildSelectSql($options);
-        return $this->execute($sql, !empty($options['fetch_sql']) ? true : false);
+        return $this->execute($sql, !empty($options['fetch_sql']));
     }
 
     /**
@@ -1169,7 +1176,7 @@ abstract class Driver
      * @throws PDOException
      * @throws \Throwable
      */
-    public function update($data, $options)
+    public function update($data, $options = [])
     {
         // 防止内存溢出，执行操作前清空sql历史记录
         $this->modelSql = [];
@@ -1189,7 +1196,7 @@ abstract class Driver
                 . $this->parseLimit(!empty($options['limit']) ? $options['limit'] : '');
         }
         $sql .= $this->parseComment(!empty($options['comment']) ? $options['comment'] : '');
-        return $this->execute($sql, !empty($options['fetch_sql']) ? true : false);
+        return $this->execute($sql, !empty($options['fetch_sql']));
     }
 
     /**
@@ -1223,7 +1230,7 @@ abstract class Driver
                 . $this->parseLimit(!empty($options['limit']) ? $options['limit'] : '');
         }
         $sql .= $this->parseComment(!empty($options['comment']) ? $options['comment'] : '');
-        return $this->execute($sql, !empty($options['fetch_sql']) ? true : false);
+        return $this->execute($sql, !empty($options['fetch_sql']));
     }
 
     /**
@@ -1240,7 +1247,7 @@ abstract class Driver
         $this->parseBind(!empty($options['bind']) ? $options['bind'] : []);
         $sql = $this->buildSelectSql($options);
 
-        return $this->query($sql, !empty($options['fetch_sql']) ? true : false, !empty($options['master']) ? true : false);
+        return $this->query($sql, !empty($options['fetch_sql']), !empty($options['master']));
     }
 
     /**
@@ -1272,9 +1279,9 @@ abstract class Driver
      * @return string|string[]
      * @throws \Exception
      */
-    public function parseSql($sql, $options = [])
+    public function parseSql(string $sql, $options = [])
     {
-        $sql = str_replace(
+        return str_replace(
             [
                 '%TABLE%',
                 '%DISTINCT%',
@@ -1307,7 +1314,6 @@ abstract class Driver
             ],
             $sql
         );
-        return $sql;
     }
 
     /**
@@ -1316,7 +1322,7 @@ abstract class Driver
      * @access public
      * @return string
      */
-    public function getLastSql($model = '')
+    public function getLastSql($model = ''): string
     {
         return $model ? $this->modelSql[$model] : $this->queryStr;
     }
@@ -1326,7 +1332,7 @@ abstract class Driver
      * @access public
      * @return string
      */
-    public function getLastInsID()
+    public function getLastInsID(): ?string
     {
         return $this->lastInsID;
     }
@@ -1336,7 +1342,7 @@ abstract class Driver
      * @access public
      * @return string
      */
-    public function getError()
+    public function getError(): string
     {
         return $this->error;
     }
@@ -1347,7 +1353,7 @@ abstract class Driver
      * @param string $str SQL字符串
      * @return string
      */
-    public function escapeString($str)
+    public function escapeString(string $str): string
     {
         return addslashes($str);
     }
@@ -1358,7 +1364,7 @@ abstract class Driver
      * @param string $model 模型名
      * @return void
      */
-    public function setModel($model)
+    public function setModel(string $model)
     {
         $this->model = $model;
     }
@@ -1368,7 +1374,7 @@ abstract class Driver
      * @access protected
      * @param boolean $start 调试开始标记 true 开始 false 结束
      */
-    protected function debug($start)
+    protected function debug(bool $start)
     {
         if ($this->config['debug']) {
             // 开启数据库调试模式
@@ -1387,23 +1393,22 @@ abstract class Driver
     /**
      * 初始化数据库连接
      * @param bool $master
-     * @return null
      * @throws \Exception
      */
     protected function initConnect($master = true)
     {
         // 开启事物时用同一个连接进行操作
-        if ($this->transPDO) {
-            return $this->transPDO;
-        }
-        if (!empty($this->config['deploy'])) // 采用分布式数据库
-        {
-            $this->_linkID = $this->multiConnect($master);
-        } else
-            // 默认单数据库
-            if (!$this->_linkID) {
-                $this->_linkID = $this->connect();
+        if (!$this->transPDO) {
+            if (!empty($this->config['deploy'])) {
+                // 采用分布式数据库
+                $this->_linkID = $this->multiConnect($master);
+            } else {
+                // 默认单数据库
+                if (!$this->_linkID) {
+                    $this->_linkID = $this->connect();
+                }
             }
+        }
     }
 
     /**
@@ -1447,23 +1452,23 @@ abstract class Driver
         $dbMaster = [];
         if ($m != $r) {
             $dbMaster = [
-                'username' => isset($_config['username'][$m]) ? $_config['username'][$m] : $_config['username'][0],
-                'password' => isset($_config['password'][$m]) ? $_config['password'][$m] : $_config['password'][0],
-                'hostname' => isset($_config['hostname'][$m]) ? $_config['hostname'][$m] : $_config['hostname'][0],
-                'hostport' => isset($_config['hostport'][$m]) ? $_config['hostport'][$m] : $_config['hostport'][0],
-                'database' => isset($_config['database'][$m]) ? $_config['database'][$m] : $_config['database'][0],
-                'dsn' => isset($_config['dsn'][$m]) ? $_config['dsn'][$m] : $_config['dsn'][0],
-                'charset' => isset($_config['charset'][$m]) ? $_config['charset'][$m] : $_config['charset'][0],
+                'username' => $_config['username'][$m] ?? $_config['username'][0],
+                'password' => $_config['password'][$m] ?? $_config['password'][0],
+                'hostname' => $_config['hostname'][$m] ?? $_config['hostname'][0],
+                'hostport' => $_config['hostport'][$m] ?? $_config['hostport'][0],
+                'database' => $_config['database'][$m] ?? $_config['database'][0],
+                'dsn' => $_config['dsn'][$m] ?? $_config['dsn'][0],
+                'charset' => $_config['charset'][$m] ?? $_config['charset'][0],
             ];
         }
         $dbConfig = [
-            'username' => isset($_config['username'][$r]) ? $_config['username'][$r] : $_config['username'][0],
-            'password' => isset($_config['password'][$r]) ? $_config['password'][$r] : $_config['password'][0],
-            'hostname' => isset($_config['hostname'][$r]) ? $_config['hostname'][$r] : $_config['hostname'][0],
-            'hostport' => isset($_config['hostport'][$r]) ? $_config['hostport'][$r] : $_config['hostport'][0],
-            'database' => isset($_config['database'][$r]) ? $_config['database'][$r] : $_config['database'][0],
-            'dsn' => isset($_config['dsn'][$r]) ? $_config['dsn'][$r] : $_config['dsn'][0],
-            'charset' => isset($_config['charset'][$r]) ? $_config['charset'][$r] : $_config['charset'][0],
+            'username' => $_config['username'][$r] ?? $_config['username'][0],
+            'password' => $_config['password'][$r] ?? $_config['password'][0],
+            'hostname' => $_config['hostname'][$r] ?? $_config['hostname'][0],
+            'hostport' => $_config['hostport'][$r] ?? $_config['hostport'][0],
+            'database' => $_config['database'][$r] ?? $_config['database'][0],
+            'dsn' => $_config['dsn'][$r] ?? $_config['dsn'][0],
+            'charset' => $_config['charset'][$r] ?? $_config['charset'][0],
         ];
         return $this->connect($dbConfig, $r, $r == $m ? false : $dbMaster);
     }

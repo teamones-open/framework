@@ -1,22 +1,24 @@
 <?php
-/**
- * This file is part of webman.
- *
- * Licensed under The MIT License
- * For full copyright and license information, please see the MIT-LICENSE.txt
- * Redistributions of files must retain the above copyright notice.
- *
- * @author    walkor<walkor@workerman.net>
- * @copyright walkor<walkor@workerman.net>
- * @link      http://www.workerman.net/
- * @license   http://www.opensource.org/licenses/mit-license.php MIT License
- */
+
+declare(strict_types=1);
+
+// +----------------------------------------------------------------------
+// | The teamones framework runs on the workerman high performance framework
+// +----------------------------------------------------------------------
+// | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
+// +----------------------------------------------------------------------
+// | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
+// +----------------------------------------------------------------------
+
 namespace think\exception;
 
-use Throwable;
 use Psr\Log\LoggerInterface;
 use think\Request;
 use think\Response;
+use Throwable;
 
 /**
  * Class Handler
@@ -25,21 +27,19 @@ use think\Response;
 class ExceptionHandler implements ExceptionHandlerInterface
 {
     /**
-     * @var LoggerInterface
+     * @var ?LoggerInterface
      */
-    protected $_logger = null;
+    protected ?LoggerInterface $_logger = null;
 
     /**
      * @var bool
      */
-    protected $_debug = false;
+    protected bool $_debug = false;
 
     /**
      * @var array
      */
-    public $dontReport = [
-
-    ];
+    public array $dontReport = [];
 
     /**
      * ExceptionHandler constructor.
@@ -53,16 +53,16 @@ class ExceptionHandler implements ExceptionHandlerInterface
     }
 
     /**
-     * @param Throwable $exception
-     * @return void
+     * @param Throwable $e
+     * @return mixed|void
      */
-    public function report(Throwable $exception)
+    public function report(Throwable $e)
     {
-        if ($this->shouldntReport($exception)) {
+        if ($this->shouldntReport($e)) {
             return;
         }
 
-        $this->_logger->error($exception->getMessage(), ['exception' => (string)$exception]);
+        $this->_logger->error($e->getMessage(), ['exception' => (string)$e]);
     }
 
     /**
@@ -70,17 +70,17 @@ class ExceptionHandler implements ExceptionHandlerInterface
      * @param Throwable $exception
      * @return Response
      */
-    public function render(Request $request, Throwable $exception): Response
+    public function render(Request $request, Throwable $e): Response
     {
-        if (\method_exists($exception, 'render')) {
-            return $exception->render();
+        if (\method_exists($e, 'render')) {
+            return $e->render();
         }
-        $code = $exception->getCode();
+        $code = $e->getCode();
         if ($request->expectsJson()) {
-            $json = ['code' => $code ? $code : 500, 'msg' => $exception->getMessage()];
-            $this->_debug && $json['traces'] = (string)$exception;
+            $json = ['code' => $code ? $code : 500, 'msg' => $e->getMessage()];
+            $this->_debug && $json['traces'] = (string)$e;
         } else {
-            $error = $this->_debug ? nl2br((string)$exception) : 'Server internal error';
+            $error = $this->_debug ? nl2br((string)$e) : 'Server internal error';
             $json = ['code' => $code ? $code : 500, 'msg' => $error];
         }
 
@@ -92,7 +92,7 @@ class ExceptionHandler implements ExceptionHandlerInterface
      * @param Throwable $e
      * @return bool
      */
-    protected function shouldntReport(Throwable $e)
+    protected function shouldntReport(Throwable $e): bool
     {
         foreach ($this->dontReport as $type) {
             if ($e instanceof $type) {

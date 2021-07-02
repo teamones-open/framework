@@ -1,22 +1,26 @@
 <?php
+
+declare(strict_types=1);
+
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK IT ]
+// | The teamones framework runs on the workerman high performance framework
 // +----------------------------------------------------------------------
-// | Copyright (c) 2006-2016 http://thinkphp.cn All rights reserved.
+// | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
-// | Author: yunwuxin <448901948@qq.com>
+// | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
 // +----------------------------------------------------------------------
 
 namespace think\exception;
 
 class StrackException extends \RuntimeException
 {
-    private $errorCode;
-    private $headers;
-    private $responseData;
-    private $responseType;
+    private int $errorCode;
+    private array $headers;
+    private array $responseData;
+    private string $responseType;
 
     /**
      * StrackException constructor.
@@ -43,22 +47,34 @@ class StrackException extends \RuntimeException
         parent::__construct($message, $errorCode, $previous);
     }
 
-    public function getResponseType()
+    /**
+     * @return string
+     */
+    public function getResponseType(): string
     {
         return $this->responseType;
     }
 
-    public function getErrorCode()
+    /**
+     * @return int
+     */
+    public function getErrorCode(): int
     {
         return $this->errorCode;
     }
 
-    public function getHeaders()
+    /**
+     * @return array
+     */
+    public function getHeaders(): array
     {
         return $this->headers;
     }
 
-    public function getResponseData()
+    /**
+     * @return array
+     */
+    public function getResponseData(): array
     {
         return $this->responseData;
     }

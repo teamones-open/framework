@@ -1,12 +1,16 @@
 <?php
+
+declare(strict_types=1);
+
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK ]
+// | The teamones framework runs on the workerman high performance framework
 // +----------------------------------------------------------------------
-// | Copyright (c) 2006~2017 http://thinkphp.cn All rights reserved.
+// | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
-// | Author: 麦当苗儿 <zuojiazi@vip.qq.com> <http://zjzit.cn>
+// | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
 // +----------------------------------------------------------------------
 
 namespace think\exception;
@@ -25,7 +29,7 @@ class ErrorException extends Exception
      * 用于保存错误级别
      * @var integer
      */
-    protected $severity;
+    protected int $severity;
 
     /**
      * 错误异常构造函数
@@ -52,7 +56,7 @@ class ErrorException extends Exception
      * 获取错误级别
      * @return integer 错误级别
      */
-    final public function getSeverity()
+    final public function getSeverity(): int
     {
         return $this->severity;
     }

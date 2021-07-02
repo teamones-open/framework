@@ -1,19 +1,23 @@
 <?php
+
+declare(strict_types=1);
+
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK IT ]
+// | The teamones framework runs on the workerman high performance framework
 // +----------------------------------------------------------------------
-// | Copyright (c) 2006-2016 http://thinkphp.cn All rights reserved.
+// | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
-// | Author: yunwuxin <448901948@qq.com>
+// | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
 // +----------------------------------------------------------------------
 
 namespace think\exception;
 
 class ClassNotFoundException extends \RuntimeException
 {
-    protected $class;
+    protected string $class;
 
     /**
      * ClassNotFoundException constructor.
@@ -32,7 +36,7 @@ class ClassNotFoundException extends \RuntimeException
      * @access public
      * @return string
      */
-    public function getClass()
+    public function getClass(): string
     {
         return $this->class;
     }

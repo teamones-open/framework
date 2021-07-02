@@ -1,12 +1,16 @@
 <?php
+
+declare(strict_types=1);
+
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK ]
+// | The teamones framework runs on the workerman high performance framework
 // +----------------------------------------------------------------------
-// | Copyright (c) 2006~2017 http://thinkphp.cn All rights reserved.
+// | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
-// | Author: 麦当苗儿 <zuojiazi@vip.qq.com> <http://zjzit.cn>
+// | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
 // +----------------------------------------------------------------------
 
 namespace think\exception;
@@ -30,8 +34,8 @@ class PDOException extends DbException
 
         $this->setData('PDO Error Info', [
             'SQLSTATE' => $error[0],
-            'Driver Error Code' => isset($error[1]) ? $error[1] : 0,
-            'Driver Error Message' => isset($error[2]) ? $error[2] : '',
+            'Driver Error Code' => $error[1] ?? 0,
+            'Driver Error Message' => $error[2] ?? '',
         ]);
 
         parent::__construct($exception->getMessage(), $config, $sql, $code);

@@ -1,12 +1,16 @@
 <?php
+
+declare(strict_types=1);
+
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK IT ]
+// | The teamones framework runs on the workerman high performance framework
 // +----------------------------------------------------------------------
-// | Copyright (c) 2006-2016 http://thinkphp.cn All rights reserved.
+// | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
-// | Author: yunwuxin <448901948@qq.com>
+// | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
 // +----------------------------------------------------------------------
 
 namespace think\exception;
@@ -19,7 +23,7 @@ use think\Response;
 class Handle
 {
 
-    protected $ignoreReport = [
+    protected array $ignoreReport = [
         '\\think\\exception\\HttpException',
         '\\think\\exception\\StrackException',
     ];
@@ -27,7 +31,7 @@ class Handle
     /**
      * Report or log an exception.
      *
-     * @param  \Exception $exception
+     * @param \Exception $exception
      * @return void
      */
     public function report(Exception $exception)
@@ -54,7 +58,11 @@ class Handle
         }
     }
 
-    protected function isIgnoreReport(Exception $exception)
+    /**
+     * @param Exception $exception
+     * @return bool
+     */
+    protected function isIgnoreReport(Exception $exception): bool
     {
         foreach ($this->ignoreReport as $class) {
             if ($exception instanceof $class) {
@@ -67,10 +75,10 @@ class Handle
     /**
      * Render an exception into an HTTP response.
      *
-     * @param  \Exception $e
+     * @param \Exception $e
      * @return Response
      */
-    public function render(Exception $e)
+    public function render(Exception $e): Response
     {
         if ($e instanceof HttpException) {
             return $this->renderHttpException($e);
@@ -97,7 +105,7 @@ class Handle
      * @param HttpException $e
      * @return Response
      */
-    protected function renderHttpException(HttpException $e)
+    protected function renderHttpException(HttpException $e): Response
     {
         return $this->fetchHttpExceptionTemplate($e, $e->getStatusCode());
     }
@@ -107,7 +115,7 @@ class Handle
      * @param StrackException $e
      * @return Response
      */
-    protected function renderStrackHttpException(StrackException $e)
+    protected function renderStrackHttpException(StrackException $e): Response
     {
         return $this->fetchHttpExceptionTemplate($e, $e->getErrorCode());
     }
@@ -118,21 +126,16 @@ class Handle
      * @param $status
      * @return Response
      */
-    protected function fetchHttpExceptionTemplate($e, $status)
+    protected function fetchHttpExceptionTemplate($e, $status): Response
     {
-        $template = C('http_exception_template');
-        if (!APP_DEBUG && !empty($template[$status])) {
-            return Response::create($template[$status], 'view', $status)->assign(['e' => $e, 'code' => $status]);
-        } else {
-            return $this->convertExceptionToResponse($e);
-        }
+        return $this->convertExceptionToResponse($e);
     }
 
     /**
      * @param StrackException $e
      * @return Response
      */
-    protected function renderStrackException(StrackException $e)
+    protected function renderStrackException(StrackException $e): Response
     {
         $responseType = $e->getResponseType();
         if ($responseType === "json") {
@@ -147,7 +150,7 @@ class Handle
      * @param Exception $exception
      * @return Response
      */
-    protected function convertExceptionToResponse(Exception $exception)
+    protected function convertExceptionToResponse(Exception $exception): Response
     {
         // 收集异常数据
         if (APP_DEBUG) {
@@ -166,7 +169,7 @@ class Handle
                     'POST Data' => $_POST,
                     'Files' => $_FILES,
                     'Cookies' => $_COOKIE,
-                    'Session' => isset($_SESSION) ? $_SESSION : [],
+                    'Session' => $_SESSION ?? [],
                     'Server/Request Data' => $_SERVER,
                     'Environment Variables' => $_ENV,
                     'ThinkPHP Constants' => $this->getConst(),
@@ -216,10 +219,10 @@ class Handle
     /**
      * 获取错误编码
      * ErrorException则使用错误级别作为错误编码
-     * @param  \Exception $exception
+     * @param \Exception $exception
      * @return integer                错误编码
      */
-    protected function getCode(Exception $exception)
+    protected function getCode(Exception $exception): int
     {
         $code = $exception->getCode();
         if (!$code && $exception instanceof ErrorException) {
@@ -231,10 +234,10 @@ class Handle
     /**
      * 获取错误信息
      * ErrorException则使用错误级别作为错误编码
-     * @param  \Exception $exception
+     * @param \Exception $exception
      * @return string                错误信息
      */
-    protected function getMessage(Exception $exception)
+    protected function getMessage(Exception $exception): string
     {
         $message = $exception->getMessage();
         if (IS_CLI) {
@@ -256,10 +259,10 @@ class Handle
     /**
      * 获取出错文件内容
      * 获取错误的前9行和后9行
-     * @param  \Exception $exception
+     * @param \Exception $exception
      * @return array                 错误文件内容
      */
-    protected function getSourceCode(Exception $exception)
+    protected function getSourceCode(Exception $exception): array
     {
         // 读取前9行和后9行
         $line = $exception->getLine();
@@ -280,10 +283,10 @@ class Handle
     /**
      * 获取异常扩展信息
      * 用于非调试模式html返回类型显示
-     * @param  \Exception $exception
+     * @param \Exception $exception
      * @return array                 异常类定义的扩展数据
      */
-    protected function getExtendData(Exception $exception)
+    protected function getExtendData(Exception $exception): array
     {
         $data = [];
         if ($exception instanceof \think\Exception) {
@@ -296,7 +299,7 @@ class Handle
      * 获取常量列表
      * @return array 常量列表
      */
-    private static function getConst()
+    private static function getConst(): array
     {
         return get_defined_constants(true)['user'];
     }
