@@ -1,12 +1,16 @@
 <?php
+
+declare(strict_types=1);
+
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK ]
+// | The teamones framework runs on the workerman high performance framework
 // +----------------------------------------------------------------------
-// | Copyright (c) 2006~2017 http://thinkphp.cn All rights reserved.
+// | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
 // | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
 // +----------------------------------------------------------------------
 
 namespace think\validate;
@@ -74,13 +78,13 @@ namespace think\validate;
 class ValidateRule
 {
     // 验证字段的名称
-    protected $title;
+    protected string $title;
 
     // 当前验证规则
-    protected $rule = [];
+    protected array $rule = [];
 
     // 验证提示信息
-    protected $message = [];
+    protected array $message = [];
 
     /**
      * 添加验证因子
@@ -90,7 +94,7 @@ class ValidateRule
      * @param string $msg 提示信息
      * @return $this
      */
-    protected function addItem($name, $rule = null, $msg = '')
+    protected function addItem(string $name, $rule = null, $msg = ''): ValidateRule
     {
         if ($rule || 0 === $rule) {
             $this->rule[$name] = $rule;
@@ -108,7 +112,7 @@ class ValidateRule
      * @access public
      * @return array
      */
-    public function getRule()
+    public function getRule(): array
     {
         return $this->rule;
     }
@@ -118,7 +122,7 @@ class ValidateRule
      * @access public
      * @return string
      */
-    public function getTitle()
+    public function getTitle(): string
     {
         return $this->title;
     }
@@ -128,7 +132,7 @@ class ValidateRule
      * @access public
      * @return array
      */
-    public function getMsg()
+    public function getMsg(): array
     {
         return $this->message;
     }
@@ -138,13 +142,18 @@ class ValidateRule
      * @access public
      * @return $this
      */
-    public function title($title)
+    public function title($title): ValidateRule
     {
         $this->title = $title;
 
         return $this;
     }
 
+    /**
+     * @param $method
+     * @param $args
+     * @return false|mixed
+     */
     public function __call($method, $args)
     {
         if ('is' == strtolower(substr($method, 0, 2))) {
@@ -156,6 +165,11 @@ class ValidateRule
         return call_user_func_array([$this, 'addItem'], $args);
     }
 
+    /**
+     * @param $method
+     * @param $args
+     * @return false|mixed
+     */
     public static function __callStatic($method, $args)
     {
         $rule = new static();

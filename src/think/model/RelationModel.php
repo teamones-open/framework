@@ -1,18 +1,23 @@
 <?php
+
+declare(strict_types=1);
+
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK IT ]
+// | The teamones framework runs on the workerman high performance framework
 // +----------------------------------------------------------------------
 // | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
 // | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
 // +----------------------------------------------------------------------
+
 namespace think\model;
 
 use think\exception\ErrorCode;
-use think\Model;
 use think\Hook;
+use think\Model;
 use think\module\Module;
 
 /**
@@ -27,16 +32,16 @@ class RelationModel extends Model
     const MANY_TO_MANY = 4;
 
     // 关联定义
-    protected $_link = [];
+    protected array $_link = [];
 
     // 字段数据源映射源数据字段
-    public $_fieldFromDataDict = [];
+    public array $_fieldFromDataDict = [];
 
     // 字段类型或者格式转换
-    protected $type = [];
+    protected array $type = [];
 
     // 是否是空值查询
-    protected $isNullOrEmptyFilter = false;
+    protected bool $isNullOrEmptyFilter = false;
 
 
     public function __construct($name = '', $tablePrefix = '', $connection = '')
@@ -59,7 +64,7 @@ class RelationModel extends Model
      * @return Model
      * @throws \Exception
      */
-    public function getModelObj($table)
+    public function getModelObj($table): Model
     {
         if (!isset($this->moduleModel)) {
             $this->moduleModel = new Model();
@@ -69,9 +74,9 @@ class RelationModel extends Model
 
     /**
      * 手动指定当前模块code
-     * @param $moduleCode
+     * @param string $moduleCode
      */
-    public function setCurrentModuleCode($moduleCode)
+    public function setCurrentModuleCode(string $moduleCode)
     {
         $this->currentModuleCode = $moduleCode;
     }
@@ -110,7 +115,7 @@ class RelationModel extends Model
      * @param $relation
      * @return string
      */
-    public function getRelationTableName($relation)
+    public function getRelationTableName($relation): string
     {
         $relationTable = !empty($this->tablePrefix) ? $this->tablePrefix : '';
         $relationTable .= $this->tableName ? $this->tableName : $this->name;
@@ -180,6 +185,7 @@ class RelationModel extends Model
      * @param $data
      * @param $options
      * @param $writeEvent
+     * @throws \Exception
      */
     protected function _after_update($result, $pkName, $data, $options, $writeEvent)
     {
@@ -238,7 +244,7 @@ class RelationModel extends Model
      * @param mixed $data 要操作的数据
      * @return boolean
      */
-    protected function _facade($data)
+    protected function _facade($data): bool
     {
         $this->_before_write($data);
         return $data;
@@ -251,7 +257,7 @@ class RelationModel extends Model
      * @param string|array $name 关联名称
      * @return array
      */
-    protected function getRelations(&$resultSet, $name = '')
+    protected function getRelations(array &$resultSet, $name = ''): array
     {
         // 获取记录集的主键列表
         foreach ($resultSet as $key => $val) {
@@ -269,7 +275,7 @@ class RelationModel extends Model
      * @param boolean $return 是否返回关联数据本身
      * @return array
      */
-    protected function getRelation(&$result, $name = '', $return = false)
+    protected function getRelation(&$result, $name = '', $return = false): array
     {
         if (!empty($this->_link)) {
             $relationData = [];
@@ -395,7 +401,7 @@ class RelationModel extends Model
      * @return bool|int|mixed|string
      * @throws \Exception
      */
-    protected function opRelation($opType, $data = '', $name = '')
+    protected function opRelation(string $opType, $data = '', $name = '')
     {
         $result = false;
         if (empty($data) && !empty($this->data)) {
@@ -408,7 +414,7 @@ class RelationModel extends Model
             // 遍历关联定义
             foreach ($this->_link as $key => $val) {
                 // 操作制定关联类型
-                $mappingName = $val['mapping_name'] ? $val['mapping_name'] : $key; // 映射名称
+                $mappingName = $val['mapping_name'] ?: $key; // 映射名称
                 if (empty($name) || true === $name || $mappingName == $name || (is_array($name) && in_array($mappingName, $name))) {
                     // 操作制定的关联
                     $mappingType = !empty($val['mapping_type']) ? $val['mapping_type'] : $val; //  关联类型
@@ -430,7 +436,7 @@ class RelationModel extends Model
                     }
                     // 获取关联model对象
                     $model = \model($mappingClass);
-                    $mappingData = isset($data[$mappingName]) ? $data[$mappingName] : false;
+                    $mappingData = $data[$mappingName] ?? false;
                     if (!empty($mappingData) || 'DEL' == $opType) {
                         switch ($mappingType) {
                             case self::HAS_ONE:
@@ -481,7 +487,7 @@ class RelationModel extends Model
                                 }
                                 break;
                             case self::MANY_TO_MANY:
-                                $mappingRelationFk = $val['relation_foreign_key'] ? $val['relation_foreign_key'] : $model->getModelName() . '_id'; // 关联
+                                $mappingRelationFk = $val['relation_foreign_key'] ?: $model->getModelName() . '_id'; // 关联
                                 $prefix = $this->tablePrefix;
                                 if (isset($val['relation_table'])) {
                                     $mappingRelationTable = preg_replace_callback("/__([A-Z_-]+)__/sU", function ($match) use ($prefix) {
@@ -554,7 +560,7 @@ class RelationModel extends Model
      * @param mixed $name 关联名称
      * @return Model
      */
-    public function relation($name)
+    public function relation($name): Model
     {
         $this->options['link'] = $name;
         return $this;
@@ -566,7 +572,7 @@ class RelationModel extends Model
      * @param string $name 关联名称
      * @return array|bool
      */
-    public function relationGet($name)
+    public function relationGet(string $name)
     {
         if (empty($this->data)) {
             return false;
@@ -584,7 +590,7 @@ class RelationModel extends Model
      * @param bool $ucfirst 首字母是否大写（驼峰规则）
      * @return string
      */
-    public function parseName($name, $type = 0, $ucfirst = true)
+    public function parseName($name, $type = 0, $ucfirst = true): string
     {
         if ($type) {
             $name = preg_replace_callback('/_([a-zA-Z])/', function ($match) {
@@ -626,13 +632,13 @@ class RelationModel extends Model
                 break;
             case 'timestamp':
                 if (!is_null($value)) {
-                    $format = !empty($param) ? $param : $this->dateFormat;
+                    $format = !empty($param) ? $param : DATE_W3C;
                     $value = date($format, $value);
                 }
                 break;
             case 'datetime':
                 if (!is_null($value)) {
-                    $format = !empty($param) ? $param : $this->dateFormat;
+                    $format = !empty($param) ? $param : DATE_W3C;
                     $value = date($format, strtotime($value));
                 }
                 break;
@@ -732,7 +738,7 @@ class RelationModel extends Model
      * @param $data
      * @return array
      */
-    protected function handleQueryData($data)
+    protected function handleQueryData($data): array
     {
         $item = [];
         $this->data = !empty($data) ? $data : $this->data;
@@ -796,7 +802,7 @@ class RelationModel extends Model
      * @param $relationItem
      * @return array
      */
-    private function unfoldEntityRelationConfig(&$relationUnfold, $relationItem)
+    private function unfoldEntityRelationConfig(&$relationUnfold, $relationItem): array
     {
         $relationUnfold[] = $relationItem;
         if (array_key_exists('child', $relationItem)) {
@@ -962,7 +968,7 @@ class RelationModel extends Model
      * @return array
      * @throws \Exception
      */
-    private function handleReturnComplexData($queryData, $type = 'find')
+    private function handleReturnComplexData($queryData, $type = 'find'): array
     {
 
         $newReturnData = [];
@@ -1067,8 +1073,6 @@ class RelationModel extends Model
                 $hasManyMapping[$moduleCode] = $relationIdMapping;
 
                 unset($relationIds);
-            } else {
-                // 一对多处理
             }
         }
 
@@ -1086,7 +1090,7 @@ class RelationModel extends Model
      * @param bool $first
      * @return array
      */
-    public function handleReturnData($first = true, $data = [])
+    public function handleReturnData($first = true, $data = []): array
     {
         $dealData = !empty($data) ? $data : $this->data;
 
@@ -1275,7 +1279,7 @@ class RelationModel extends Model
      * @param $filter
      * @return array
      */
-    private function sortFilterParam($filter)
+    private function sortFilterParam($filter): array
     {
         $order = [];
         foreach ($filter as $key => $value) {
@@ -1303,9 +1307,9 @@ class RelationModel extends Model
      * @param $filterItem
      * @param $key
      * @param $value
-     * @return mixed
+     * @return void
      */
-    private function parserFilterItemParam(&$filterItem, $key, $value)
+    private function parserFilterItemParam(&$filterItem, $key, $value): void
     {
         if (strpos($key, '.')) {
             $this->parserFilterParamValue($filterItem, $key, $value);
@@ -1320,7 +1324,6 @@ class RelationModel extends Model
             }
         }
 
-        return $filterItem;
     }
 
 
@@ -1451,7 +1454,7 @@ class RelationModel extends Model
      * @param $moduleDictBySrcModuleId
      * @return array
      */
-    private function getEntityParentChildHierarchy($complexFilterRelatedModule, $moduleDictByDstModuleId, $moduleDictBySrcModuleId)
+    private function getEntityParentChildHierarchy($complexFilterRelatedModule, $moduleDictByDstModuleId, $moduleDictBySrcModuleId): array
     {
         $resultDict = [];
 
@@ -1587,10 +1590,10 @@ class RelationModel extends Model
     /**
      * 获取关联模块自定义字段
      * @param $modules
-     * @return array
+     * @return void
      * @throws \Exception
      */
-    private function getRelationModuleCustomFields($modules)
+    private function getRelationModuleCustomFields($modules): void
     {
         $relationModule = [];
         $entityModuleList = $this->getModelObj('module')->field('code')->where(['type' => 'entity'])->select();
@@ -1611,7 +1614,6 @@ class RelationModel extends Model
 
         $this->queryComplexRelationCustomFields = $relationModule;
 
-        return $relationModule;
     }
 
     /**
@@ -1620,7 +1622,7 @@ class RelationModel extends Model
      * @return array
      * @throws \Exception
      */
-    public function parserFilterModuleRelation($allModuleBack = false)
+    public function parserFilterModuleRelation($allModuleBack = false): array
     {
         if (!empty($this->queryModuleRelation)) {
             return $this->queryModuleRelation;
@@ -1729,7 +1731,7 @@ class RelationModel extends Model
      * @param $filter
      * @return array
      */
-    private function formatFilterCondition($filter)
+    private function formatFilterCondition($filter): array
     {
         foreach ($filter as &$condition) {
             if (is_array($condition)) {
@@ -1752,7 +1754,7 @@ class RelationModel extends Model
      * @param bool $isComplex
      * @return array
      */
-    private function parserFilterItemComplexValue($masterModuleCode, $itemModule, $selectData, $idsString, $isComplex = true)
+    private function parserFilterItemComplexValue($masterModuleCode, $itemModule, $selectData, $idsString, $isComplex = true): array
     {
         $filterData = [];
         if (strpos($itemModule['link_id'], ',') !== false) {
@@ -1798,7 +1800,7 @@ class RelationModel extends Model
      * @return array
      * @throws \Exception
      */
-    private function parserFilterItemEntityTaskRelated(&$filterData, $masterModuleCode, $itemModule, $filter)
+    private function parserFilterItemEntityTaskRelated(&$filterData, $masterModuleCode, $itemModule, $filter): array
     {
         $selectData = $this->getModelObj('entity')->where($this->formatFilterCondition($filter))->select();
         if (!empty($selectData)) {
@@ -1878,7 +1880,7 @@ class RelationModel extends Model
                 $itemValueStr = $itemValue;
             }
 
-            // todo 针对itemCondition 进行sql组装
+
             if (!empty($moduleCode)) {
                 switch ($itemCondition) {
                     case "FIND_IN_SET":
@@ -1897,6 +1899,7 @@ class RelationModel extends Model
                 }
             }
         } else {
+            // todo 针对itemCondition 进行sql组装
 //        echo json_encode($field);
 //        echo json_encode($condition);
 //        $class = '\\common\\model\\' . string_initial_letter($mapModule) . 'Model';
@@ -1916,9 +1919,9 @@ class RelationModel extends Model
      * @param $field
      * @param $condition
      * @param string $moduleCode
-     * @return mixed
+     * @return void
      */
-    private function parserFilterCustomItemCondition(&$filterData, $field, $condition, $moduleCode = '')
+    private function parserFilterCustomItemCondition(&$filterData, $field, $condition, $moduleCode = ''): void
     {
         if (is_array($condition)) {
             list($itemCondition, $itemValue) = $condition;
@@ -1949,7 +1952,6 @@ class RelationModel extends Model
             }
         }
 
-        return $filterData;
     }
 
     /**
@@ -1960,7 +1962,7 @@ class RelationModel extends Model
      * @return array
      * @throws \Exception
      */
-    private function parserFilterItemValue($masterModuleCode, $itemModule, $filter)
+    private function parserFilterItemValue($masterModuleCode, $itemModule, $filter): array
     {
         $filterData = [];
 
@@ -2037,7 +2039,7 @@ class RelationModel extends Model
      * @return array
      * @throws \Exception
      */
-    private function parserFilterValue(&$complexFilter, $filterReverse, $filterModuleLinkRelation)
+    private function parserFilterValue(&$complexFilter, $filterReverse, $filterModuleLinkRelation): array
     {
         foreach ($filterReverse as $filterGroupItem) {
 
@@ -2111,7 +2113,7 @@ class RelationModel extends Model
      * @param $filter
      * @return array
      */
-    private function parseComplexFilterKey($filter)
+    private function parseComplexFilterKey($filter): array
     {
         $newFilter = [];
         $index = 1;
@@ -2170,7 +2172,7 @@ class RelationModel extends Model
      * @return array
      * @throws \Exception
      */
-    private function buildFilter($filter, $fields = [])
+    private function buildFilter($filter, $fields = []): array
     {
         if ($this->isComplexFilter) {
             // 复杂过滤条件处理
@@ -2200,7 +2202,7 @@ class RelationModel extends Model
      * @param $field
      * @return string
      */
-    private function handleQueryCustomFields($field)
+    private function handleQueryCustomFields($field): string
     {
         if (strpos($field, '.') !== false) {
             $fieldArray = explode('.', $field);
@@ -2225,7 +2227,7 @@ class RelationModel extends Model
      * @return array
      * @throws \Exception
      */
-    private function handleComplexFields($fieldsArr)
+    private function handleComplexFields($fieldsArr): array
     {
         $newFields = [];
         $filterModuleLinkRelation = $this->parserFilterModuleRelation();
@@ -2330,7 +2332,7 @@ class RelationModel extends Model
      * @return string
      * @throws \Exception
      */
-    public function buildFields($field)
+    public function buildFields($field): string
     {
         if ($this->isComplexFilter) {
             // 处理所有 module relation 链路数据
@@ -2360,7 +2362,7 @@ class RelationModel extends Model
      * @param $filter
      * @return array
      */
-    private function autoFillEntityModuleIdFilter($filter)
+    private function autoFillEntityModuleIdFilter($filter): array
     {
         $newFilter = [];
         $currentModuleData = Module::$moduleDictData['module_index_by_code'][$this->currentModuleCode];
@@ -2398,7 +2400,7 @@ class RelationModel extends Model
      * @param $filter
      * @return array
      */
-    private function autoFillTenantIdFilter($filter)
+    private function autoFillTenantIdFilter($filter): array
     {
         $newFilter = [];
         $tenantId = \request()->tenantId;
@@ -2477,7 +2479,7 @@ class RelationModel extends Model
      * 处理关联查询jion sql 组装
      * @return $this
      */
-    private function parseQueryRelationDataJoinSql()
+    private function parseQueryRelationDataJoinSql(): RelationModel
     {
         if (!empty($this->queryModuleLfetJoinRelation)) {
 
@@ -2534,7 +2536,7 @@ class RelationModel extends Model
 
                 if ($queryJoin['type'] === 'one') {
                     $conditionString = join('AND', $queryJoin['condition']);
-                    substr($conditionString, 0, -strlen('AND'));
+                    $conditionString = substr($conditionString, 0, -strlen('AND'));
 
                     $this->join("LEFT JOIN `{$joinModuleSourceCode}` AS `{$joinModuleCode}` ON {$conditionString}");
                 } else {
@@ -2613,7 +2615,7 @@ class RelationModel extends Model
      * @return array
      * @throws \Exception
      */
-    public function selectData($options = [], $needFormat = true)
+    public function selectData($options = [], $needFormat = true): array
     {
         $this->resetDefault();
 
@@ -2742,17 +2744,6 @@ class RelationModel extends Model
     }
 
     /**
-     * 生成排序规则
-     * @param $sortRule
-     * @param $groupRule
-     * @return string
-     */
-    private function buildSortRule($sortRule, $groupRule = [])
-    {
-
-    }
-
-    /**
      * 生成模块字段
      * @param $moduleCode
      * @return mixed
@@ -2785,7 +2776,7 @@ class RelationModel extends Model
      * @param $value
      * @return array
      */
-    public function buildWidgetFilter($moduleCode, $filed, $value)
+    public function buildWidgetFilter($moduleCode, $filed, $value): array
     {
 
         // 获取模块字段
@@ -2825,15 +2816,11 @@ class RelationModel extends Model
                     case "BETWEEN":
                         $dateBetween = explode(",", $filterVal);
                         return [$condition, [strtotime($dateBetween[0]), strtotime($dateBetween[1])]];
-                        break;
                     default:
                         return $value;
-                        break;
                 }
-                break;
             default:
                 return $value;
-                break;
         }
     }
 
@@ -2843,7 +2830,7 @@ class RelationModel extends Model
      * @param $value
      * @return array
      */
-    protected function checkFilterValWeatherNullOrEmpty($condition, $value)
+    protected function checkFilterValWeatherNullOrEmpty($condition, $value): array
     {
         if (is_array($value)) {
             // 为数组

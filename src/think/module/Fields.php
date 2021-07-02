@@ -1,4 +1,18 @@
 <?php
+
+declare(strict_types=1);
+
+// +----------------------------------------------------------------------
+// | The teamones framework runs on the workerman high performance framework
+// +----------------------------------------------------------------------
+// | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
+// +----------------------------------------------------------------------
+// | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
+// +----------------------------------------------------------------------
+
 namespace think\module;
 
 use think\Db;
@@ -11,7 +25,7 @@ class Fields
      * @return array
      * @throws \Exception
      */
-    public static function getAllModuleFieldsMapData($moduleMapData = [])
+    public static function getAllModuleFieldsMapData($moduleMapData = []): array
     {
         $allFieldsData = Db::getInstance()->query("SELECT type,module_id,config FROM field");
 
@@ -54,10 +68,10 @@ class Fields
 
     /**
      * 判断当前字段是否为必须
-     * @param $field
+     * @param string $field
      * @return string
      */
-    public static function checkFieldRequire($field)
+    public static function checkFieldRequire(string $field): string
     {
         if (in_array($field, ['name', 'phone', 'password', 'value', 'ptype', 'status', 'man_hour', 'type', 'attribute_value'])) {
             return 'yes';
@@ -72,10 +86,10 @@ class Fields
 
     /**
      * 判断当前字段是否能编辑
-     * @param $field
+     * @param string $field
      * @return string
      */
-    public static function checkFieldEdit($field)
+    public static function checkFieldEdit(string $field): string
     {
         if (in_array($field, ['id', 'uuid', 'created_by', 'created', 'json', 'is_horizontal'])) {
             return 'deny';
@@ -90,10 +104,10 @@ class Fields
 
     /**
      * 判断当前字段是否能显示
-     * @param $field
+     * @param string $field
      * @return string
      */
-    public static function checkFieldShow($field)
+    public static function checkFieldShow(string $field): string
     {
         if (in_array($field, ['json', 'password'])) {
             return 'no';
@@ -105,10 +119,10 @@ class Fields
 
     /**
      * 判断当前字段是否能排序
-     * @param $field
+     * @param string $field
      * @return string
      */
-    public static function checkFieldSort($field)
+    public static function checkFieldSort(string $field): string
     {
         if (in_array($field, ['name', 'code', 'attribute_id', 'start_time', 'end_time', 'type', 'created_by', 'created', 'project_id', 'category_id', 'step_category_id'])) {
             return 'allow';
@@ -121,10 +135,10 @@ class Fields
 
     /**
      * 判断当前字段是否能分组
-     * @param $field
+     * @param string $field
      * @return string
      */
-    public static function checkFieldGroup($field)
+    public static function checkFieldGroup(string $field): string
     {
         if (strpos($field, '_id')) {
             return 'allow';
@@ -135,10 +149,10 @@ class Fields
 
     /**
      * 判断当前字段是否能过滤
-     * @param $field
+     * @param string $field
      * @return string
      */
-    public static function checkFieldFilter($field)
+    public static function checkFieldFilter(string $field): string
     {
         if (in_array($field, ['id', 'uuid', 'json', 'config', 'param', 'admin_password', 'node_config'])) {
             return 'deny';
@@ -149,10 +163,10 @@ class Fields
 
     /**
      * 判断当前字段是否能过滤
-     * @param $field
+     * @param string $field
      * @return string
      */
-    public static function checkFieldPrimaryKey($field)
+    public static function checkFieldPrimaryKey(string $field): string
     {
         if ($field === 'id') {
             return 'yes';
@@ -163,10 +177,10 @@ class Fields
 
     /**
      * 判断当前字段是否能过滤
-     * @param $field
+     * @param string $field
      * @return string
      */
-    public static function checkFieldForeignKey($field)
+    public static function checkFieldForeignKey(string $field): string
     {
         if (strpos($field, '_id')) {
             return 'yes';
@@ -177,11 +191,11 @@ class Fields
 
     /**
      * 获取固定字段的编辑器类型
-     * @param $field
-     * @param $type
+     * @param string $field
+     * @param string $type
      * @return string
      */
-    public static function getFixedFieldEditor($field, $type)
+    public static function getFixedFieldEditor(string $field, string $type): string
     {
         if (
             strpos($field, '_id')
@@ -220,14 +234,14 @@ class Fields
 
     /**
      * 生成字段配置
-     * @param $modelName
-     * @param $realName
-     * @param $moduleID
-     * @param $field
-     * @param $param
+     * @param string $modelName
+     * @param string $realName
+     * @param int $moduleID
+     * @param string $field
+     * @param array $param
      * @return array
      */
-    public static function generateFieldConfig($modelName, $realName, $moduleID, $field, $param)
+    public static function generateFieldConfig(string $modelName, string $realName, int $moduleID, string $field, array $param): array
     {
         // 默认 id 字段就是主键
         $isPrimary = $field === 'id' ? "yes" : "no";
@@ -235,7 +249,7 @@ class Fields
         // 默认 带_id的参数都属于外键
         $isForeign = strpos($field, '_id') === false ? "no" : "yes";
 
-        $fieldConfig = [
+        return [
             "id" => 0, // 字段id, 固定字段是0，自定义字段是注册的id值
             "field" => $field, // 字段名
             "type" => $param['type'], //字段类型
@@ -273,7 +287,5 @@ class Fields
                 "data" => [] // 数据源，静态直接配置，动态是一个字符串标识
             ]
         ];
-
-        return $fieldConfig;
     }
 }

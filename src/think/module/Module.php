@@ -1,12 +1,16 @@
 <?php
+
+declare(strict_types=1);
+
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK ]
+// | The teamones framework runs on the workerman high performance framework
 // +----------------------------------------------------------------------
-// | Copyright (c) 2006~2018 http://thinkphp.cn All rights reserved.
+// | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
 // | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
 // +----------------------------------------------------------------------
 
 namespace think\module;
@@ -17,13 +21,13 @@ use think\exception\ErrorCode;
 class Module
 {
     // 必须包含模块
-    protected static $requireModules = ['entity', 'module', 'module_relation', 'field', 'schema'];
+    protected static array $requireModules = ['entity', 'module', 'module_relation', 'field', 'schema'];
 
     // 模块字典缓存数据
-    public static $moduleDictData = [];
+    public static array $moduleDictData = [];
 
     // 包含租户id的模块列表数据
-    public static $includeTenantIdModules = [];
+    public static array $includeTenantIdModules = [];
 
     /**
      * 模块初始化
@@ -54,7 +58,7 @@ class Module
      * @param $tempDb
      * @return array
      */
-    public static function getAllModuleData($tempDb)
+    public static function getAllModuleData($tempDb): array
     {
         $result = $tempDb->query("select * from module");
         $info = [];
@@ -71,6 +75,8 @@ class Module
      */
     public static function fixedModuleConfig($fixedModule, $tempDb)
     {
+
+        $tables = [];
 
         // 获取所有存在的表
         $moduleMap = self::getAllModuleData($tempDb);
@@ -183,10 +189,10 @@ class Module
 
     /**
      * 生成模块字段缓存
-     * @param $moduleIndexById
+     * @param array $moduleIndexById
      * @throws \Exception
      */
-    protected static function generateModuleFieldCache($moduleIndexById)
+    protected static function generateModuleFieldCache(array $moduleIndexById)
     {
         // 获取所有模块字段
         self::$moduleDictData['field_index_by_code'] = Fields::getAllModuleFieldsMapData($moduleIndexById);
