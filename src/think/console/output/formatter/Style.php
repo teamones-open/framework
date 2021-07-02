@@ -46,8 +46,8 @@ class Style
         'conceal' => ['set' => 8, 'unset' => 28],
     ];
 
-    private ?string $foreground;
-    private ?string $background;
+    private ?array $foreground = null;
+    private ?array $background = null;
     private array $options = [];
 
     /**

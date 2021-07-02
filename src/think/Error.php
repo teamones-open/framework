@@ -55,13 +55,13 @@ class Error
     /**
      * Error Handler
      * @param integer $errno 错误编号
-     * @param integer $errstr 详细错误信息
+     * @param string $errstr 详细错误信息
      * @param string $errfile 出错的文件
      * @param integer $errline 出错行号
      * @param array $errcontext
      * @throws ErrorException
      */
-    public static function appError(int $errno, int $errstr, $errfile = '', $errline = 0, $errcontext = [])
+    public static function appError(int $errno, string $errstr, $errfile = '', $errline = 0, $errcontext = [])
     {
         $exception = new ErrorException($errno, $errstr, $errfile, $errline, $errcontext);
         if (error_reporting() & $errno) {

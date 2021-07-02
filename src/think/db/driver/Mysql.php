@@ -23,7 +23,7 @@ class Mysql extends Driver
      * @param array $config 连接信息
      * @return string
      */
-    protected function parseDsn($config) :string
+    protected function parseDsn($config): string
     {
         $dsn = 'mysql:dbname=' . $config['database'] . ';host=' . $config['hostname'];
         if (!empty($config['hostport'])) {
@@ -174,7 +174,7 @@ class Mysql extends Driver
      * @param mixed $duplicate
      * @return string
      */
-    protected function parseDuplicate($duplicate)
+    protected function parseDuplicate($duplicate): string
     {
         // 布尔值或空则返回空字符串
         if (is_bool($duplicate) || empty($duplicate)) {

@@ -298,6 +298,7 @@ if (!function_exists('trace')) {
             return Log::getLog();
         } else {
             Log::record($log, $level);
+            return [];
         }
     }
 }

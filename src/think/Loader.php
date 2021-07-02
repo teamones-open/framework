@@ -308,7 +308,7 @@ class Loader
 
         if (!defined('APP_DEBUG')) {
             // 需要在 start.php 入口定义
-            define('APP_DEBUG', false);
+           // define('APP_DEBUG', false);
         }
 
         // 系统常量定义

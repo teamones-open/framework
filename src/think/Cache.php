@@ -34,7 +34,7 @@ class Cache
      * @var Driver
      * @access protected
      */
-    protected static Driver $handler;
+    protected static ?Driver $handler = null;
 
     /**
      * 连接缓存

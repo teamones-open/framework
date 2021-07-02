@@ -22,7 +22,7 @@ abstract class Driver
 {
     protected ?object $handler = null;
     protected array $options = [];
-    protected ?string $tag;
+    protected ?string $tag = null;
 
     /**
      * 判断缓存是否存在

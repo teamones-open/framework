@@ -1311,7 +1311,7 @@ class RelationModel extends Model
      */
     private function parserFilterItemParam(&$filterItem, $key, $value): void
     {
-        if (strpos($key, '.')) {
+        if (is_string($key) && strpos($key, '.')) {
             $this->parserFilterParamValue($filterItem, $key, $value);
         } else {
             $str = json_encode($value);
@@ -1340,8 +1340,9 @@ class RelationModel extends Model
         $sortFilter = $this->sortFilterParam($currentFilter);
 
         $filterItem = [];
+
         foreach ($sortFilter as $key => $value) {
-            if (strpos($key, '.') === false && is_array($value)) {
+            if (is_string($key) && strpos($key, '.') === false && is_array($value)) {
                 if (count($value) > 1) {
                     $index++;
                     $this->parserFilterParam($result, $filter, $value, $index);
@@ -2774,9 +2775,9 @@ class RelationModel extends Model
      * @param $moduleCode
      * @param $filed
      * @param $value
-     * @return array
+     * @return mixed
      */
-    public function buildWidgetFilter($moduleCode, $filed, $value): array
+    public function buildWidgetFilter($moduleCode, $filed, $value)
     {
 
         // 获取模块字段

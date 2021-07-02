@@ -27,7 +27,7 @@ class Console
     /** @var  Formatter */
     private Formatter $formatter;
 
-    public array $terminalDimensions;
+    public array $terminalDimensions = [];
 
     /** @var  Output */
     private Output $output;

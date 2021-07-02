@@ -52,12 +52,12 @@ class App
     /**
      * @var bool 应用路由检测
      */
-    protected static bool $routeCheck;
+    protected static ?bool $routeCheck = null;
 
     /**
      * @var bool 严格路由检测
      */
-    protected static bool $routeMust;
+    protected static ?bool $routeMust = null;
 
     /**
      * @var bool

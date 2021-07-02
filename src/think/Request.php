@@ -1167,9 +1167,8 @@ class Request extends \Workerman\Protocols\Http\Request
     {
         if (!empty($route)) {
             $this->routeInfo = $route;
-        } else {
-            return $this->routeInfo;
         }
+        return $this->routeInfo;
     }
 
     /**

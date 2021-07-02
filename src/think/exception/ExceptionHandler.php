@@ -49,7 +49,7 @@ class ExceptionHandler implements ExceptionHandlerInterface
     public function __construct($logger, $debug)
     {
         $this->_logger = $logger;
-        $this->_debug = $debug;
+        $this->_debug = (bool)$debug;
     }
 
     /**

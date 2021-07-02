@@ -65,10 +65,10 @@ class Route
     // 当前分组信息
     private static array $group = [];
 
-    private static array $domainRule;
+    private static array $domainRule = [];
 
     // 当前域名
-    private static ?string $domain;
+    private static ?string $domain = null;
 
     // 当前路由执行过程中的参数
     private static array $option = [];

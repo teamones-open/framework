@@ -1,12 +1,16 @@
 <?php
+
+declare(strict_types=1);
+
 // +----------------------------------------------------------------------
-// | ThinkPHP [ WE CAN DO IT JUST THINK ]
+// | The teamones framework runs on the workerman high performance framework
 // +----------------------------------------------------------------------
-// | Copyright (c) 2006~2015 http://thinkphp.cn All rights reserved.
+// | Copyright (c) 2006-2014 http://thinkphp.cn All rights reserved.
 // +----------------------------------------------------------------------
 // | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
 // +----------------------------------------------------------------------
-// | Author: yunwuxin <448901948@qq.com>
+// | Author: liu21st <liu21st@gmail.com>
+// | Reviser: weijer <weiwei163@foxmail.com>
 // +----------------------------------------------------------------------
 
 namespace think\console;
@@ -20,21 +24,21 @@ class Command
 {
 
     /** @var  Console */
-    private $console;
-    private $name;
-    private $aliases = [];
-    private $definition;
-    private $help;
-    private $description;
-    private $ignoreValidationErrors          = false;
-    private $consoleDefinitionMerged         = false;
-    private $consoleDefinitionMergedWithArgs = false;
-    private $code;
-    private $synopsis = [];
-    private $usages   = [];
+    private ?Console $console = null;
+    private string $name = '';
+    private array $aliases = [];
+    private ?Definition $definition = null;
+    private string $help = '';
+    private string $description = '';
+    private bool $ignoreValidationErrors = false;
+    private bool $consoleDefinitionMerged = false;
+    private bool $consoleDefinitionMergedWithArgs = false;
+    private $code = null;
+    private array $synopsis = [];
+    private array $usages = [];
 
     /** @var  Input */
-    protected $input;
+    protected Input $input;
 
     /** @var  Output */
     protected Output $output;
@@ -70,7 +74,7 @@ class Command
 
     /**
      * 设置控制台
-     * @param Console $console
+     * @param console|null $console
      */
     public function setConsole(Console $console = null)
     {
@@ -79,10 +83,9 @@ class Command
 
     /**
      * 获取控制台
-     * @return Console
-     * @api
+     * @return console|null
      */
-    public function getConsole()
+    public function getConsole(): ?Console
     {
         return $this->console;
     }
@@ -91,7 +94,7 @@ class Command
      * 是否有效
      * @return bool
      */
-    public function isEnabled()
+    public function isEnabled(): bool
     {
         return true;
     }
@@ -105,20 +108,20 @@ class Command
 
     /**
      * 执行指令
-     * @param Input  $input
+     * @param Input $input
      * @param Output $output
      * @return null|int
      * @throws \LogicException
      * @see setCode()
      */
-    protected function execute(Input $input, Output $output)
+    protected function execute(Input $input, Output $output): ?int
     {
         throw new \LogicException('You must override the execute() method in the concrete command class.');
     }
 
     /**
      * 用户验证
-     * @param Input  $input
+     * @param Input $input
      * @param Output $output
      */
     protected function interact(Input $input, Output $output)
@@ -127,7 +130,7 @@ class Command
 
     /**
      * 初始化
-     * @param Input  $input  An InputInterface instance
+     * @param Input $input An InputInterface instance
      * @param Output $output An OutputInterface instance
      */
     protected function initialize(Input $input, Output $output)
@@ -136,16 +139,16 @@ class Command
 
     /**
      * 执行
-     * @param Input  $input
+     * @param Input $input
      * @param Output $output
      * @return int
      * @throws \Exception
      * @see setCode()
      * @see execute()
      */
-    public function run(Input $input, Output $output)
+    public function run(Input $input, Output $output): int
     {
-        $this->input  = $input;
+        $this->input = $input;
         $this->output = $output;
 
         $this->getSynopsis(true);
@@ -175,7 +178,7 @@ class Command
             $statusCode = $this->execute($input, $output);
         }
 
-        return is_numeric($statusCode) ? (int) $statusCode : 0;
+        return is_numeric($statusCode) ? (int)$statusCode : 0;
     }
 
     /**
@@ -184,7 +187,7 @@ class Command
      * @return $this
      * @throws \ReflectionException
      */
-    public function setCode(callable $code)
+    public function setCode(callable $code): Command
     {
         if (!is_callable($code)) {
             throw new \InvalidArgumentException('Invalid callable provided to Command::setCode.');
@@ -235,7 +238,7 @@ class Command
      * @return Command
      * @api
      */
-    public function setDefinition($definition)
+    public function setDefinition($definition): Command
     {
         if ($definition instanceof Definition) {
             $this->definition = $definition;
@@ -253,7 +256,7 @@ class Command
      * @return Definition
      * @api
      */
-    public function getDefinition()
+    public function getDefinition(): Definition
     {
         return $this->definition;
     }
@@ -262,20 +265,20 @@ class Command
      * 获取当前指令的参数定义
      * @return Definition
      */
-    public function getNativeDefinition()
+    public function getNativeDefinition(): Definition
     {
         return $this->getDefinition();
     }
 
     /**
      * 添加参数
-     * @param string $name        名称
-     * @param int    $mode        类型
+     * @param string $name 名称
+     * @param int $mode 类型
      * @param string $description 描述
-     * @param mixed  $default     默认值
+     * @param mixed $default 默认值
      * @return Command
      */
-    public function addArgument($name, $mode = null, $description = '', $default = null)
+    public function addArgument(string $name, $mode = null, $description = '', $default = null): Command
     {
         $this->definition->addArgument(new Argument($name, $mode, $description, $default));
 
@@ -284,14 +287,14 @@ class Command
 
     /**
      * 添加选项
-     * @param string $name        选项名称
-     * @param string $shortcut    别名
-     * @param int    $mode        类型
+     * @param string $name 选项名称
+     * @param string $shortcut 别名
+     * @param int $mode 类型
      * @param string $description 描述
-     * @param mixed  $default     默认值
+     * @param mixed $default 默认值
      * @return Command
      */
-    public function addOption($name, $shortcut = null, $mode = null, $description = '', $default = null)
+    public function addOption(string $name, $shortcut = null, $mode = null, $description = '', $default = null): Command
     {
         $this->definition->addOption(new Option($name, $shortcut, $mode, $description, $default));
 
@@ -304,7 +307,7 @@ class Command
      * @return Command
      * @throws \InvalidArgumentException
      */
-    public function setName($name)
+    public function setName(string $name): Command
     {
         $this->validateName($name);
 
@@ -317,7 +320,7 @@ class Command
      * 获取指令名称
      * @return string
      */
-    public function getName()
+    public function getName(): string
     {
         return $this->name;
     }
@@ -327,7 +330,7 @@ class Command
      * @param string $description
      * @return Command
      */
-    public function setDescription($description)
+    public function setDescription(string $description): Command
     {
         $this->description = $description;
 
@@ -338,7 +341,7 @@ class Command
      *  获取描述
      * @return string
      */
-    public function getDescription()
+    public function getDescription(): string
     {
         return $this->description;
     }
@@ -348,7 +351,7 @@ class Command
      * @param string $help
      * @return Command
      */
-    public function setHelp($help)
+    public function setHelp(string $help): Command
     {
         $this->help = $help;
 
@@ -359,7 +362,7 @@ class Command
      * 获取帮助信息
      * @return string
      */
-    public function getHelp()
+    public function getHelp(): string
     {
         return $this->help;
     }
@@ -368,7 +371,7 @@ class Command
      * 描述信息
      * @return string
      */
-    public function getProcessedHelp()
+    public function getProcessedHelp(): string
     {
         $name = $this->name;
 
@@ -390,7 +393,7 @@ class Command
      * @return Command
      * @throws \InvalidArgumentException
      */
-    public function setAliases($aliases)
+    public function setAliases(array $aliases): Command
     {
         if (!is_array($aliases) && !$aliases instanceof \Traversable) {
             throw new \InvalidArgumentException('$aliases must be an array or an instance of \Traversable');
@@ -409,7 +412,7 @@ class Command
      * 获取别名
      * @return array
      */
-    public function getAliases()
+    public function getAliases(): array
     {
         return $this->aliases;
     }
@@ -419,7 +422,7 @@ class Command
      * @param bool $short 是否简单的
      * @return string
      */
-    public function getSynopsis($short = false)
+    public function getSynopsis($short = false): string
     {
         $key = $short ? 'short' : 'long';
 
@@ -435,7 +438,7 @@ class Command
      * @param string $usage
      * @return $this
      */
-    public function addUsage($usage)
+    public function addUsage(string $usage): Command
     {
         if (0 !== strpos($usage, $this->name)) {
             $usage = sprintf('%s %s', $this->name, $usage);
@@ -450,7 +453,7 @@ class Command
      * 获取用法介绍
      * @return array
      */
-    public function getUsages()
+    public function getUsages(): array
     {
         return $this->usages;
     }

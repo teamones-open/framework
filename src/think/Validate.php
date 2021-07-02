@@ -1430,9 +1430,9 @@ class Validate
      * 获取数据验证的场景
      * @access protected
      * @param string $scene 验证场景
-     * @return array
+     * @return mixed
      */
-    protected function getScene(string $scene = ''): array
+    protected function getScene(string $scene = '')
     {
         if (empty($scene)) {
             // 读取指定场景
@@ -1442,7 +1442,7 @@ class Validate
         $this->only = $this->append = $this->remove = [];
 
         if (empty($scene)) {
-            return [];
+            return '';
         }
 
         if (method_exists($this, 'scene' . $scene)) {
