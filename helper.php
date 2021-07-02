@@ -138,7 +138,7 @@ if (!function_exists('download')) {
      * @param integer $expire 有效期（秒）
      * @return \think\response\Download
      */
-    function download($filename, $name = '', $content = false, $expire = 180)
+    function download(string $filename, $name = '', $content = false, $expire = 180): \think\response\Download
     {
         return Response::create($filename, 'download')->name($name)->isContent($content)->expire($expire);
     }
@@ -152,7 +152,7 @@ if (!function_exists('success_response')) {
      * @param int $status
      * @return array
      */
-    function success_response($message = '', $data = [], $status = 0)
+    function success_response($message = '', $data = [], $status = 0): array
     {
         return ["code" => $status, "msg" => $message, "data" => $data];
     }
@@ -292,7 +292,7 @@ if (!function_exists('trace')) {
      * @param string $level
      * @return array
      */
-    function trace($log = '[think]', $level = think\Log::INFO)
+    function trace($log = '[think]', $level = think\Log::INFO): array
     {
         if ('[think]' === $log) {
             return Log::getLog();
@@ -308,7 +308,7 @@ if (!function_exists('compile')) {
      * @param string $filename 文件名
      * @return string
      */
-    function compile($filename)
+    function compile(string $filename): string
     {
         $content = php_strip_whitespace($filename);
         $content = trim(substr($content, 5));
@@ -328,7 +328,7 @@ if (!function_exists('compile')) {
 }
 
 if (!function_exists('array_map_recursive')) {
-    function array_map_recursive($filter, $data)
+    function array_map_recursive($filter, $data): array
     {
         $result = array();
         foreach ($data as $key => $val) {
@@ -355,7 +355,7 @@ if (!function_exists('N')) {
      * @param boolean $save 是否保存结果
      * @return mixed
      */
-    function N($key, $step = 0, $save = false)
+    function N(string $key, $step = 0, $save = false)
     {
         static $_num = array();
         if (!isset($_num[$key])) {
@@ -382,7 +382,7 @@ if (!function_exists('parse_name')) {
      * @param integer $type 转换类型
      * @return string
      */
-    function parse_name($name, $type = 0)
+    function parse_name(string $name, $type = 0): string
     {
         if ($type) {
             return ucfirst(preg_replace_callback('/_([a-zA-Z])/', function ($match) {
@@ -400,7 +400,7 @@ if (!function_exists('require_cache')) {
      * @param string $filename 文件地址
      * @return boolean
      */
-    function require_cache($filename)
+    function require_cache(string $filename): bool
     {
         static $_importFiles = array();
         if (!isset($_importFiles[$filename])) {
@@ -421,7 +421,7 @@ if (!function_exists('file_exists_case')) {
      * @param string $filename 文件地址
      * @return boolean
      */
-    function file_exists_case($filename)
+    function file_exists_case(string $filename): bool
     {
         if (is_file($filename)) {
             if (IS_WIN && APP_DEBUG) {
@@ -485,7 +485,7 @@ if (!function_exists('controller')) {
      * @return object|\think\Controller
      * @throws ReflectionException
      */
-    function controller($name, $layer = 'controller', $appendSuffix = false)
+    function controller(string $name, $layer = 'controller', $appendSuffix = false)
     {
         return Loader::controller($name, $layer, $appendSuffix);
     }
@@ -501,7 +501,7 @@ if (!function_exists('action')) {
      * @return bool|mixed
      * @throws ReflectionException
      */
-    function action($url, $vars = [], $layer = 'controller', $appendSuffix = false)
+    function action(string $url, $vars = [], $layer = 'controller', $appendSuffix = false)
     {
         return Loader::action($url, $vars, $layer, $appendSuffix);
     }
@@ -516,7 +516,7 @@ if (!function_exists('R')) {
      * @return bool|mixed
      * @throws ReflectionException
      */
-    function R($url, $vars = array(), $layer = '')
+    function R(string $url, $vars = array(), $layer = '')
     {
         $info = pathinfo($url);
         $action = $info['basename'];
@@ -540,7 +540,7 @@ if (!function_exists('tag')) {
      * @param mixed $params 传入参数
      * @return void
      */
-    function tag($tag, &$params = null)
+    function tag(string $tag, &$params = null)
     {
         \think\Hook::listen($tag, $params);
     }
@@ -554,7 +554,7 @@ if (!function_exists('B')) {
      * @param Mixed $params 传入的参数
      * @return void
      */
-    function B($name, $tag = '', &$params = null)
+    function B(string $name, $tag = '', &$params = null)
     {
         if ('' == $tag) {
             $name .= 'Behavior';
@@ -569,7 +569,7 @@ if (!function_exists('strip_whitespace')) {
      * @param string $content 代码内容
      * @return string
      */
-    function strip_whitespace($content)
+    function strip_whitespace(string $content): string
     {
         $stripStr = '';
         //分析php源码
@@ -623,7 +623,7 @@ if (!function_exists('dump')) {
      * @param boolean $echo 是否输出 默认为True 如果为false 则返回输出字符串
      * @param string $label 标签 默认为空
      * @param boolean $strict 是否严谨 默认为true
-     * @return void|string
+     * @return false|string|null
      */
     function dump($var, $echo = true, $label = null, $strict = true)
     {
@@ -675,184 +675,6 @@ if (!function_exists('layout')) {
     }
 }
 
-if (!function_exists('U')) {
-    /**
-     * URL组装 支持不同URL模式
-     * @param Request $request
-     * @param string $url URL表达式，格式：'[模块/控制器/操作#锚点@域名]?参数1=值1&参数2=值2...'
-     * @param string|array $vars 传入的参数，支持数组和字符串
-     * @param string|boolean $suffix 伪静态后缀，默认为true表示获取配置值
-     * @param boolean $domain 是否显示域名
-     * @return false|mixed|string|string[]
-     */
-    function U(Request $request, $url = '', $vars = '', $suffix = true, $domain = false)
-    {
-        // 解析URL
-        $info = parse_url($url);
-        $url = !empty($info['path']) ? $info['path'] : $request->action();
-        if (isset($info['fragment'])) {
-            // 解析锚点
-            $anchor = $info['fragment'];
-            if (false !== strpos($anchor, '?')) {
-                // 解析参数
-                list($anchor, $info['query']) = explode('?', $anchor, 2);
-            }
-            if (false !== strpos($anchor, '@')) {
-                // 解析域名
-                list($anchor, $host) = explode('@', $anchor, 2);
-            }
-        } elseif (false !== strpos($url, '@')) {
-            // 解析域名
-            list($url, $host) = explode('@', $info['path'], 2);
-        }
-        // 解析子域名
-        if (isset($host)) {
-            $domain = $host . (strpos($host, '.') ? '' : strstr($_SERVER['HTTP_HOST'], '.'));
-        } elseif (true === $domain) {
-            $domain = $_SERVER['HTTP_HOST'];
-            if (C('APP_SUB_DOMAIN_DEPLOY')) {
-                // 开启子域名部署
-                $domain = 'localhost' == $domain ? 'localhost' : 'www' . strstr($_SERVER['HTTP_HOST'], '.');
-                // '子域名'=>array('模块[/控制器]');
-                foreach (C('APP_SUB_DOMAIN_RULES') as $key => $rule) {
-                    $rule = is_array($rule) ? $rule[0] : $rule;
-                    if (false === strpos($key, '*') && 0 === strpos($url, $rule)) {
-                        $domain = $key . strstr($domain, '.'); // 生成对应子域名
-                        $url = substr_replace($url, '', 0, strlen($rule));
-                        break;
-                    }
-                }
-            }
-        }
-
-        // 解析参数
-        if (is_string($vars)) {
-            // aaa=1&bbb=2 转换成数组
-            parse_str($vars, $vars);
-        } elseif (!is_array($vars)) {
-            $vars = array();
-        }
-        if (isset($info['query'])) {
-            // 解析地址里面参数 合并到vars
-            parse_str($info['query'], $params);
-            $vars = array_merge($params, $vars);
-        }
-
-        // URL组装
-        $depr = C('URL_PATHINFO_DEPR');
-        $urlCase = C('URL_CASE_INSENSITIVE');
-        if ($url) {
-            if (0 === strpos($url, '/')) {
-                // 定义路由
-                $route = true;
-                $url = substr($url, 1);
-                if ('/' != $depr) {
-                    $url = str_replace('/', $depr, $url);
-                }
-            } else {
-                if ('/' != $depr) {
-                    // 安全替换
-                    $url = str_replace('/', $depr, $url);
-                }
-                // 解析模块、控制器和操作
-                $url = trim($url, $depr);
-                $path = explode($depr, $url);
-                $var = array();
-                $varModule = C('VAR_MODULE');
-                $varController = C('VAR_CONTROLLER');
-                $varAction = C('VAR_ACTION');
-                $var[$varAction] = !empty($path) ? array_pop($path) : $request->action();
-                $var[$varController] = !empty($path) ? array_pop($path) : $request->controller();
-                if ($maps = C('URL_ACTION_MAP')) {
-                    if (isset($maps[strtolower($var[$varController])])) {
-                        $maps = $maps[strtolower($var[$varController])];
-                        if ($action = array_search(strtolower($var[$varAction]), $maps)) {
-                            $var[$varAction] = $action;
-                        }
-                    }
-                }
-                if ($maps = C('URL_CONTROLLER_MAP')) {
-                    if ($controller = array_search(strtolower($var[$varController]), $maps)) {
-                        $var[$varController] = $controller;
-                    }
-                }
-                if ($urlCase) {
-                    $var[$varController] = parse_name($var[$varController]);
-                }
-                $module = '';
-
-                if (!empty($path)) {
-                    $var[$varModule] = implode($depr, $path);
-                } else {
-                    if (C('MULTI_MODULE')) {
-                        if ($request->module() != C('DEFAULT_MODULE') || !C('MODULE_ALLOW_LIST')) {
-                            $var[$varModule] = $request->module();
-                        }
-                    }
-                }
-                if ($maps = C('URL_MODULE_MAP')) {
-                    if ($_module = array_search(strtolower($var[$varModule]), $maps)) {
-                        $var[$varModule] = $_module;
-                    }
-                }
-                if (isset($var[$varModule])) {
-                    $module = $var[$varModule];
-                    unset($var[$varModule]);
-                }
-
-            }
-        }
-
-        if (C('URL_MODEL') == 0) {
-            // 普通模式URL转换
-            $url = __APP__ . '?' . C('VAR_MODULE') . "={$module}&" . http_build_query(array_reverse($var));
-            if ($urlCase) {
-                $url = strtolower($url);
-            }
-            if (!empty($vars)) {
-                $vars = http_build_query($vars);
-                $url .= '&' . $vars;
-            }
-        } else {
-            // PATHINFO模式或者兼容URL模式
-            if (isset($route)) {
-                $url = __APP__ . '/' . rtrim($url, $depr);
-            } else {
-                $module = (defined('BIND_MODULE') && BIND_MODULE == $module) ? '' : $module;
-                $url = __APP__ . '/' . ($module ? $module . C() : 'URL_PATHINFO_DEPR') . implode($depr, array_reverse($var));
-            }
-            if ($urlCase) {
-                $url = strtolower($url);
-            }
-            if (!empty($vars)) {
-                // 添加参数
-                foreach ($vars as $var => $val) {
-                    if ('' !== trim($val)) {
-                        $url .= $depr . $var . $depr . urlencode($val);
-                    }
-
-                }
-            }
-            if ($suffix) {
-                $suffix = true === $suffix ? C('URL_HTML_SUFFIX') : $suffix;
-                if ($pos = strpos($suffix, '|')) {
-                    $suffix = substr($suffix, 0, $pos);
-                }
-                if ($suffix && '/' != substr($url, -1)) {
-                    $url .= '.' . ltrim($suffix, '.');
-                }
-            }
-        }
-        if (isset($anchor)) {
-            $url .= '#' . $anchor;
-        }
-        if ($domain) {
-            $url = (is_ssl() ? 'https://' : 'http://') . $domain . $url;
-        }
-        return $url;
-    }
-}
-
 if (!function_exists('W')) {
     /**
      * 渲染输出Widget
@@ -861,7 +683,7 @@ if (!function_exists('W')) {
      * @return bool|mixed
      * @throws ReflectionException
      */
-    function W($name, $data = array())
+    function W(string $name, $data = array())
     {
         return R($name, $data, 'Widget');
     }
@@ -872,15 +694,9 @@ if (!function_exists('is_ssl')) {
      * 判断是否SSL协议
      * @return boolean
      */
-    function is_ssl()
+    function is_ssl(): bool
     {
-        if (!empty($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) !== 'off') {
-            return true;
-        } elseif (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
-            return true;
-        } elseif (!empty($_SERVER['HTTP_FRONT_END_HTTPS']) && strtolower($_SERVER['HTTP_FRONT_END_HTTPS']) !== 'off') {
-            return true;
-        }
+        return \request()->isSsl();
     }
 }
 
@@ -894,7 +710,7 @@ if (!function_exists('redirect')) {
      * @param int $code
      * @return mixed
      */
-    function redirect($url, $time = 0, $msg = '', $params = [], $code = 302)
+    function redirect(string $url, $time = 0, $msg = '', $params = [], $code = 302)
     {
         $url = str_replace(array("\n", "\r"), '', $url);
 
@@ -908,8 +724,7 @@ if (!function_exists('redirect')) {
         }
 
         return Response::create($url, 'redirect', $code)
-            ->header("refresh", $time)
-            ->params($params);
+            ->header("refresh", $time);
     }
 }
 
@@ -1007,7 +822,7 @@ if (!function_exists('to_guid_string')) {
      * @param mixed $mix 变量
      * @return string
      */
-    function to_guid_string($mix)
+    function to_guid_string($mix): string
     {
         if (is_object($mix)) {
             return spl_object_hash($mix);
@@ -1031,7 +846,7 @@ if (!function_exists('xml_encode')) {
      * @param string $encoding 数据编码
      * @return string
      */
-    function xml_encode($data, $root = 'think', $item = 'item', $attr = '', $id = 'id', $encoding = 'utf-8')
+    function xml_encode($data, $root = 'think', $item = 'item', $attr = '', $id = 'id', $encoding = 'utf-8'): string
     {
         if (is_array($attr)) {
             $_attr = array();
@@ -1058,7 +873,7 @@ if (!function_exists('data_to_xml')) {
      * @param string $id 数字索引key转换为的属性名
      * @return string
      */
-    function data_to_xml($data, $item = 'item', $id = 'id')
+    function data_to_xml($data, $item = 'item', $id = 'id'): string
     {
         $xml = $attr = '';
         foreach ($data as $key => $val) {
@@ -1077,8 +892,7 @@ if (!function_exists('data_to_xml')) {
 if (!function_exists('load_ext_file')) {
     /**
      * 加载动态扩展文件
-     * @throws \think\Exception
-     * @var string $path 文件路径
+     * @param $path
      */
     function load_ext_file($path)
     {
@@ -1118,7 +932,7 @@ if (!function_exists('get_client_ip')) {
     function get_client_ip($type = 0, $adv = false)
     {
         $type = $type ? 1 : 0;
-        static $ip = null;
+        static $ip = '';
         if (null !== $ip) {
             return $ip[$type];
         }
@@ -1141,7 +955,7 @@ if (!function_exists('get_client_ip')) {
             $ip = $_SERVER['REMOTE_ADDR'];
         }
         // IP地址合法验证
-        $long = sprintf("%u", ip2long($ip));
+        $long = sprintf("%u", ip2long((string)$ip));
         $ip = $long ? array($ip, $long) : array('0.0.0.0', 0);
         return $ip[$type];
     }
@@ -1153,7 +967,7 @@ if (!function_exists('send_http_status')) {
      * @param integer $code 状态码
      * @return void
      */
-    function send_http_status($code)
+    function send_http_status(int $code)
     {
         static $_status = array(
             // Informational 1xx
@@ -1229,7 +1043,7 @@ if (!function_exists('in_array_case')) {
      * @param $array
      * @return bool
      */
-    function in_array_case($value, $array)
+    function in_array_case($value, $array): bool
     {
         return in_array(strtolower($value), array_map('strtolower', $array));
     }
@@ -1242,7 +1056,7 @@ if (!function_exists('check_tel_number')) {
      * @param string $type
      * @return bool
      */
-    function check_tel_number($number, $type = 'phone')
+    function check_tel_number($number, $type = 'phone'): bool
     {
         $regxArr = array(
             'phone' => '/^(\+?86-?)?(19|18|17|16|15|14|13)[0-9]{9}$/',
@@ -1292,7 +1106,7 @@ if (!function_exists('un_camelize')) {
      * @param string $separator
      * @return string
      */
-    function un_camelize($camelCaps, $separator = '_')
+    function un_camelize($camelCaps, $separator = '_'): string
     {
         return strtolower(preg_replace('/([a-z])([A-Z])/', "$1" . $separator . "$2", $camelCaps));
     }
@@ -1305,7 +1119,7 @@ if (!function_exists('is_many_dimension_array')) {
      * @param $array
      * @return bool
      */
-    function is_many_dimension_array($array)
+    function is_many_dimension_array($array): bool
     {
         if (count($array) == count($array, 1)) {
             return false;
@@ -1321,7 +1135,7 @@ if (!function_exists('array_depth')) {
      * @param $array
      * @return int
      */
-    function array_depth($array)
+    function array_depth($array): int
     {
         $maxDepth = 1;
         foreach ($array as $value) {
@@ -1346,7 +1160,7 @@ if (!function_exists('camelize')) {
      * @param string $separator
      * @return string
      */
-    function camelize($unCamelizeWords, $separator = '_')
+    function camelize($unCamelizeWords, $separator = '_'): string
     {
         $unCamelizeWords = $separator . str_replace($separator, " ", strtolower($unCamelizeWords));
         return str_replace(" ", "", ucwords(ltrim($unCamelizeWords, $separator)));
@@ -1358,7 +1172,7 @@ if (!function_exists('get_module_model_name')) {
      * @param $moduleData
      * @return string
      */
-    function get_module_model_name($moduleData)
+    function get_module_model_name($moduleData): string
     {
         if ($moduleData['type'] === 'entity') {
             $class = '\\common\\model\\EntityModel';
@@ -1376,7 +1190,7 @@ if (!function_exists('get_module_table_name')) {
      * @param $moduleData
      * @return string
      */
-    function get_module_table_name($moduleData)
+    function get_module_table_name($moduleData): string
     {
         if ($moduleData['type'] === 'entity') {
             return 'entity';
@@ -1404,12 +1218,11 @@ if (!function_exists('string_random')) {
      * @return string
      * @throws Exception
      */
-    function string_random($length)
+    function string_random($length): string
     {
         $int = $length / 2;
         $bytes = random_bytes($int);
-        $string = bin2hex($bytes);
-        return $string;
+        return bin2hex($bytes);
     }
 }
 
@@ -1418,7 +1231,7 @@ if (!function_exists('cpu_count')) {
     /**
      * @return int
      */
-    function cpu_count()
+    function cpu_count(): int
     {
         if (strtolower(PHP_OS) === 'darwin') {
             $count = shell_exec('sysctl -n machdep.cpu.core_count');
@@ -1434,7 +1247,7 @@ if (!function_exists('runtime_path')) {
     /**
      * @return string
      */
-    function runtime_path()
+    function runtime_path(): string
     {
         return RUNTIME_PATH;
     }
@@ -1445,7 +1258,7 @@ if (!function_exists('base_path')) {
     /**
      * @return string
      */
-    function base_path()
+    function base_path(): string
     {
         return ROOT_PATH;
     }
@@ -1455,7 +1268,7 @@ if (!function_exists('app_path')) {
     /**
      * @return string
      */
-    function app_path()
+    function app_path(): string
     {
         return APP_PATH;
     }
@@ -1465,7 +1278,7 @@ if (!function_exists('config_path')) {
     /**
      * @return string
      */
-    function config_path()
+    function config_path(): string
     {
         return COMMON_PATH . 'config' . DS;
     }
@@ -1475,7 +1288,7 @@ if (!function_exists('public_path')) {
     /**
      * @return string
      */
-    function public_path()
+    function public_path(): string
     {
         return ROOT_PATH . 'public';
     }
@@ -1501,7 +1314,7 @@ if (!function_exists('request')) {
     /**
      * @return Request
      */
-    function request()
+    function request(): Request
     {
         $request = App::request();
         if (!isset($request) && class_exists('\think\Rpc')) {
@@ -1546,7 +1359,7 @@ if (!function_exists('to_under_score')) {
      * @param $str
      * @return string
      */
-    function to_under_score($str)
+    function to_under_score($str): string
     {
         $dstr = preg_replace_callback('/([A-Z]+)/', function ($matchs) {
             return '_' . strtolower($matchs[0]);
@@ -1558,17 +1371,16 @@ if (!function_exists('to_under_score')) {
 if (!function_exists('generate_mysql_json_contains')) {
     /**
      * 生成mysql json contains
-     * @param $str
+     * @param $data
+     * @param $field
      * @return string
      */
-    function generate_mysql_json_contains($data, $field)
+    function generate_mysql_json_contains($data, $field): string
     {
         $itemValueStr = "";
         foreach ($data as $item) {
             $itemValueStr .= "\"{$item[$field]}\"" . ",";
         }
-        $itemValueStr = substr($itemValueStr, 0, -1);
-
-        return $itemValueStr;
+        return substr($itemValueStr, 0, -1);
     }
 }
