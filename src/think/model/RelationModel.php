@@ -626,13 +626,13 @@ class RelationModel extends Model
                 break;
             case 'timestamp':
                 if (!is_null($value)) {
-                    $format = !empty($param) ? $param : $this->dateFormat;
+                    $format = !empty($param) ? $param : DATE_W3C;
                     $value = date($format, $value);
                 }
                 break;
             case 'datetime':
                 if (!is_null($value)) {
-                    $format = !empty($param) ? $param : $this->dateFormat;
+                    $format = !empty($param) ? $param : DATE_W3C;
                     $value = date($format, strtotime($value));
                 }
                 break;
