@@ -55,7 +55,6 @@ class Controller
             }
         } else {
             StrackE(__CLASS__ . ':' . $method . L('_METHOD_NOT_EXIST_'), ErrorCode::METHOD_NOT_EXIST);
-            return;
         }
     }
 

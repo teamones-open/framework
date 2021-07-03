@@ -90,11 +90,6 @@ class App
     protected static $_publicPath = '';
 
     /**
-     * @var string
-     */
-    protected static $_configPath = '';
-
-    /**
      * @var TcpConnection
      */
     protected static $_connection = null;
@@ -300,7 +295,7 @@ class App
             return self::module(
                 $dispatch['module'],
                 $config,
-                isset($dispatch['convert']) ? $dispatch['convert'] : null
+                $dispatch['convert'] ?? null
             );
         }
 
@@ -407,7 +402,7 @@ class App
         $args = self::bindParams($reflect, $vars);
 
         APP_DEBUG && Log::record('[ RUN ] ' . $reflect->class . '->' . $reflect->name . '[ ' . $reflect->getFileName() . ' ]', Log::INFO);
-        return $reflect->invokeArgs(isset($class) ? $class : null, $args);
+        return $reflect->invokeArgs($class ?? null, $args);
     }
 
     /**
