@@ -36,7 +36,7 @@ class Log
     // 日志初始化
     public static function init($config = [])
     {
-        $type = isset($config['type']) ? $config['type'] : 'File';
+        $type = $config['type'] ?? 'File';
         $class = strpos($type, '\\') ? $type : 'think\\log\\driver\\' . ucwords(strtolower($type));
         unset($config['type']);
         if (IS_CLI) {

@@ -22,6 +22,12 @@ class Module
     // 模块字典缓存数据
     public static $moduleDictData = [];
 
+    // 模块关联字典缓存数据
+    public static $moduleRelationData = [];
+
+    // 水平关联模块自定义字段字典缓存数据
+    public static $moduleCustomHorizontalFieldsDict = [];
+
     // 包含租户id的模块列表数据
     public static $includeTenantIdModules = [];
 
@@ -34,6 +40,7 @@ class Module
         if (empty(self::$moduleDictData)) {
             self::getModuleData();
             self::generateModuleFieldCache(self::$moduleDictData['module_index_by_id']);
+            self::generateCustomHorizontalFieldsCache();
         }
     }
 
@@ -179,6 +186,12 @@ class Module
 
         self::$moduleDictData['module_index_by_id'] = array_column($moduleList, null, 'id');
         self::$moduleDictData['module_index_by_code'] = array_column($moduleList, null, 'code');
+
+        // 获取所有实体code列表
+        self::$moduleDictData['entity_code_list'] = Db::getInstance()->query("SELECT code FROM module WHERE type='entity'");
+        
+        // 获取模块关联数据
+        self::$moduleRelationData = Db::getInstance()->query("SELECT id,type as relation_type,src_module_id,dst_module_id,link_id FROM module_relation");
     }
 
     /**
@@ -190,6 +203,14 @@ class Module
     {
         // 获取所有模块字段
         self::$moduleDictData['field_index_by_code'] = Fields::getAllModuleFieldsMapData($moduleIndexById);
+    }
+
+    /**
+     * 生成模块 水平自定义字段 缓存
+     */
+    protected static function generateCustomHorizontalFieldsCache()
+    {
+        self::$moduleCustomHorizontalFieldsDict = Fields::generateCustomHorizontalFieldsCache();
     }
 
     /**

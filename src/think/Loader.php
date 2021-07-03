@@ -21,9 +21,6 @@ class Loader
     // 类名映射
     protected static $_map = [];
 
-    // 命名空间别名
-    protected static $namespaceAlias = [];
-
     // PSR-4
     private static $prefixLengthsPsr4 = [];
     private static $prefixDirsPsr4 = [];
@@ -37,11 +34,7 @@ class Loader
      * 需要加载的文件
      * @var array
      */
-    private static $files = [];
-
-    private static $configCacheFile = "";
     private static $configCache = [];
-    private static $configCacheRefresh = false;
 
     /**
      * 查找文件
@@ -254,10 +247,6 @@ class Loader
             C(load_config(CONF_PATH . 'config_' . APP_MODE . CONF_EXT));
         }
 
-
-
-
-
         // 读取当前应用状态对应的配置文件
         if (APP_STATUS && is_file(CONF_PATH . APP_STATUS . CONF_EXT)) {
             C(include CONF_PATH . APP_STATUS . CONF_EXT);
@@ -300,19 +289,6 @@ class Loader
     }
 
     /**
-     * 检查应用目录结构 如果不存在则自动创建
-     */
-    private static function checkAppDir()
-    {
-        if (C('CHECK_APP_DIR')) {
-            if (!is_dir(APP_PATH . BIND_MODULE) || !is_dir(LOG_PATH)) {
-                // 检测应用目录结构
-                Build::checkDir(BIND_MODULE);
-            }
-        }
-    }
-
-    /**
      * 加载常量
      */
     public static function loadConstant()
@@ -326,10 +302,14 @@ class Loader
             $GLOBALS['_startUseMems'] = memory_get_usage();
         }
 
+        if (!defined('APP_DEBUG')) {
+            // 开启调试模式 建议开发阶段开启 部署阶段注释或者设为false
+            define('APP_DEBUG', Env::get('app_debug'));
+        }
+
         // 系统常量定义
         defined('DS') or define('DS', DIRECTORY_SEPARATOR);   // 分隔符常量
         defined('EXT') or define('EXT', '.php'); // 类文件后缀
-        defined('ROOT_PATH') or define('ROOT_PATH', dirname(realpath(APP_PATH)) . DS);
         defined('RUNTIME_PATH') or define('RUNTIME_PATH', ROOT_PATH . 'runtime/');   // 定义缓存目录
         defined('APP_STATUS') or define('APP_STATUS', ''); // 应用状态 加载对应的配置文件
         defined('APP_MODE') or define('APP_MODE', 'common'); // 应用模式 默认为普通模式
@@ -353,7 +333,6 @@ class Loader
         defined('CONF_EXT') or define('CONF_EXT', '.php'); // 配置文件后缀
         defined('CONF_PARSE') or define('CONF_PARSE', ''); // 配置文件解析方法
         defined('ADDON_PATH') or define('ADDON_PATH', APP_PATH . 'addon');
-        defined('ENV_PREFIX') or define('ENV_PREFIX', 'PHP_'); // 环境变量的配置前缀
         defined('MAGIC_QUOTES_GPC') or define('MAGIC_QUOTES_GPC', false);
 
         define('IS_CGI', (0 === strpos(PHP_SAPI, 'cgi') || false !== strpos(PHP_SAPI, 'fcgi')) ? 1 : 0);
@@ -394,7 +373,6 @@ class Loader
             if (is_file(ROOT_PATH . '.env')) {
                 $env = parse_ini_file(ROOT_PATH . '.env', true);
                 self::$configCache['env'] = $env;
-                self::$configCacheRefresh = true;
             }
         }
 
@@ -420,16 +398,28 @@ class Loader
      * @param string $autoload
      * @throws Exception
      */
-    public static function register($autoload = '')
+    public static function register()
     {
+
+        if (!defined('APP_PATH')) {
+            define('APP_PATH', '');
+            throw new \Exception('APP_PATH 常量未在start.php文件中定义');
+        }
+
+        // 设置根目录路径常量
+        defined('ROOT_PATH') or define('ROOT_PATH', dirname(realpath(APP_PATH)) . DS);
+
+        // ENV 环境变量配置后缀常量
+        defined('ENV_PREFIX') or define('ENV_PREFIX', 'PHP_'); // 环境变量的配置前缀
+
+        // 读取ENV环境配置
+        self::loadEnv();
+
         // 加载变量
         self::loadConstant();
 
         // 初始化文件存储方式
         self::initStorage();
-
-        // 读取ENV环境配置
-        self::loadEnv();
 
         // 读取应用模式配置数据
         self::readModeFile();

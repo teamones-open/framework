@@ -23,14 +23,18 @@ class Tree
     //用来存储子分类的数组key名
     public $childrenKey;
 
+    /**
+     * Tree constructor.
+     * @param string $pk
+     * @param string $parentKey
+     * @param string $childrenKey
+     */
     function __construct($pk = "id", $parentKey = "pid", $childrenKey = "children")
     {
         if (!empty($pk) && !empty($parentKey) && !empty($childrenKey)) {
             $this->pk = $pk;
             $this->parentKey = $parentKey;
             $this->childrenKey = $childrenKey;
-        } else {
-            return false;
         }
     }
 

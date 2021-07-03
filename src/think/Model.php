@@ -319,8 +319,6 @@ class Model
 
     /**
      * 获取字段信息并缓存
-     * @access public
-     * @return bool
      */
     public function flush()
     {
@@ -328,41 +326,40 @@ class Model
         $this->db->setModel($this->name);
         $tableName = $this->getTableName();
         $fields = $this->db->getFields($tableName);
-        if (!$fields) {
-            // 无法获取字段信息
-            return false;
-        }
-        $this->fields = array_keys($fields);
-        unset($this->fields['_pk']);
-        foreach ($fields as $key => $val) {
-            // 记录字段类型
-            $type[$key] = $val['type'];
-            if ($val['primary']) {
-                // 增加复合主键支持
-                if (isset($this->fields['_pk']) && null != $this->fields['_pk']) {
-                    if (is_string($this->fields['_pk'])) {
-                        $this->pk = [$this->fields['_pk']];
-                        $this->fields['_pk'] = $this->pk;
+
+        if (!empty($fields)) {
+            $this->fields = array_keys($fields);
+            unset($this->fields['_pk']);
+            foreach ($fields as $key => $val) {
+                // 记录字段类型
+                $type[$key] = $val['type'];
+                if ($val['primary']) {
+                    // 增加复合主键支持
+                    if (isset($this->fields['_pk']) && null != $this->fields['_pk']) {
+                        if (is_string($this->fields['_pk'])) {
+                            $this->pk = [$this->fields['_pk']];
+                            $this->fields['_pk'] = $this->pk;
+                        }
+                        $this->pk[] = $key;
+                        $this->fields['_pk'][] = $key;
+                    } else {
+                        $this->pk = $key;
+                        $this->fields['_pk'] = $key;
                     }
-                    $this->pk[] = $key;
-                    $this->fields['_pk'][] = $key;
-                } else {
-                    $this->pk = $key;
-                    $this->fields['_pk'] = $key;
-                }
-                if ($val['autoinc']) {
-                    $this->autoinc = true;
-                }
+                    if ($val['autoinc']) {
+                        $this->autoinc = true;
+                    }
 
+                }
             }
-        }
-        // 记录字段类型信息
-        $this->fields['_type'] = $type;
+            // 记录字段类型信息
+            $this->fields['_type'] = $type;
 
-        // 增加缓存开关控制
-        if (C('DB_FIELDS_CACHE')) {
-            // 永久缓存数据表信息
-            F('_fields/' . strtolower($tableName), $this->fields);
+            // 增加缓存开关控制
+            if (C('DB_FIELDS_CACHE')) {
+                // 永久缓存数据表信息
+                F('_fields/' . strtolower($tableName), $this->fields);
+            }
         }
     }
 
@@ -387,7 +384,7 @@ class Model
      */
     public function __get($name)
     {
-        return isset($this->data[$name]) ? $this->data[$name] : null;
+        return $this->data[$name] ?? null;
     }
 
     /**
@@ -428,7 +425,7 @@ class Model
             return $this;
         } elseif (in_array(strtolower($method), ['count', 'sum', 'min', 'max', 'avg'], true)) {
             // 统计查询的实现
-            $field = isset($args[0]) ? $args[0] : '*';
+            $field = $args[0] ?? '*';
             return $this->getField(strtoupper($method) . '(' . $field . ') AS tp_' . $method);
         } elseif (strtolower(substr($method, 0, 5)) == 'getby') {
             // 根据某个字段获取记录
@@ -647,8 +644,6 @@ class Model
         M()->execute($sql);
 
         unset($sql);
-
-        return;
     }
 
     /**
@@ -1737,8 +1732,8 @@ class Model
 
                     $val[2] = $this->getRuleMsg($val[0], $val[4], $val[1], $langMsg);
 
-                    $val[3] = isset($val[3]) ? $val[3] : self::EXISTS_VALIDATE;
-                    $val[4] = isset($val[4]) ? $val[4] : 'regex';
+                    $val[3] = $val[3] ?? self::EXISTS_VALIDATE;
+                    $val[4] = $val[4] ?? 'regex';
                     // 判断验证条件
                     switch ($val[3]) {
                         case self::MUST_VALIDATE:    // 必须验证 不管表单是否有设置该字段
@@ -2114,7 +2109,7 @@ class Model
         if (is_string($rule) && strpos($rule, ',')) {
             list($rule, $param) = explode(',', $rule);
         } elseif (is_array($rule)) {
-            $param = isset($rule[1]) ? $rule[1] : null;
+            $param = $rule[1] ?? null;
             $rule = $rule[0];
         } else {
             $param = null;
@@ -2123,30 +2118,12 @@ class Model
     }
 
     /**
-     * 存储过程返回多数据集
-     * @access public
-     * @param string $sql SQL指令
-     * @param mixed $parse 是否需要解析SQL
-     * @return array
-     */
-    public function procedure($sql, $parse = false)
-    {
-        return $this->db->procedure($sql, $parse);
-    }
-
-    /**
-     * SQL查询
-     * @access public
-     * @param string $sql SQL指令
-     * @param mixed $parse 是否需要解析SQL
+     * @param $sql
+     * @param ...$parse
      * @return mixed
      */
     public function query($sql, ...$parse)
     {
-//        if (!is_bool($parse) && !is_array($parse)) {
-//            $parse = func_get_args();
-//            array_shift($parse);
-//        }
         $sql = $this->parseSql($sql, $parse);
         return $this->db->query($sql);
     }
@@ -2156,14 +2133,10 @@ class Model
      * @access public
      * @param string $sql SQL指令
      * @param mixed $parse 是否需要解析SQL
-     * @return false | integer
+     * @return int
      */
     public function execute($sql, ...$parse)
     {
-//        if (!is_bool($parse) && !is_array($parse)) {
-//            $parse = func_get_args();
-//            array_shift($parse);
-//        }
         $sql = $this->parseSql($sql, $parse);
         return $this->db->execute($sql);
     }
@@ -2172,7 +2145,7 @@ class Model
      * 解析SQL语句
      * @access public
      * @param string $sql SQL指令
-     * @param boolean $parse 是否需要解析SQL
+     * @param mixed $parse 是否需要解析SQL
      * @return string
      */
     protected function parseSql($sql, $parse)
@@ -2683,10 +2656,6 @@ class Model
     public function where($where, ...$parse)
     {
         if (!is_null($parse) && is_string($where)) {
-//            if (!is_array($parse)) {
-//                $parse = func_get_args();
-//                array_shift($parse);
-//            }
             $parse = array_map([$this->db, 'escapeString'], $parse);
             $where = vsprintf($where, $parse);
         } elseif (is_object($where)) {
@@ -2773,14 +2742,6 @@ class Model
         if (is_array($key)) {
             $this->options['bind'] = $key;
         } else {
-//            $num = func_num_args();
-//            if ($num > 2) {
-//                $params = func_get_args();
-//                array_shift($params);
-//                $this->options['bind'][$key] = $params;
-//            } else {
-//                $this->options['bind'][$key] = $value;
-//            }
             $this->options['bind'][$key] = $params;
         }
         return $this;

@@ -45,5 +45,6 @@ class Storage
         if (method_exists(self::$handler, $method)) {
             return call_user_func_array([self::$handler, $method], $args);
         }
+        return null;
     }
 }

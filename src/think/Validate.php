@@ -410,7 +410,7 @@ class Validate
                 // 字段|描述 用于指定属性名称
                 list($key, $title) = explode('|', $key);
             } else {
-                $title = isset($this->field[$key]) ? $this->field[$key] : $key;
+                $title = $this->field[$key] ?? $key;
             }
 
             // 场景检测
@@ -448,14 +448,14 @@ class Validate
             }
         }
 
-        return !empty($this->error) ? false : true;
+        return empty($this->error);
     }
 
     /**
      * 根据验证规则验证数据
      * @access public
-     * @param  mixed $value 字段值
-     * @param  mixed $rules 验证规则
+     * @param mixed $value 字段值
+     * @param mixed $rules 验证规则
      * @return bool
      */
     public function checkRule($value, $rules)
@@ -475,7 +475,7 @@ class Validate
                 // 判断验证类型
                 list($type, $rule) = $this->getValidateType($key, $rule);
 
-                $callback = isset(self::$type[$type]) ? self::$type[$type] : [$this, $type];
+                $callback = self::$type[$type] ?? [$this, $type];
 
                 $result = call_user_func_array($callback, [$value, $rule]);
             }
@@ -491,8 +491,8 @@ class Validate
     /**
      * 获取当前验证类型及规则
      * @access public
-     * @param  mixed $key
-     * @param  mixed $rule
+     * @param mixed $key
+     * @param mixed $rule
      * @return array
      */
     protected function getValidateType($key, $rule)
@@ -530,7 +530,7 @@ class Validate
      * @param array $data 数据
      * @param string $title 字段描述
      * @param array $msg 提示信息
-     * @return mixed
+     * @return array|bool|mixed|string|string[]
      */
     protected function checkItem($field, $value, $rules, $data, $title = '', $msg = [])
     {
@@ -550,6 +550,7 @@ class Validate
         }
 
         $i = 0;
+        $result = false;
         foreach ($rules as $key => $rule) {
             if ($rule instanceof \Closure) {
                 $result = call_user_func_array($rule, [$value, $data]);
@@ -558,9 +559,7 @@ class Validate
                 // 判断验证类型
                 list($type, $rule, $info) = $this->getValidateType($key, $rule);
 
-                if (isset($this->append[$field]) && in_array($info, $this->append[$field])) {
-
-                } elseif (isset($this->remove[$field]) && in_array($info, $this->remove[$field])) {
+                if (isset($this->remove[$field]) && in_array($info, $this->remove[$field])) {
                     // 规则已经移除
                     $i++;
                     continue;
@@ -568,7 +567,7 @@ class Validate
 
                 if ('must' == $info || 0 === strpos($info, 'require') || (!is_null($value) && '' !== $value)) {
                     // 验证类型
-                    $callback = isset(self::$type[$type]) ? self::$type[$type] : [$this, $type];
+                    $callback = self::$type[$type] ?? [$this, $type];
                     // 验证数据
                     $result = call_user_func_array($callback, [$value, $rule, $data, $field, $title]);
                 } else {
@@ -828,7 +827,7 @@ class Validate
     /**
      * 检测上传文件后缀
      * @param SplFileObject $file 上传文件
-     * @param  array|string $ext 允许后缀
+     * @param array|string $ext 允许后缀
      * @return bool
      */
     protected function checkExt($file, $ext)
@@ -877,7 +876,7 @@ class Validate
     /**
      * 检测上传文件类型
      * @param SplFileObject $file 上传文件
-     * @param  array|string $mime 允许类型
+     * @param array|string $mime 允许类型
      * @return bool
      */
     protected function checkMime($file, $mime)
@@ -934,7 +933,7 @@ class Validate
      */
     public function image($file, $rule)
     {
-        if (!($file instanceof SplFileInfo)) {
+        if (!($file instanceof \SplFileInfo)) {
             return false;
         }
 
@@ -991,10 +990,10 @@ class Validate
     /**
      * 验证是否唯一
      * @access public
-     * @param  mixed $value 字段值
-     * @param  mixed $rule 验证规则 格式：数据表,字段名,排除ID,主键名
-     * @param  array $data 数据
-     * @param  string $field 验证字段名
+     * @param mixed $value 字段值
+     * @param mixed $rule 验证规则 格式：数据表,字段名,排除ID,主键名
+     * @param array $data 数据
+     * @param string $field 验证字段名
      * @return bool
      */
     public function unique($value, $rule, array $data = [], string $field = ''): bool
@@ -1356,6 +1355,7 @@ class Validate
      */
     protected function getDataValue($data, $key)
     {
+        $value = null;
         if (is_numeric($key)) {
             $value = $key;
         } elseif (strpos($key, '.')) {
@@ -1431,7 +1431,7 @@ class Validate
         $this->only = $this->append = $this->remove = [];
 
         if (empty($scene)) {
-            return;
+            return null;
         }
 
         if (method_exists($this, 'scene' . $scene)) {

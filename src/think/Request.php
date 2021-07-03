@@ -307,8 +307,8 @@ class Request extends \Workerman\Protocols\Http\Request
     /**
      * 设置或获取当前包含协议的域名
      * @access public
-     * @param string $domain 域名
-     * @return string
+     * @param string|null $domain 域名
+     * @return $this|string
      */
     public function domain($domain = null)
     {
@@ -324,7 +324,7 @@ class Request extends \Workerman\Protocols\Http\Request
     /**
      * 设置或获取当前完整URL 包括QUERY_STRING
      * @param null $url
-     * @return $this|mixed|null
+     * @return $this|string
      */
     public function url($url = null)
     {
@@ -339,9 +339,8 @@ class Request extends \Workerman\Protocols\Http\Request
 
     /**
      * 设置或获取当前URL 不含QUERY_STRING
-     * @access public
-     * @param string $url URL地址
-     * @return string
+     * @param null $url
+     * @return $this|false|string
      */
     public function baseUrl($url = null)
     {
@@ -372,7 +371,6 @@ class Request extends \Workerman\Protocols\Http\Request
      */
     public function path()
     {
-        $suffix = C('URL_HTML_SUFFIX');
         $path = parent::path();
         $this->path = substr_replace($path, "", 0, 1);
         return $this->path;
@@ -858,8 +856,15 @@ class Request extends \Workerman\Protocols\Http\Request
         } else {
             $this->filter = $filter;
         }
+
+        return $this->filter;
     }
 
+    /**
+     * @param $filter
+     * @param $default
+     * @return array|false|string[]
+     */
     protected function getFilter($filter, $default)
     {
         if (is_null($filter)) {
@@ -882,7 +887,6 @@ class Request extends \Workerman\Protocols\Http\Request
      * @param mixed $value 键值
      * @param mixed $key 键名
      * @param array $filters 过滤方法+默认值
-     * @return mixed
      */
     private function filterValue(&$value, $key, $filters)
     {
@@ -910,7 +914,7 @@ class Request extends \Workerman\Protocols\Http\Request
                 }
             }
         }
-        return $this->filterExp($value);
+        $this->filterExp($value);
     }
 
     /**
@@ -931,7 +935,6 @@ class Request extends \Workerman\Protocols\Http\Request
      * 强制类型转换
      * @param string $data
      * @param string $type
-     * @return mixed
      */
     private function typeCast(&$data, $type)
     {
@@ -986,7 +989,7 @@ class Request extends \Workerman\Protocols\Http\Request
                 return false;
             }
         }
-        return ($checkEmpty && '' === $param) ? false : true;
+        return !(($checkEmpty && '' === $param));
     }
 
 
@@ -1160,14 +1163,14 @@ class Request extends \Workerman\Protocols\Http\Request
 
     /**
      * 获取当前请求的路由信息
-     * @access public
-     * @param array $route 路由名称
-     * @return array
+     * @param array $route
+     * @return $this|array
      */
     public function routeInfo($route = [])
     {
         if (!empty($route)) {
             $this->routeInfo = $route;
+            return $this;
         } else {
             return $this->routeInfo;
         }
@@ -1205,9 +1208,8 @@ class Request extends \Workerman\Protocols\Http\Request
 
     /**
      * 设置或者获取当前的控制器名
-     * @access public
-     * @param string $controller 控制器名
-     * @return string|class
+     * @param null $controller
+     * @return $this|string
      */
     public function controller($controller = null)
     {
@@ -1222,9 +1224,8 @@ class Request extends \Workerman\Protocols\Http\Request
 
     /**
      * 设置或者获取当前的操作名
-     * @access public
-     * @param string $action 操作名
-     * @return string|class
+     * @param null $action
+     * @return $this|string
      */
     public function action($action = null)
     {

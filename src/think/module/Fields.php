@@ -1,4 +1,5 @@
 <?php
+
 namespace think\module;
 
 use think\Db;
@@ -51,6 +52,35 @@ class Fields
 
         return $fieldModuleMapData;
     }
+
+
+    /**
+     * 获取所有模块字段按照模块id映射数据
+     * @return array
+     * @throws \Exception
+     */
+    public static function generateCustomHorizontalFieldsCache()
+    {
+        $customHorizontalFieldsData = Db::getInstance()->query("SELECT id,`table`,config,module_id,is_horizontal FROM field WHERE type='custom'");
+        $customHorizontalFieldsDict = [
+            'horizontal' => [],
+            'other' => []
+        ];
+        foreach ($customHorizontalFieldsData as $item) {
+
+            if ((int)$item['is_horizontal'] === 1) {
+                // 水平字段
+                $customHorizontalFieldsDict['horizontal'][$item['module_id']][] = $item;
+            } else {
+                // 普通自定义字段
+                $customHorizontalFieldsDict['other'][$item['module_id']][] = $item;
+            }
+        }
+
+        unset($customHorizontalFieldsData);
+        return $customHorizontalFieldsDict;
+    }
+
 
     /**
      * 判断当前字段是否为必须

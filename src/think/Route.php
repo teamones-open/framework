@@ -59,7 +59,6 @@ class Route
     // 当前分组信息
     private static $group = [];
     // 当前子域名绑定
-    private static $domainBind;
     private static $domainRule;
     // 当前域名
     private static $domain;
@@ -127,7 +126,6 @@ class Route
      * @access public
      * @param mixed $bind 绑定信息
      * @param string $type 绑定类型 默认为module 支持 namespace class controller
-     * @return mixed
      */
     public static function bind($bind, $type = 'module')
     {
@@ -139,7 +137,7 @@ class Route
      * @access public
      * @param string|array $name 路由命名标识 数组表示批量设置
      * @param array $value 路由地址及变量信息
-     * @return array
+     * @return array|mixed|null
      */
     public static function name($name = '', $value = null)
     {
@@ -149,9 +147,10 @@ class Route
             return self::$rules['name'];
         } elseif (!is_null($value)) {
             self::$rules['name'][strtolower($name)][] = $value;
+            return $value;
         } else {
             $name = strtolower($name);
-            return isset(self::$rules['name'][$name]) ? self::$rules['name'][$name] : null;
+            return self::$rules['name'][$name] ?? null;
         }
     }
 
@@ -163,7 +162,7 @@ class Route
      */
     public static function getBind($type)
     {
-        return isset(self::$bind[$type]) ? self::$bind[$type] : null;
+        return self::$bind[$type] ?? null;
     }
 
     /**
@@ -216,7 +215,7 @@ class Route
                 $key = substr($key, 1, -1);
                 self::group($key, $val);
             } elseif (is_array($val)) {
-                self::setRule($key, $val[0], $type, $val[1], isset($val[2]) ? $val[2] : []);
+                self::setRule($key, $val[0], $type, $val[1], $val[2] ?? []);
             } else {
                 self::setRule($key, $val, $type);
             }
@@ -257,7 +256,7 @@ class Route
                 if (is_array($val)) {
                     $route = $val[0];
                     $option1 = array_merge($option, $val[1]);
-                    $pattern1 = array_merge($pattern, isset($val[2]) ? $val[2] : []);
+                    $pattern1 = array_merge($pattern, $val[2] ?? []);
                 } else {
                     $option1 = null;
                     $pattern1 = null;
@@ -312,7 +311,7 @@ class Route
         $vars = self::parseVar($rule);
         if (isset($name)) {
             $key = $group ? $group . ($rule ? '/' . $rule : '') : $rule;
-            $suffix = isset($option['ext']) ? $option['ext'] : null;
+            $suffix = $option['ext'] ?? null;
             self::name($name, [$key, $vars, self::$domain, $suffix]);
         }
         if (isset($option['modular'])) {
@@ -414,7 +413,7 @@ class Route
     {
         if (is_array($name)) {
             $option = $name;
-            $name = isset($option['name']) ? $option['name'] : '';
+            $name = $option['name'] ?? '';
         }
         // 分组
         $currentGroup = self::getGroup('name');
@@ -449,8 +448,8 @@ class Route
                         $route = $val;
                     }
 
-                    $options = isset($option1) ? $option1 : $option;
-                    $patterns = isset($pattern1) ? $pattern1 : $pattern;
+                    $options = $option1 ?? $option;
+                    $patterns = $pattern1 ?? $pattern;
                     if ('$' == substr($key, -1, 1)) {
                         // 是否完整匹配
                         $options['complete_match'] = true;
@@ -462,7 +461,7 @@ class Route
                     $vars = self::parseVar($key);
                     $item[] = ['rule' => $key, 'route' => $route, 'var' => $vars, 'option' => $options, 'pattern' => $patterns];
                     // 设置路由标识
-                    $suffix = isset($options['ext']) ? $options['ext'] : null;
+                    $suffix = $options['ext'] ?? null;
                     self::name($route, [$name . ($key ? '/' . $key : ''), $vars, self::$domain, $suffix]);
                 }
                 self::$rules['*'][$name] = ['rule' => $item, 'route' => '', 'var' => [], 'option' => $option, 'pattern' => $pattern];
@@ -598,7 +597,7 @@ class Route
                 $last = array_pop($array);
                 $item = [];
                 foreach ($array as $val) {
-                    $item[] = $val . '/:' . (isset($option['var'][$val]) ? $option['var'][$val] : $val . '_id');
+                    $item[] = $val . '/:' . ($option['var'][$val] ?? $val . '_id');
                 }
                 $rule = implode('/', $item) . '/' . $last;
             }
@@ -719,6 +718,7 @@ class Route
     {
         if (is_array($rules)) {
             self::$rules = $rules;
+            return $rules;
         } elseif ($rules) {
             return true === $rules ? self::$rules : self::$rules[strtolower($rules)];
         } else {
@@ -820,10 +820,9 @@ class Route
                         // 绑定到模块/控制器 例如 index/user
                         self::$bind = ['type' => 'module', 'module' => $result];
                     }
-                    self::$domainBind = true;
                 } else {
                     self::$domainRule = $item;
-                    $currentRules = isset($item[$method]) ? $item[$method] : $item['*'];
+                    $currentRules = $item[$method] ?? $item['*'];
                 }
             }
         }
@@ -861,7 +860,7 @@ class Route
         }
         $method = strtolower($request->method());
         // 获取当前请求类型的路由规则
-        $rules = isset(self::$rules[$method]) ? self::$rules[$method] : [];
+        $rules = self::$rules[$method] ?? [];
         // 检测域名部署
         if ($checkDomain) {
             self::checkDomain($request, $rules, $method);
@@ -894,6 +893,10 @@ class Route
         return false;
     }
 
+    /**
+     * @param $key
+     * @return mixed
+     */
     private static function getRouteExpress($key)
     {
         return self::$domainRule ? self::$domainRule['*'][$key] : self::$rules['*'][$key];
@@ -1328,14 +1331,14 @@ class Route
                 foreach ($matches[1] as $name) {
                     if (strpos($name, '?')) {
                         $name = substr($name, 0, -1);
-                        $replace[] = '(' . (isset($pattern[$name]) ? $pattern[$name] : '\w+') . ')?';
+                        $replace[] = '(' . ($pattern[$name] ?? '\w+') . ')?';
                     } else {
-                        $replace[] = '(' . (isset($pattern[$name]) ? $pattern[$name] : '\w+') . ')';
+                        $replace[] = '(' . ($pattern[$name] ?? '\w+') . ')';
                     }
                     $value[] = $name;
                 }
                 $val = str_replace($matches[0], $replace, $val);
-                if (preg_match('/^' . $val . '$/', isset($m1[$key]) ? $m1[$key] : '', $match)) {
+                if (preg_match('/^' . $val . '$/', $m1[$key] ?? '', $match)) {
                     array_shift($match);
                     foreach ($value as $k => $name) {
                         if (isset($match[$k])) {
@@ -1372,7 +1375,7 @@ class Route
                         return false;
                     }
                 }
-                $var[$name] = isset($m1[$key]) ? $m1[$key] : '';
+                $var[$name] = $m1[$key] ?? '';
             } elseif (!isset($m1[$key]) || 0 !== strcasecmp($val, $m1[$key])) {
                 return false;
             }
@@ -1509,7 +1512,7 @@ class Route
             App::$modulePath = APP_PATH . (C('MULTI_MODULE') ? $request->module() . DS : '');
         } else {
             // 路由到模块/控制器/操作
-            $result = self::parseModule($route, isset($option['convert']) ? $option['convert'] : false);
+            $result = self::parseModule($route, $option['convert'] ?? false);
         }
 
         // 加入返回路由中间件信息

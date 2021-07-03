@@ -205,7 +205,7 @@ class RedisHandler
                 static::$_manager = \support\bootstrap\Redis::$_manager;
             } else {
                 $config = config('redis');
-                static::$_manager = new RedisManager('', 'phpredis', $config);
+                static::$_manager = new RedisManager(null, 'phpredis', $config);
             }
         }
         return static::$_manager;

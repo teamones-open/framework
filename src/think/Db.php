@@ -17,9 +17,9 @@ use think\exception\ErrorCode;
  * Class Db
  * @package think
  * @method mixed select(mixed $data = null) static 查询多个记录
- * @method integer insert(array $data, boolean $replace = false, boolean $getLastInsID = false, string $sequence = null) static 插入一条记录
- * @method integer insertAll(array $dataSet) static 插入多条记录
- * @method integer update(array $data) static 更新记录
+ * @method integer insert(array $data, array $options, bool $replace = false) static 插入一条记录
+ * @method integer insertAll(array $dataSet, $options = [], $replace = false) static 插入多条记录
+ * @method integer update(array $data, array $options) static 更新记录
  * @method integer delete(mixed $data = null) static 删除记录
  * @method mixed query(string $sql, array $bind = [], boolean $master = false, bool $pdo = false) static SQL查询
  * @method integer execute(string $sql, array $bind = [], boolean $fetch = false, boolean $getLastInsID = false, string $sequence = null) static SQL执行
@@ -29,6 +29,11 @@ use think\exception\ErrorCode;
  * @method string getLastInsID($sequence = null) static 获取最近插入的ID
  * @method array getTables($dbName = '') static 取得数据库的表信息
  * @method array getFields($tableName) static 取得数据表的字段信息
+ * @method string setModel($model) 设置当前操作模型
+ * @method mixed selectInsert($fields, $table, $options = []) 通过Select方式插入记录
+ * @method mixed parseSql($sql, $options = []) 替换SQL语句中表达式
+ * @method string getError()
+ * @method string getLastSql($model = '')
  */
 class Db
 {
@@ -113,7 +118,7 @@ class Db
             return self::$config;
         }
 
-        return isset(self::$config[$name]) ? self::$config[$name] : null;
+        return self::$config[$name] ?? null;
     }
 
     /**
@@ -137,15 +142,15 @@ class Db
                 'hostname' => $config['db_host'],
                 'hostport' => $config['db_port'],
                 'database' => $config['db_name'],
-                'dsn' => isset($config['db_dsn']) ? $config['db_dsn'] : null,
-                'params' => isset($config['db_params']) ? $config['db_params'] : null,
-                'charset' => isset($config['db_charset']) ? $config['db_charset'] : 'utf8',
-                'deploy' => isset($config['db_deploy_type']) ? $config['db_deploy_type'] : 0,
-                'rw_separate' => isset($config['db_rw_separate']) ? $config['db_rw_separate'] : false,
-                'master_num' => isset($config['db_master_num']) ? $config['db_master_num'] : 1,
-                'slave_no' => isset($config['db_slave_no']) ? $config['db_slave_no'] : '',
-                'debug' => isset($config['db_debug']) ? $config['db_debug'] : APP_DEBUG,
-                'lite' => isset($config['db_lite']) ? $config['db_lite'] : false,
+                'dsn' => $config['db_dsn'] ?? null,
+                'params' => $config['db_params'] ?? null,
+                'charset' => $config['db_charset'] ?? 'utf8',
+                'deploy' => $config['db_deploy_type'] ?? 0,
+                'rw_separate' => $config['db_rw_separate'] ?? false,
+                'master_num' => $config['db_master_num'] ?? 1,
+                'slave_no' => $config['db_slave_no'] ?? '',
+                'debug' => $config['db_debug'] ?? APP_DEBUG,
+                'lite' => $config['db_lite'] ?? false,
             ];
         } else {
             $databaseConfig = C('database');
@@ -198,12 +203,12 @@ class Db
         }
         $dsn = [
             'type' => $info['scheme'],
-            'username' => isset($info['user']) ? $info['user'] : '',
-            'password' => isset($info['pass']) ? $info['pass'] : '',
-            'hostname' => isset($info['host']) ? $info['host'] : '',
-            'hostport' => isset($info['port']) ? $info['port'] : '',
+            'username' => $info['user'] ?? '',
+            'password' => $info['pass'] ?? '',
+            'hostname' => $info['host'] ?? '',
+            'hostport' => $info['port'] ?? '',
             'database' => isset($info['path']) ? substr($info['path'], 1) : '',
-            'charset' => isset($info['fragment']) ? $info['fragment'] : 'utf8',
+            'charset' => $info['fragment'] ?? 'utf8',
         ];
 
         if (isset($info['query'])) {
