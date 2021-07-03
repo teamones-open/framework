@@ -21,9 +21,6 @@ class Loader
     // 类名映射
     protected static $_map = [];
 
-    // 命名空间别名
-    protected static $namespaceAlias = [];
-
     // PSR-4
     private static $prefixLengthsPsr4 = [];
     private static $prefixDirsPsr4 = [];
@@ -37,11 +34,7 @@ class Loader
      * 需要加载的文件
      * @var array
      */
-    private static $files = [];
-
-    private static $configCacheFile = "";
     private static $configCache = [];
-    private static $configCacheRefresh = false;
 
     /**
      * 查找文件
@@ -380,7 +373,6 @@ class Loader
             if (is_file(ROOT_PATH . '.env')) {
                 $env = parse_ini_file(ROOT_PATH . '.env', true);
                 self::$configCache['env'] = $env;
-                self::$configCacheRefresh = true;
             }
         }
 
