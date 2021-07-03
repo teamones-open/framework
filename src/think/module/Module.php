@@ -22,6 +22,9 @@ class Module
     // 模块字典缓存数据
     public static $moduleDictData = [];
 
+    // 模块关联字典缓存数据
+    public static $moduleRelationData = [];
+
     // 包含租户id的模块列表数据
     public static $includeTenantIdModules = [];
 
@@ -179,6 +182,9 @@ class Module
 
         self::$moduleDictData['module_index_by_id'] = array_column($moduleList, null, 'id');
         self::$moduleDictData['module_index_by_code'] = array_column($moduleList, null, 'code');
+
+        // 获取模块关联数据
+        self::$moduleRelationData = Db::getInstance()->query("SELECT id,type as relation_type,src_module_id,dst_module_id,link_id FROM module_relation");
     }
 
     /**
