@@ -2,9 +2,9 @@
 
 namespace {%namespace%};
 
-use think\Model;
+use think\model\RelationModel;
 
-class {%className%} extends Model
+class {%className%} extends RelationModel
 {
     //
 }
