@@ -109,9 +109,9 @@ class Build
         !is_dir(APP_PATH . $module) && mkdir(APP_PATH . $module);
 
         // 如果不是 runtime 目录则需要创建配置文件和公共文件、创建模块的默认页面
-        if (basename(RUNTIME_PATH) != $module) {
-            //self::buildCommon($module);
-        }
+//        if (basename(RUNTIME_PATH) != $module) {
+//            self::buildCommon($module);
+//        }
 
         // 未指定文件和目录，则创建默认的模块目录和文件
         if (empty($list)) {
