@@ -35,7 +35,6 @@ class Controller extends Make
         if ($this->input->getOption('plain')) {
             return __DIR__ . '/stubs/controller.plain.stub';
         }
-
         return __DIR__ . '/stubs/controller.stub';
     }
 
@@ -45,7 +44,7 @@ class Controller extends Make
      */
     protected function getClassName($name)
     {
-        return parent::getClassName($name) . (C('controller_suffix') ? ucfirst(C('url_controller_layer')) : '');
+        return parent::getClassName($name) . (C('CONTROLLER_SUFFIX') ? ucfirst(C('URL_CONTROLLER_LAYER')) : '');
     }
 
     /**

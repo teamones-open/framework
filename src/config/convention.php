@@ -63,7 +63,7 @@ return [
     'DEBUG_LOG_DRIVE' => 'file',
 
     // 控制器类后缀
-    'CONTROLLER_SUFFIX' => true,
+    'CONTROLLER_SUFFIX' => false,
 
     // 是否自动转换URL中的控制器和操作名
     'URL_CONVERT' => false,
