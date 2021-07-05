@@ -20,9 +20,14 @@ class Clear extends Command
     protected function configure()
     {
         // 指令配置
-        $this
-            ->setName('clear')
+        $this->setName('clear')
             ->addOption('path', 'd', Option::VALUE_OPTIONAL, 'path to clear', null)
+            ->addOption('cache', 'c', Option::VALUE_NONE, 'clear cache file')
+            ->addOption('log', 'l', Option::VALUE_NONE, 'clear log file')
+            ->addOption('data', 'a', Option::VALUE_NONE, 'clear data file')
+            ->addOption('temp', 't', Option::VALUE_NONE, 'clear temp file')
+            ->addOption('dir', 'r', Option::VALUE_NONE, 'clear empty dir')
+            ->addOption('expire', 'e', Option::VALUE_NONE, 'clear cache file if cache has expired')
             ->setDescription('Clear runtime file');
     }
 
@@ -33,17 +38,93 @@ class Clear extends Command
      */
     protected function execute(Input $input, Output $output)
     {
-        $path  = $input->getOption('path') ?: RUNTIME_PATH;
-        $files = scandir($path);
-        if ($files) {
-            foreach ($files as $file) {
-                if ('.' != $file && '..' != $file && is_dir($path . $file)) {
-                    array_map('unlink', glob($path . $file . '/*.*'));
-                } elseif (is_file($path . $file)) {
+        $runtimePath = RUNTIME_PATH;
+        if ($input->getOption('cache')) {
+            $path = $runtimePath . 'cache';
+        } elseif ($input->getOption('log')) {
+            $path = $runtimePath . 'logs';
+        } elseif ($input->getOption('data')) {
+            $path = $runtimePath . 'data';
+        } elseif ($input->getOption('temp')) {
+            $path = $runtimePath . 'temp';
+        } else {
+            $path = $input->getOption('path') ?: $runtimePath;
+        }
+
+        $rmdir = $input->getOption('dir') ? true : false;
+
+        // --expire 仅当 --cache 时生效
+        $cache_expire = $input->getOption('expire') && $input->getOption('cache') ? true : false;
+        $this->clear(rtrim($path, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR, $rmdir, $cache_expire);
+
+
+        $output->writeln("<info>Clear Successed</info>");
+    }
+
+
+    protected function clear(string $path, bool $rmdir, bool $cache_expire): void
+    {
+        $files = is_dir($path) ? scandir($path) : [];
+
+        foreach ($files as $file) {
+            if ('.' != $file && '..' != $file && is_dir($path . $file)) {
+
+                if ($file === 'cache') {
+                    $this->empty_folder($path . $file . "/");
+                    continue;
+                }
+
+                $this->clear($path . $file . DIRECTORY_SEPARATOR, $rmdir, $cache_expire);
+                if ($rmdir) {
+                    @rmdir($path . $file);
+                }
+            } elseif ('.gitignore' != $file && 'index.html' != $file && is_file($path . $file)) {
+                if ($cache_expire) {
+                    if ($this->cacheHasExpired($path . $file)) {
+                        unlink($path . $file);
+                    }
+                } else {
                     unlink($path . $file);
                 }
             }
         }
-        $output->writeln("<info>Clear Successed</info>");
+    }
+
+    protected function empty_folder($path)
+    {
+        //如果是目录则继续
+        if (is_dir($path)) {
+            //扫描一个文件夹内的所有文件夹和文件并返回数组
+            $p = scandir($path);
+            foreach ($p as $val) {
+                //排除目录中的.和..
+                if ($val != "." && $val != "..") {
+                    //如果是目录则递归子目录，继续操作
+                    if (is_dir($path . $val)) {
+                        //子目录中操作删除文件夹和文件
+                        $this->empty_folder($path . $val . '/');
+                        //目录清空后删除空文件夹
+                        @rmdir($path . $val . '/');
+                    } else {
+                        //如果是文件直接删除
+                        if ('.gitignore' != $val && 'index.html' != $val) {
+                            unlink($path . $val);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * 缓存文件是否已过期
+     * @param $filename string 文件路径
+     * @return bool
+     */
+    protected function cacheHasExpired($filename)
+    {
+        $content = file_get_contents($filename);
+        $expire = (int)substr($content, 8, 12);
+        return 0 != $expire && time() - $expire > filemtime($filename);
     }
 }
