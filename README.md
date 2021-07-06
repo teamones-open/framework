@@ -8,3 +8,7 @@
 ```
 composer require teamones/framework
 ```
+
+# 使用
+
+注意：此存储库是teamones框架的核心代码。如果您想使用teamones构建应用程序，请访问 teamones 完整存储库。
