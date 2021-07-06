@@ -17,6 +17,8 @@ use Workerman\Protocols\Http;
 class Request extends \Workerman\Protocols\Http\Request
 {
 
+    public $name;
+
     protected $method;
     /**
      * @var string 域名（含协议和端口）

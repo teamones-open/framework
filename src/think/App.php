@@ -10,17 +10,17 @@
 // +----------------------------------------------------------------------
 namespace think;
 
-use think\exception\ErrorCode;
-use think\exception\ExceptionHandlerInterface;
-use think\exception\ExceptionHandler;
-use think\exception\ClassNotFoundException;
-use Workerman\Worker;
-use Workerman\Timer;
-use Workerman\Connection\TcpConnection;
-use think\exception\HttpResponseException;
-use think\exception\HttpException;
-use Psr\Container\ContainerInterface;
 use Monolog\Logger;
+use Psr\Container\ContainerInterface;
+use think\exception\ClassNotFoundException;
+use think\exception\ErrorCode;
+use think\exception\ExceptionHandler;
+use think\exception\ExceptionHandlerInterface;
+use think\exception\HttpException;
+use think\exception\HttpResponseException;
+use Workerman\Connection\TcpConnection;
+use Workerman\Timer;
+use Workerman\Worker;
 
 class App
 {
@@ -173,6 +173,28 @@ class App
     }
 
     /**
+     * 获取路由模块名称
+     * @param $result
+     * @param $config
+     * @return array
+     */
+    protected static function getRouteModuleName($result, $config)
+    {
+        $controllerIndex = 1;
+        $actionIndex = 2;
+        if (false !== strpos($result[0], '\\')) {
+            $controllerPath = explode('\\', $result[0]);
+            $module = strip_tags($controllerPath[1] ?: $config['DEFAULT_MODULE']);
+            $controllerIndex = 0;
+            $actionIndex = 1;
+        } else {
+            $module = strip_tags($result[0] ?: $config['DEFAULT_MODULE']);
+        }
+
+        return [$module, $controllerIndex, $actionIndex];
+    }
+
+    /**
      * 执行模块
      * @access public
      * @param array $result 模块/控制器/操作
@@ -189,7 +211,8 @@ class App
 
         if ($config['MULTI_MODULE']) {
             // 多模块部署
-            $module = strip_tags($result[0] ?: $config['DEFAULT_MODULE']);
+            list($module, $controllerIndex, $actionIndex) = self::getRouteModuleName($result, $config);
+
             $bind = Route::getBind('module');
             $available = false;
 
@@ -209,7 +232,6 @@ class App
 
             // 模块初始化
             if ($module && $available) {
-
                 // 初始化模块
                 static::$_request->module($module);
             } else {
@@ -217,7 +239,7 @@ class App
             }
         } else {
             // 单一模块部署
-            $module = strip_tags($result[0] ?: $config['DEFAULT_MODULE']);
+            list($module, $controllerIndex, $actionIndex) = self::getRouteModuleName($result, $config);
             static::$_request->module($module);
         }
 
@@ -228,16 +250,11 @@ class App
         $convert = is_bool($convert) ? $convert : $config['URL_CONVERT'];
 
         // 获取控制器名
-        $controller = strip_tags($result[1] ?: $config['DEFAULT_CONTROLLER']);
-
-        if (!preg_match('/^[A-Za-z](\w|\.)*$/', $controller)) {
-            throw new HttpException(ErrorCode::ERROR_404, 'controller not exists:' . $controller);
-        }
-
+        $controller = strip_tags($result[$controllerIndex] ?: $config['DEFAULT_CONTROLLER']);
         $controller = $convert ? strtolower($controller) : $controller;
 
         // 获取操作名
-        $actionName = strip_tags($result[2] ?: $config['DEFAULT_ACTION']);
+        $actionName = strip_tags($result[$actionIndex] ?: $config['DEFAULT_ACTION']);
 
         // 获取当前操作名
         $action = $actionName . $config['ACTION_SUFFIX'];
@@ -290,16 +307,26 @@ class App
      */
     public static function analysisModule($dispatch, $config)
     {
-        if ($dispatch['type'] === 'module') {
-            // 模块/控制器/操作
-            return self::module(
-                $dispatch['module'],
-                $config,
-                $dispatch['convert'] ?? null
-            );
+        switch ($dispatch['type']) {
+            case 'module': // 模块/控制器/操作
+                $data = self::module(
+                    $dispatch['module'],
+                    $config,
+                    isset($dispatch['convert']) ? $dispatch['convert'] : null
+                );
+                break;
+            case 'method': // 回调方法
+                $data = self::module(
+                    $dispatch['method'],
+                    $config,
+                    isset($dispatch['convert']) ? $dispatch['convert'] : null
+                );
+                break;
+            default:
+                throw new \InvalidArgumentException('dispatch type not support', ErrorCode::DISPATCH_TYPE_NOT_SUPPORT);
         }
 
-        throw new \InvalidArgumentException('dispatch type not support', ErrorCode::DISPATCH_TYPE_NOT_SUPPORT);
+        return $data;
     }
 
 
@@ -331,7 +358,7 @@ class App
                 $class = $param->getClass();
                 if ($class) {
                     $className = $class->getName();
-                    $bind = \request()->$name;
+                    $bind = \request()->name;
                     if ($bind instanceof $className) {
                         $args[] = $bind;
                     } else {
@@ -342,7 +369,7 @@ class App
                                 continue;
                             }
                         }
-                        $args[] = method_exists($className, 'instance') ? $className::instance() : new $className;
+                        $args[] = \request();
                     }
                 } elseif (1 == $type && !empty($vars)) {
                     $args[] = array_shift($vars);
