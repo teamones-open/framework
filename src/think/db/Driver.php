@@ -917,6 +917,9 @@ abstract class Driver
                 if (is_numeric($key)) {
                     if (false === strpos($val, '(')) {
                         $array[] = $this->parseKey($val);
+                    } else {
+                        // 复杂order条件 包含 () JSON_EXTRACT
+                        $array[] = $val;
                     }
                 } else {
                     $sort = in_array(strtolower($val), ['asc', 'desc']) ? ' ' . $val : '';
