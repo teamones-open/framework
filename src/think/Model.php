@@ -2122,7 +2122,7 @@ class Model
      * @param ...$parse
      * @return mixed
      */
-    public function query($sql, ...$parse)
+    public function query($sql, $parse = false)
     {
         $sql = $this->parseSql($sql, $parse);
         return $this->db->query($sql);
@@ -2135,7 +2135,7 @@ class Model
      * @param mixed $parse 是否需要解析SQL
      * @return int
      */
-    public function execute($sql, ...$parse)
+    public function execute($sql, $parse = false)
     {
         $sql = $this->parseSql($sql, $parse);
         return $this->db->execute($sql);
