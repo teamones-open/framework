@@ -197,7 +197,7 @@ class Request extends \Workerman\Protocols\Http\Request
     public function setUserInfoCache($unionId, $userData)
     {
         $cacheKey = 'user_info_cache_' . C('belong_system') . '_' . $unionId;
-        Cache::set($cacheKey, $userData);
+        Cache::set($cacheKey, $userData, 0);
     }
 
     /**
