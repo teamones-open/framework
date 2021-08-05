@@ -738,7 +738,7 @@ if (!function_exists('S')) {
     {
         if (is_array($options)) {
             // 缓存操作的同时初始化
-            Cache::connect($options);
+            Cache::init();;
         } elseif (is_array($name)) {
             // 缓存初始化
             return Cache::connect($name);
