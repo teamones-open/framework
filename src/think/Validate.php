@@ -1033,9 +1033,9 @@ class Validate
             $currentModel->where($where);
         }
 
-        $resData = $currentModel->count();
+        $existData = $currentModel->find();
 
-        if ($resData > 0) {
+        if (!empty($existData)) {
             return false;
         }
 
