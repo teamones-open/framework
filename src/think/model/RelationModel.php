@@ -2778,6 +2778,38 @@ class RelationModel extends Model
         return $this->queryModuleFieldDict[$moduleCode];
     }
 
+
+    /**
+     * 修正数据值
+     * @param $filed
+     * @param $condition
+     * @param $filterVal
+     * @param array $editorParam
+     * @return array|int
+     */
+    protected function correctionDataValue($filed, $condition, $filterVal, $editorParam = [])
+    {
+        if ($filed === 'id' || strpos($filed, '_id') !== false || strpos($editorParam['type'], 'int(11)') !== false) {
+            // 解决字段为id或者为整型的数据隐式转换问题
+            if(is_array($filterVal)){
+                $newFilterVal = [];
+                foreach ($filterVal as $filterValItem){
+                    if(!in_array((int)$filterValItem, $newFilterVal)){
+                        $newFilterVal[] = (int)$filterValItem;
+                    }
+                }
+
+                return $newFilterVal;
+            }else{
+                if(strpos($filterVal, ',') === false){
+                    return (int)$filterVal;
+                }
+            }
+        }
+
+        return $filterVal;
+    }
+
     /**
      * 生成控件过滤条件
      * @param $moduleCode
@@ -2797,6 +2829,9 @@ class RelationModel extends Model
         } else {
             return $value;
         }
+
+        // 处理隐式转换问题
+        $filterVal = $this->correctionDataValue($filed, $condition, $filterVal, $currentModuleFieldsDict[$filed]);
 
         switch ($currentModuleFieldsDict[$filed]['editor']) {
             case "input":
@@ -2818,22 +2853,17 @@ class RelationModel extends Model
                         break;
                 }
                 return [$condition, $conditionValue];
-                break;
             case "times":
             case "date":
                 switch ($condition) {
                     case "BETWEEN":
                         $dateBetween = explode(",", $filterVal);
                         return [$condition, [strtotime($dateBetween[0]), strtotime($dateBetween[1])]];
-                        break;
                     default:
-                        return $value;
-                        break;
+                        return [$condition, $filterVal];
                 }
-                break;
             default:
-                return $value;
-                break;
+                return [$condition, $filterVal];
         }
     }
 
