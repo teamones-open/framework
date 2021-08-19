@@ -301,30 +301,40 @@ class Model
         // 如果不是Model类 自动记录数据表信息
         // 只在第一次执行记录
         if (empty($this->fields)) {
-            // 如果数据表字段没有定义则自动获取
-            if (C('DB_FIELDS_CACHE')) {
-                $fields = F('_fields/' . strtolower($this->getTableName()));
-                if ($fields) {
-                    $this->fields = $fields;
-                    if (!empty($fields['_pk'])) {
-                        $this->pk = $fields['_pk'];
-                    }
-                    return;
-                }
-            }
+
             // 每次都会读取数据表信息
-            $this->flush();
+            $fields = $this->flush();
+
+            if (!empty($fields)) {
+                $this->fields = $fields;
+                if (!empty($fields['_pk'])) {
+                    $this->pk = $fields['_pk'];
+                }
+                return;
+            }
         }
     }
 
     /**
      * 获取字段信息并缓存
+     * @param string $tableName
+     * @return mixed
      */
-    public function flush()
+    public function flush($tableName = '')
     {
+        if(empty($tableName)){
+            $tableName = $this->getTableName();
+        }
+
+        if (C('DB_FIELDS_CACHE')) {
+            $fieldsCache = S('fields_' . strtolower($tableName));
+            if(!empty($fieldsCache)){
+                return $fieldsCache;
+            }
+        }
+
         // 缓存不存在则查询数据表信息
         $this->db->setModel($this->name);
-        $tableName = $this->getTableName();
         $fields = $this->db->getFields($tableName);
 
         if (!empty($fields)) {
@@ -357,8 +367,8 @@ class Model
 
             // 增加缓存开关控制
             if (C('DB_FIELDS_CACHE')) {
-                // 永久缓存数据表信息
-                F('_fields/' . strtolower($tableName), $this->fields);
+                // 永久缓存数据表信息, 缓存一个小时
+                S('fields_' . strtolower($tableName), $this->fields, 3600);
             }
         }
     }
@@ -2411,8 +2421,15 @@ class Model
                     return false;
                 }
             }
-            $fields = $this->db->getFields($table);
-            return $fields ? array_keys($fields) : false;
+
+            $fields = $this->flush($table);
+
+            if(!empty($fields)){
+                unset($fields['_type'], $fields['_pk']);
+                return $fields;
+            }
+
+            return false;
         }
         if ($this->fields) {
             $fields = $this->fields;
