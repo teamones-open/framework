@@ -170,6 +170,11 @@ class Module
 
             // 销毁对象
             unset($tempDb);
+
+            // 清除数据表字段缓存
+            foreach ($tables as $tableName){
+                S('fields_' . strtolower($tableName), null);
+            }
         } else {
             throw new \RuntimeException('Data structure error. Need module ' . join(',', self::$requireModules), ErrorCode::DATA_STRUCTURE_NEED_MODULE);
         }
@@ -189,7 +194,7 @@ class Module
 
         // 获取所有实体code列表
         self::$moduleDictData['entity_code_list'] = Db::getInstance()->query("SELECT code FROM module WHERE type='entity'");
-        
+
         // 获取模块关联数据
         self::$moduleRelationData = Db::getInstance()->query("SELECT id,type as relation_type,src_module_id,dst_module_id,link_id FROM module_relation");
     }
