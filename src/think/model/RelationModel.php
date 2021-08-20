@@ -2801,7 +2801,7 @@ class RelationModel extends Model
 
                 return $newFilterVal;
             }else{
-                if(strpos($filterVal, ',') === false){
+                if (in_array(strtolower($condition), ["eq", "neq", "gt", "egt", "lt", "elt"]) && strpos($filterVal, ',') === false) {
                     return (int)$filterVal;
                 }
             }
