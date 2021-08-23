@@ -37,7 +37,7 @@ class Redis extends Driver
         ];
 
         // 初始化对象
-        RedisHandler::instance();
+        RedisHandler::instance($config);
     }
 
     /**
