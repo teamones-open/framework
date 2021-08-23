@@ -196,19 +196,25 @@ class RedisHandler
     /**
      * @return RedisManager
      */
-    public static function instance()
+    public static function instance($config)
     {
         if (empty(static::$_manager)) {
-
             if (class_exists('\support\bootstrap\Redis') && isset(\support\bootstrap\Redis::$_manager)) {
                 // 外面配置了redis 句柄直接获取
                 static::$_manager = \support\bootstrap\Redis::$_manager;
             } else {
-                $config = config('redis');
                 static::$_manager = new RedisManager(null, 'phpredis', $config);
             }
         }
         return static::$_manager;
+    }
+
+    /**
+     * 销毁实列
+     */
+    public static function  destroy()
+    {
+        static::$_manager = null;
     }
 
     /**

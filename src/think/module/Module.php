@@ -13,6 +13,7 @@ namespace think\module;
 
 use think\Db;
 use think\exception\ErrorCode;
+use think\RedisHandler;
 
 class Module
 {
@@ -172,9 +173,11 @@ class Module
             unset($tempDb);
 
             // 清除数据表字段缓存
+            RedisHandler::instance(config('redis'));
             foreach ($tables as $tableName){
                 S('fields_' . strtolower($tableName), null);
             }
+            RedisHandler::destroy();
         } else {
             throw new \RuntimeException('Data structure error. Need module ' . join(',', self::$requireModules), ErrorCode::DATA_STRUCTURE_NEED_MODULE);
         }
