@@ -82,6 +82,18 @@ class Cache
     }
 
     /**
+     * 销毁实例化对象
+     */
+    public static function destroy(array $options = [])
+    {
+        self::$handler = null;
+        $type = !empty($options['type']) ? $options['type'] : 'File';
+        if (strtolower($type) === 'redis') {
+            RedisHandler::destroy();
+        }
+    }
+
+    /**
      * 切换缓存类型 需要配置 cache.type 为 complex
      * @access public
      * @param string $name 缓存标识
