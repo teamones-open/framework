@@ -322,13 +322,13 @@ class Model
      */
     public function flush($tableName = '')
     {
-        if(empty($tableName)){
+        if (empty($tableName)) {
             $tableName = $this->getTableName();
         }
 
         if (C('DB_FIELDS_CACHE')) {
             $fieldsCache = S('fields_' . strtolower($tableName));
-            if(!empty($fieldsCache)){
+            if (!empty($fieldsCache)) {
                 return $fieldsCache;
             }
         }
@@ -2424,7 +2424,7 @@ class Model
 
             $fields = $this->flush($table);
 
-            if(!empty($fields)){
+            if (!empty($fields)) {
                 unset($fields['_type'], $fields['_pk']);
                 return $fields;
             }
@@ -2778,5 +2778,86 @@ class Model
         }
 
         return $this;
+    }
+
+    /**
+     * 列查询
+     * @param string $field
+     * @return array|false|mixed|string
+     */
+    public function column(string $field)
+    {
+        // 分析表达式
+        $options = $this->_parseOptions();
+        // 标记是列查询
+        $options['column_select_field'] = $field;
+        // 判断查询缓存
+        $key = "";
+        if (isset($options['cache'])) {
+            $cache = $options['cache'];
+            $key = is_string($cache['key']) ? $cache['key'] : md5(serialize($options));
+            $data = S($key, '', $cache);
+            if (false !== $data) {
+                return $data;
+            }
+        }
+        $resultSet = $this->db->select($options);
+        if (false === $resultSet) {
+            return false;
+        }
+        if (!empty($resultSet)) {
+            // 有查询结果
+            if (is_string($resultSet)) {
+                return $resultSet;
+            }
+            $resultSet = array_column($resultSet, $field);
+        }
+        if (isset($cache)) {
+            S($key, $resultSet, $cache);
+        }
+        return $resultSet;
+    }
+
+    /**
+     * 值查询
+     * @param string $field
+     * @return false|mixed|string|null
+     */
+    public function value(string $field)
+    {
+        // 标记是值查询
+        $this->options['value_find_field'] = $field;
+        // 总是查找一条记录
+        $this->options['limit'] = 1;
+        // 分析表达式
+        $options = $this->_parseOptions();
+        // 判断查询缓存
+        $key = "";
+        if (isset($options['cache'])) {
+            $cache = $options['cache'];
+            $key = is_string($cache['key']) ? $cache['key'] : md5(serialize($options));
+            $data = S($key, '', $cache);
+            if (false !== $data) {
+                $this->data = $data;
+                return $data;
+            }
+        }
+        $resultSet = $this->db->select($options);
+        if (false === $resultSet) {
+            return false;
+        }
+        if (empty($resultSet)) {
+            // 查询结果为空
+            return null;
+        }
+        if (is_string($resultSet)) {
+            return $resultSet;
+        }
+        // 读取数据后的处理
+        $this->data = $resultSet[0][$field] ?? null;
+        if (isset($cache)) {
+            S($key, $this->data, $cache);
+        }
+        return $this->data;
     }
 }
