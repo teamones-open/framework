@@ -763,6 +763,8 @@ class Model
      */
     protected function _before_update($pk, &$data, $options, $writeEvent)
     {
+        $this->oldUpdateData = [];
+        $this->newUpdateData = [];
         if ($options["model"] != "EventLog" && $writeEvent) {
             $oldData = $this->where($options["where"])->find();
             foreach ($data as $key => $value) {
