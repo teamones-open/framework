@@ -1672,6 +1672,12 @@ class Model
                                 $data[$auto[0]] = call_user_func_array([&$this, $auto[1]], $args);
                             }
                             break;
+                        case 'callback_with_data':
+                            $args = isset($auto[4]) ? (array)$auto[4] : [];
+                            array_unshift($args, $auto[0]);
+                            array_unshift($args, $data);
+                            $data[$auto[0]] = call_user_func_array([&$this, $auto[1]], $args);
+                            break;
                         case 'function_with_data':
                             // 使用函数进行填充，传入数组值和字段名
                             $data[$auto[0]] = call_user_func_array($auto[1], ['data' => $data, "field" => $auto[0]]);
