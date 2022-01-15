@@ -180,10 +180,11 @@ class Request extends \Workerman\Protocols\Http\Request
             $keys = ['phone', 'email', 'name', 'union_id', 'avatar'];
             if (!empty($userCache)) {
                 foreach ($keys as $key) {
-                    if (!empty($XUserInfoBase[$key]) && $XUserInfoBase[$key] === $userCache[$key]) {
-                        return $userCache;
+                    if (!empty($XUserInfoBase[$key]) && !empty($userCache[$key]) && $XUserInfoBase[$key] != $userCache[$key]) {
+                        return false;
                     }
                 }
+                return $userCache;
             }
         }
         return false;
