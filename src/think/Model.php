@@ -318,15 +318,16 @@ class Model
     /**
      * 获取字段信息并缓存
      * @param string $tableName
+     * @param bool $must 是否必须刷新
      * @return mixed
      */
-    public function flush($tableName = '')
+    public function flush($tableName = '', $must = false)
     {
         if (empty($tableName)) {
             $tableName = $this->getTableName();
         }
 
-        if (C('DB_FIELDS_CACHE')) {
+        if ($must === false && C('DB_FIELDS_CACHE')) {
             $fieldsCache = S('fields_' . strtolower($tableName));
             if (!empty($fieldsCache)) {
                 return $fieldsCache;
