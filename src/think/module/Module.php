@@ -32,6 +32,21 @@ class Module
     // 包含租户id的模块列表数据
     public static $includeTenantIdModules = [];
 
+    // 刷新缓存锁
+    protected static $refreshLock = false;
+
+    /**
+     * 初始化数据
+     * @return void
+     * @throws \Exception
+     */
+    private static function generateModuleData()
+    {
+        self::getModuleData();
+        self::generateModuleFieldCache(self::$moduleDictData['module_index_by_id']);
+        self::generateCustomHorizontalFieldsCache();
+    }
+
     /**
      * 模块初始化
      * @throws \Exception
@@ -39,9 +54,7 @@ class Module
     public static function init()
     {
         if (empty(self::$moduleDictData)) {
-            self::getModuleData();
-            self::generateModuleFieldCache(self::$moduleDictData['module_index_by_id']);
-            self::generateCustomHorizontalFieldsCache();
+            self::generateModuleData();
         }
     }
 
@@ -174,7 +187,7 @@ class Module
 
             // 清除数据表字段缓存
             Cache::init(config('redis'));
-            foreach ($tables as $tableName){
+            foreach ($tables as $tableName) {
                 S('fields_' . strtolower($tableName), null);
             }
             Cache::destroy(config('redis'));
@@ -230,5 +243,24 @@ class Module
         if (!in_array($moduleCOde, self::$includeTenantIdModules)) {
             self::$includeTenantIdModules[] = $moduleCOde;
         }
+    }
+
+    /**
+     * 刷新模块配置
+     * @return bool
+     * @throws \Exception
+     */
+    public static function refreshModuleConfig()
+    {
+        if (self::$refreshLock) {
+            return false;
+        }
+        self::$refreshLock = true;
+        try {
+            self::generateModuleData();
+        } finally {
+            self::$refreshLock = false;
+        }
+        return true;
     }
 }
