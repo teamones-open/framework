@@ -1041,7 +1041,7 @@ class RelationModel extends Model
                 }
 
                 foreach ($queryFields as &$queryField) {
-                    $queryField = $this->handleQueryCustomFields($queryField) . " AS $queryField";
+                    $queryField = transform_custom_field($queryField, $moduleCode) . " AS $queryField";
                 }
 
                 $horizontalData = $newModelObject->field(join(',', $queryFields))->where(['id' => ['IN', join(',', $relationIds)]])->select();
@@ -2311,7 +2311,7 @@ class RelationModel extends Model
                         }
                     }
                 } else {
-                    $newFields[] = "{$this->handleQueryCustomFields($fieldItem)} AS {$moduleArray[0]}__{$moduleArray[1]}";
+                    $newFields[] = transform_custom_field($fieldItem, $moduleArray[0]) . " AS {$moduleArray[0]}__{$moduleArray[1]}";
                 }
             }
         }
@@ -2791,16 +2791,16 @@ class RelationModel extends Model
     {
         if ($filed === 'id' || strpos($filed, '_id') !== false || strpos($editorParam['type'], 'int(11)') !== false) {
             // 解决字段为id或者为整型的数据隐式转换问题
-            if(is_array($filterVal)){
+            if (is_array($filterVal)) {
                 $newFilterVal = [];
-                foreach ($filterVal as $filterValItem){
-                    if(!in_array((int)$filterValItem, $newFilterVal)){
+                foreach ($filterVal as $filterValItem) {
+                    if (!in_array((int)$filterValItem, $newFilterVal)) {
                         $newFilterVal[] = (int)$filterValItem;
                     }
                 }
 
                 return $newFilterVal;
-            }else{
+            } else {
                 if (in_array(strtolower($condition), ["eq", "neq", "gt", "egt", "lt", "elt"]) && strpos($filterVal, ',') === false) {
                     return (int)$filterVal;
                 }

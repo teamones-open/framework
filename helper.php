@@ -1380,3 +1380,38 @@ if (!function_exists('generate_mysql_json_contains')) {
         return substr($itemValueStr, 0, -1);
     }
 }
+
+if (!function_exists('transform_custom_field')) {
+    /**
+     *   转换 自定义字段
+     * @param $field
+     * @param $currentModuleCode
+     * @return array
+     */
+    function transform_custom_field($field, $currentModuleCode)
+    {
+        // key 是包含 . 的 那么就进行处理
+        if (strstr($field, '.') !== false) {
+            $fieldData = explode('.', $field);
+            $moduleCode = $fieldData[0];
+            $fieldName = $fieldData[1];
+        } else {
+            $moduleCode = $currentModuleCode;
+            $fieldName = $field;
+        }
+
+        if (isset(\think\module\Module::$moduleDictData['field_index_by_code'][$moduleCode])) {
+            $customFields = array_keys(\think\module\Module::$moduleDictData['field_index_by_code'][$moduleCode]['custom'] ?? []);
+            if (in_array($fieldName, $customFields)) {
+                // 自定义字段 需要处理查询规则
+                $fieldName = "JSON_UNQUOTE(JSON_EXTRACT(`{$moduleCode}`.`json`,'$.{$fieldName}'))";
+            } else {
+                $fieldName = $moduleCode . '.' . $fieldName;
+            }
+        } else {
+            throw_strack_exception('unknown module ' . $moduleCode, \think\exception\ErrorCode::UNKNOWN_MODULE_CODE);
+        }
+
+        return $fieldName;
+    }
+}
