@@ -11,6 +11,7 @@
  * @link      http://www.workerman.net/
  * @license   http://www.opensource.org/licenses/mit-license.php MIT License
  */
+
 namespace think\exception;
 
 use Throwable;
@@ -83,7 +84,11 @@ class ExceptionHandler implements ExceptionHandlerInterface
             $error = $this->_debug ? nl2br((string)$exception) : 'Server internal error';
             $json = ['code' => $code ? $code : 500, 'msg' => $error];
         }
-
+        // 没有开启debug 所有不是think\exception\LogicException的都屏蔽错误
+        if (!$this->_debug && !$exception instanceof RuntimeException) {
+            $json['msg'] = 'Server internal error';
+        }
+        $this->_debug && $json['traces'] = (string)$exception;
         return new Response(json_encode($json, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES), 200, ['Content-Type' => 'application/json']);
 
     }
