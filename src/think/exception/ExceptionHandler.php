@@ -85,7 +85,7 @@ class ExceptionHandler implements ExceptionHandlerInterface
             $json = ['code' => $code ? $code : 500, 'msg' => $error];
         }
         // 没有开启debug 所有不是think\exception\LogicException的都屏蔽错误
-        if (!$this->_debug && !$exception instanceof LogicException) {
+        if (!$this->_debug && !$exception instanceof RuntimeException) {
             $json['msg'] = 'Server internal error';
         }
         $this->_debug && $json['traces'] = (string)$exception;
