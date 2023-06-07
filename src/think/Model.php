@@ -1768,7 +1768,7 @@ class Model
                             }
                             break;
                         default:    // 默认表单存在该字段就验证
-                            if (!empty($data[$val[0]])) {
+                            if (isset($data[$val[0]])) {
                                 if (false === $this->_validationField($data, $val)) {
                                     return false;
                                 }
