@@ -93,7 +93,7 @@ abstract class Driver
     ];
 
     // 查询表达式
-    protected $selectSql = 'SELECT%DISTINCT% %FIELD% FROM %TABLE%%FORCE%%JOIN%%WHERE%%GROUP%%HAVING%%ORDER%%LIMIT% %UNION%%LOCK%%COMMENT%';
+    protected $selectSql = '%HINT% SELECT%DISTINCT% %FIELD% FROM %TABLE%%FORCE%%JOIN%%WHERE%%GROUP%%HAVING%%ORDER%%LIMIT% %UNION%%LOCK%%COMMENT%';
 
     // 查询次数
     protected $queryTimes = 0;
@@ -976,6 +976,16 @@ abstract class Driver
     }
 
     /**
+     * 增加 Hint
+     * @param $hint
+     * @return string
+     */
+    protected function parseHint($hint)
+    {
+        return !empty($hint) ? ' /*' . $hint . '*/' : '';
+    }
+
+    /**
      * distinct分析
      * @access protected
      * @param mixed $distinct
@@ -1279,6 +1289,7 @@ abstract class Driver
     {
         $sql = str_replace(
             [
+                '%HINT%',
                 '%TABLE%',
                 '%DISTINCT%',
                 '%FIELD%',
@@ -1294,6 +1305,7 @@ abstract class Driver
                 '%FORCE%'
             ],
             [
+                $this->parseHint(!empty($options['hint']) ? $options['hint'] : ''),
                 $this->parseTable($options['table']),
                 $this->parseDistinct(isset($options['distinct']) ? $options['distinct'] : false),
                 $this->parseField(!empty($options['field']) ? $options['field'] : '*'),
