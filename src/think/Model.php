@@ -2746,6 +2746,26 @@ class Model
     }
 
     /**
+     * 强制走主DB查询
+     * @return $this
+     */
+    public function forceMasterDB()
+    {
+        return $this->hint('FORCE_MASTER');
+    }
+
+    /**
+     * 增加hint标识
+     * @param $hintContent
+     * @return $this
+     */
+    public function hint($hintContent)
+    {
+        $this->options['hint'] = $hintContent;
+        return $this;
+    }
+
+    /**
      * 获取执行的SQL语句
      * @access public
      * @param boolean $fetch 是否返回sql

@@ -1143,7 +1143,9 @@ class RelationModel extends Model
             } else {
                 //新增成功，返回当前添加的一条完整数据
                 $pk = $this->getPk();
-                $this->_resData = $this->where([$pk => $result])->find();
+
+                // 强制走主数据库查询
+                $this->_resData = $this->forceMasterDB()->where([$pk => $result])->find();
                 $this->successMsg = "Add {$this->name} items successfully.";
                 return $this->handleReturnData(false, $this->_resData);
             }
@@ -1177,7 +1179,9 @@ class RelationModel extends Model
             } else {
                 // 修改成功，返回当前修改的一条完整数据
                 $pk = $this->getPk();
-                $this->_resData = $this->where([$pk => $param[$pk]])->find();
+
+                // 强制走主数据库查询
+                $this->_resData = $this->forceMasterDB()->where([$pk => $param[$pk]])->find();
                 $this->successMsg = "Modify {$this->name} items successfully.";
                 return $this->handleReturnData(false, $this->_resData);
             }
@@ -1208,7 +1212,9 @@ class RelationModel extends Model
                 }
             } else {
                 $pk = $this->getPk();
-                $this->_resData = $this->where([$pk => $data[$pk]])->find();
+
+                // 强制走主数据库查询
+                $this->_resData = $this->forceMasterDB()->where([$pk => $data[$pk]])->find();
                 return $this->handleReturnData(false, $this->_resData);
             }
         } else {
