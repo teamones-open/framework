@@ -982,7 +982,7 @@ abstract class Driver
      */
     protected function parseHint($hint)
     {
-        return !empty($hint) ? ' /*' . $hint . '*/' : '';
+        return !empty($hint) ? '/*' . $hint . '*/' : '';
     }
 
     /**
