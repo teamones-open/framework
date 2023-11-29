@@ -572,7 +572,7 @@ abstract class Driver
                 [$key, $name]  = explode('->', $key, 2);
                 $item          = $this->parseKey($key);
 
-                if(!empty($val) &&is_array($val)){
+                if(is_array($val)){
                     // json数据格式保持原样不转义
                     $val = json_encode($val);
                     $jsonSql = 'JSON_SET(' . $item . ', \'$.' . $name . '\', CAST(\'' . $val . '\' AS JSON))';
