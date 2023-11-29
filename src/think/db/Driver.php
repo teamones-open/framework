@@ -209,7 +209,7 @@ abstract class Driver
      */
     protected function parseDsn($config): string
     {
-
+        return '';
     }
 
     /**
