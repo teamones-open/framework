@@ -566,7 +566,22 @@ abstract class Driver
     {
         $set = [];
         foreach ($data as $key => $val) {
-            if (isset($val[0]) && 'exp' == $val[0]) {
+
+            if (false !== strpos($key, '->')) {
+                // 处理局部json字段数据更新
+                [$key, $name]  = explode('->', $key, 2);
+                $item          = $this->parseKey($key);
+
+                if(!empty($val) &&is_array($val)){
+                    // json数据格式保持原样不转义
+                    $val = json_encode($val);
+                    $jsonSql = 'JSON_SET(' . $item . ', \'$.' . $name . '\', CAST(\'' . $val . '\' AS JSON))';
+                }else{
+                    $jsonSql = 'JSON_SET(' . $item . ', \'$.' . $name . '\', \'' . $val . '\')';
+                }
+
+                $set[] =    $item.'='.$jsonSql;
+            }elseif (isset($val[0]) && 'exp' == $val[0]) {
                 $set[] = $this->parseKey($key) . '=' . $val[1];
             } elseif (is_null($val)) {
                 $set[] = $this->parseKey($key) . '=NULL';
