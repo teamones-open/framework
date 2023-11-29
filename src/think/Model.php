@@ -769,10 +769,16 @@ class Model
         if ($options["model"] != "EventLog" && $writeEvent) {
             $oldData = $this->where($options["where"])->find();
             foreach ($data as $key => $value) {
-                if ($oldData[$key] != $value) {
+                if (false !== strpos($key, '->')) {
+                    // json数据更新兼容取值，不精确到具体的值
+                    [$indexKey, $name]  = explode('->', $key, 2);
+                }else{
+                    $indexKey = $key;
+                }
+                if ($oldData[$indexKey] != $value) {
                     //仅记录变化字段
-                    $this->oldUpdateData[$key] = $oldData[$key];
-                    $this->newUpdateData[$key] = $value;
+                    $this->oldUpdateData[$indexKey] = $oldData[$indexKey];
+                    $this->newUpdateData[$indexKey] = $value;
                 }
             }
             $this->oldUpdateKey = $oldData[$pk];
@@ -2762,6 +2768,15 @@ class Model
     public function hint($hintContent)
     {
         $this->options['hint'] = $hintContent;
+        return $this;
+    }
+
+    /**
+     * 禁用DB after event 回调，防止死循环事件产生
+     * @return $this
+     */
+    public function disableDBAfter(){
+        $this->options['disable_db_after'] = true;
         return $this;
     }
 

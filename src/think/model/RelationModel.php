@@ -125,6 +125,11 @@ class RelationModel extends Model
      */
     protected function _after_find(&$result, $options)
     {
+        if(!empty($options['disable_db_after']) && $options['disable_db_after'] === true){
+            // 禁用db后处理事件
+            return;
+        }
+
         // 获取关联数据 并附加到结果中
         if (!empty($options['link'])) {
             $this->getRelation($result, $options['link']);
@@ -138,6 +143,11 @@ class RelationModel extends Model
      */
     protected function _after_select(&$result, $options)
     {
+        if(!empty($options['disable_db_after']) && $options['disable_db_after'] === true){
+            // 禁用db后处理事件
+            return;
+        }
+
         // 获取关联数据 并附加到结果中
         if (!empty($options['link'])) {
             $this->getRelations($result, $options['link']);
@@ -154,6 +164,11 @@ class RelationModel extends Model
      */
     protected function _after_insert($pk, $pkName, $data, $options)
     {
+        if(!empty($options['disable_db_after']) && $options['disable_db_after'] === true){
+            // 禁用db后处理事件
+            return;
+        }
+
         //写入事件日志
         if ($options["model"] != "EventLog") {
             $this->databaseEventLogHook([
@@ -183,6 +198,11 @@ class RelationModel extends Model
      */
     protected function _after_update($result, $pkName, $data, $options, $writeEvent)
     {
+        if(!empty($options['disable_db_after']) && $options['disable_db_after'] === true){
+            // 禁用db后处理事件
+            return;
+        }
+
         //写入事件日志
         if ($result > 0 && $options["model"] != "EventLog" && $writeEvent) {
             $this->databaseEventLogHook([
@@ -212,6 +232,11 @@ class RelationModel extends Model
      */
     protected function _after_delete($result, $pkName, $data, $options)
     {
+        if(!empty($options['disable_db_after']) && $options['disable_db_after'] === true){
+            // 禁用db后处理事件
+            return;
+        }
+
         //写入事件日志
         if ($result > 0 && $options["model"] != "EventLog") {
             $this->databaseEventLogHook([
