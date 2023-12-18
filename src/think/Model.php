@@ -85,6 +85,9 @@ class Model
     // 数据表名（不包含表前缀）
     protected $tableName = '';
 
+    // 数据表后缀
+    protected $suffix = '';
+
     // 实际数据表名（包含表前缀）
     protected $trueTableName = '';
 
@@ -1020,6 +1023,11 @@ class Model
         } else {
             // 指定数据表 则重新获取字段列表 但不支持类型检测
             $fields = $this->getDbFields();
+        }
+
+        // 拼接数据表后缀
+        if (!empty($this->suffix)) {
+            $options['table']  .= $this->suffix;
         }
 
         // 数据表别名
@@ -2195,6 +2203,28 @@ class Model
     }
 
     /**
+     * 设置当前模型数据表的后缀
+     * @access public
+     * @param $suffix
+     * @return $this
+     */
+    public function setSuffix($suffix)
+    {
+        $this->suffix = $suffix;
+        return $this;
+    }
+
+    /**
+     * 获取当前模型的数据表后缀
+     * @access public
+     * @return string
+     */
+    public function getSuffix()
+    {
+        return $this->suffix ?: '';
+    }
+
+    /**
      * 切换当前的数据库连接
      * @access public
      * @param integer $linkNum 连接序号
@@ -2761,6 +2791,18 @@ class Model
     }
 
     /**
+     * 设置当前查询所在的分区
+     * @access public
+     * @param string|array $partition 分区名称
+     * @return $this
+     */
+    public function partition($partition)
+    {
+        $this->options['partition'] = $partition;
+        return $this;
+    }
+
+    /**
      * 增加hint标识
      * @param $hintContent
      * @return $this
@@ -2775,7 +2817,8 @@ class Model
      * 禁用DB after event 回调，防止死循环事件产生
      * @return $this
      */
-    public function disableDBAfter(){
+    public function disableDBAfter()
+    {
         $this->options['disable_db_after'] = true;
         return $this;
     }
