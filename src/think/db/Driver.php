@@ -93,7 +93,7 @@ abstract class Driver
     ];
 
     // 查询表达式
-    protected $selectSql = '%HINT% SELECT%DISTINCT% %FIELD% FROM %TABLE%%FORCE%%JOIN%%WHERE%%GROUP%%HAVING%%ORDER%%LIMIT% %UNION%%LOCK%%COMMENT%';
+    protected $selectSql = '%HINT% SELECT%DISTINCT% %FIELD% FROM %TABLE%%PARTITION%%FORCE%%JOIN%%WHERE%%GROUP%%HAVING%%ORDER%%LIMIT% %UNION%%LOCK%%COMMENT%';
 
     // 查询次数
     protected $queryTimes = 0;
@@ -279,7 +279,7 @@ abstract class Driver
             } else {
                 return $this->getResult();
             }
-        } catch (\PDOException | \Exception | \Throwable $e) {
+        } catch (\PDOException|\Exception|\Throwable $e) {
             if ($this->transTimes > 0) {
                 // 当前是开启了事务 避免多层事务失效 直接重置事务计数
                 if ($this->isBreak($e)) {
@@ -361,7 +361,7 @@ abstract class Driver
                 }
                 return $this->numRows;
             }
-        } catch (\PDOException | \Exception | \Throwable $e) {
+        } catch (\PDOException|\Exception|\Throwable $e) {
             if ($this->transTimes > 0) {
                 // 当前是开启了事务 避免多层事务失效 直接重置事务计数
                 if ($this->isBreak($e)) {
@@ -569,19 +569,19 @@ abstract class Driver
 
             if (false !== strpos($key, '->')) {
                 // 处理局部json字段数据更新
-                [$key, $name]  = explode('->', $key, 2);
-                $item          = $this->parseKey($key);
+                [$key, $name] = explode('->', $key, 2);
+                $item = $this->parseKey($key);
 
-                if(is_array($val)){
+                if (is_array($val)) {
                     // json数据格式保持原样不转义
                     $val = json_encode($val);
                     $jsonSql = 'JSON_SET(' . $item . ', \'$.' . $name . '\', CAST(\'' . $val . '\' AS JSON))';
-                }else{
+                } else {
                     $jsonSql = 'JSON_SET(' . $item . ', \'$.' . $name . '\', \'' . $val . '\')';
                 }
 
-                $set[] =    $item.'='.$jsonSql;
-            }elseif (isset($val[0]) && 'exp' == $val[0]) {
+                $set[] = $item . '=' . $jsonSql;
+            } elseif (isset($val[0]) && 'exp' == $val[0]) {
                 $set[] = $this->parseKey($key) . '=' . $val[1];
             } elseif (is_null($val)) {
                 $set[] = $this->parseKey($key) . '=NULL';
@@ -1000,6 +1000,25 @@ abstract class Driver
         return !empty($hint) ? '/*' . $hint . '*/' : '';
     }
 
+
+    /**
+     * Partition 分析
+     * @param $partition
+     * @return string
+     */
+    protected function parsePartition($partition)
+    {
+        if ('' == $partition) {
+            return '';
+        }
+
+        if (is_string($partition)) {
+            $partition = explode(',', $partition);
+        }
+
+        return ' PARTITION (' . implode(' , ', $partition) . ') ';
+    }
+
     /**
      * distinct分析
      * @access protected
@@ -1111,7 +1130,7 @@ abstract class Driver
         }
         // 兼容数字传入方式
         $replace = (is_numeric($replace) && $replace > 0) ? true : $replace;
-        $sql = (true === $replace ? 'REPLACE' : 'INSERT') . ' INTO ' . $this->parseTable($options['table']) . ' (' . implode(',', $fields) . ') VALUES (' . implode(',', $values) . ')' . $this->parseDuplicate($replace);
+        $sql = (true === $replace ? 'REPLACE' : 'INSERT') . ' INTO ' . $this->parseTable($options['table']) . $this->parsePartition(!empty($options['partition']) ? $options['partition'] : '') . ' (' . implode(',', $fields) . ') VALUES (' . implode(',', $values) . ')' . $this->parseDuplicate($replace);
         $sql .= $this->parseComment(!empty($options['comment']) ? $options['comment'] : '');
         return $this->execute($sql, !empty($options['fetch_sql']) ? true : false);
     }
@@ -1157,7 +1176,7 @@ abstract class Driver
             }
             $values[] = 'SELECT ' . implode(',', $value);
         }
-        $sql = 'INSERT INTO ' . $this->parseTable($options['table']) . ' (' . implode(',', $fields) . ') ' . implode(' UNION ALL ', $values);
+        $sql = 'INSERT INTO ' . $this->parseTable($options['table']) . $this->parsePartition(!empty($options['partition']) ? $options['partition'] : '') . ' (' . implode(',', $fields) . ') ' . implode(' UNION ALL ', $values);
         $sql .= $this->parseComment(!empty($options['comment']) ? $options['comment'] : '');
         return $this->execute($sql, !empty($options['fetch_sql']) ? true : false);
     }
@@ -1205,7 +1224,7 @@ abstract class Driver
         $this->model = $options['model'];
         $this->parseBind(!empty($options['bind']) ? $options['bind'] : []);
         $table = $this->parseTable($options['table']);
-        $sql = 'UPDATE ' . $table . $this->parseSet($data);
+        $sql = 'UPDATE ' . $table . $this->parsePartition(!empty($options['partition']) ? $options['partition'] : '') . $this->parseSet($data);
         if (strpos($table, ',')) {
             // 多表更新支持JOIN操作
             $sql .= $this->parseJoin(!empty($options['join']) ? $options['join'] : '');
@@ -1236,7 +1255,7 @@ abstract class Driver
         $this->model = $options['model'];
         $this->parseBind(!empty($options['bind']) ? $options['bind'] : []);
         $table = $this->parseTable($options['table']);
-        $sql = 'DELETE FROM ' . $table;
+        $sql = 'DELETE FROM ' . $table . $this->parsePartition(!empty($options['partition']) ? $options['partition'] : '');
         if (strpos($table, ',')) {
             // 多表删除支持USING和JOIN操作
             if (!empty($options['using'])) {
@@ -1306,6 +1325,7 @@ abstract class Driver
             [
                 '%HINT%',
                 '%TABLE%',
+                '%PARTITION%',
                 '%DISTINCT%',
                 '%FIELD%',
                 '%JOIN%',
@@ -1322,6 +1342,7 @@ abstract class Driver
             [
                 $this->parseHint(!empty($options['hint']) ? $options['hint'] : ''),
                 $this->parseTable($options['table']),
+                $this->parsePartition(!empty($options['partition']) ? $options['partition'] : ''),
                 $this->parseDistinct(isset($options['distinct']) ? $options['distinct'] : false),
                 $this->parseField(!empty($options['field']) ? $options['field'] : '*'),
                 $this->parseJoin(!empty($options['join']) ? $options['join'] : ''),
