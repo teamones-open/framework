@@ -105,6 +105,20 @@ class Module
             }
         }
 
+        if (!empty($tables)) {
+            // 存在新模块添加到module表
+            self::saveNewModule($tempDb, $tables);
+        }
+    }
+
+    /**
+     * 保存新模块
+     * @param $tempDb
+     * @param $tables ['type' => 'fixed','name' => ‘xxx’]
+     * @return void
+     */
+    public static function saveNewModule($tempDb, $tables)
+    {
         $result = $tempDb->query("select max(id) as max_id from module");
         $insertId = !empty($result[0]['max_id']) ? $result[0]['max_id'] + 1 : 1;
 
