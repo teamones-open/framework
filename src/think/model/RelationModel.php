@@ -125,7 +125,7 @@ class RelationModel extends Model
      */
     protected function _after_find(&$result, $options)
     {
-        if(!empty($options['disable_db_after']) && $options['disable_db_after'] === true){
+        if (!empty($options['disable_db_after']) && $options['disable_db_after'] === true) {
             // 禁用db后处理事件
             return;
         }
@@ -143,7 +143,7 @@ class RelationModel extends Model
      */
     protected function _after_select(&$result, $options)
     {
-        if(!empty($options['disable_db_after']) && $options['disable_db_after'] === true){
+        if (!empty($options['disable_db_after']) && $options['disable_db_after'] === true) {
             // 禁用db后处理事件
             return;
         }
@@ -164,7 +164,7 @@ class RelationModel extends Model
      */
     protected function _after_insert($pk, $pkName, $data, $options)
     {
-        if(!empty($options['disable_db_after']) && $options['disable_db_after'] === true){
+        if (!empty($options['disable_db_after']) && $options['disable_db_after'] === true) {
             // 禁用db后处理事件
             return;
         }
@@ -198,7 +198,7 @@ class RelationModel extends Model
      */
     protected function _after_update($result, $pkName, $data, $options, $writeEvent)
     {
-        if(!empty($options['disable_db_after']) && $options['disable_db_after'] === true){
+        if (!empty($options['disable_db_after']) && $options['disable_db_after'] === true) {
             // 禁用db后处理事件
             return;
         }
@@ -232,7 +232,7 @@ class RelationModel extends Model
      */
     protected function _after_delete($result, $pkName, $data, $options)
     {
-        if(!empty($options['disable_db_after']) && $options['disable_db_after'] === true){
+        if (!empty($options['disable_db_after']) && $options['disable_db_after'] === true) {
             // 禁用db后处理事件
             return;
         }
@@ -2536,7 +2536,7 @@ class RelationModel extends Model
                         }
                     } else {
                         if ($linkId) {
-                            if (in_array($linkId, ['assignee', 'executor', 'created_by'])) {
+                            if (in_array($linkId, ['assignee', 'executor', 'created_by', 'assignee_producer', 'updated_by'])) {
                                 // 需要分为多个join
                                 $queryJoin['type'] = 'multiple';
                             }
@@ -2822,16 +2822,16 @@ class RelationModel extends Model
     {
         if ($filed === 'id' || strpos($filed, '_id') !== false || strpos($editorParam['type'], 'int(11)') !== false) {
             // 解决字段为id或者为整型的数据隐式转换问题
-            if(is_array($filterVal)){
+            if (is_array($filterVal)) {
                 $newFilterVal = [];
-                foreach ($filterVal as $filterValItem){
-                    if(!in_array((int)$filterValItem, $newFilterVal)){
+                foreach ($filterVal as $filterValItem) {
+                    if (!in_array((int)$filterValItem, $newFilterVal)) {
                         $newFilterVal[] = (int)$filterValItem;
                     }
                 }
 
                 return $newFilterVal;
-            }else{
+            } else {
                 if (in_array(strtolower($condition), ["eq", "neq", "gt", "egt", "lt", "elt"]) && strpos($filterVal, ',') === false) {
                     return (int)$filterVal;
                 }
