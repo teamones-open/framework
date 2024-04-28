@@ -2649,31 +2649,38 @@ class RelationModel extends Model
         $this->resetDefault();
 
         // 统计个数
-        $maxId = $this->max('id');
-
         $this->checkIsComplexFilter($options);
-
-        if ($this->isComplexFilter) {
-            $this->alias($this->currentModuleCode);
-        }
 
         $filter = [];
         if (array_key_exists("filter", $options) && !empty($options['filter'])) {
             // 有过滤条件
             $fields = !empty($options["fields"]) ? $options["fields"] : [];
             $filter = $this->buildFilter($options["filter"], $fields);
-            $this->where($filter);
         }
 
-        if ($maxId > 100000) {
-            // 当单表数据量超过10万时候，不做count查询
-            $total = C("database.database_max_select_rows");
+        // 分页第一页获取total，其他页不在获取
+        $isNotFirstPage = false;
+        $total = 0;
+        if (array_key_exists("page", $options) && $options["page"][0] > 1) {
+            $isNotFirstPage = true;
         } else {
-            $total = $this->count();
+            $maxId = $this->max('id');
+
+            if ($this->isComplexFilter) {
+                $this->alias($this->currentModuleCode);
+            }
+
+            if ($maxId > 100000) {
+                // 当单表数据量超过10万时候，不做count查询
+                $total = C("database.database_max_select_rows");
+            } else {
+                // total 缓存5秒 防止频繁count
+                $total = $this->where($filter)->cache(5)->count();
+            }
         }
 
         // 获取数据
-        if ($total >= 0) {
+        if ($total >= 0 || $isNotFirstPage) {
 
             if ($this->isComplexFilter) {
                 $this->alias($this->currentModuleCode);
