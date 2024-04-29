@@ -77,6 +77,16 @@ class RelationModel extends Model
     }
 
     /**
+     * 设置水平自定义字段是否join关联查询返回
+     * @param bool $mode
+     */
+    public function setJoinQueryHorizontalFields(bool $mode = true)
+    {
+        $this->joinQueryHorizontalFields = $mode;
+    }
+
+
+    /**
      * 动态方法实现
      * @param string $method 方法名称
      * @param array $args 调用参数
@@ -1592,8 +1602,6 @@ class RelationModel extends Model
     {
         $customFieldData = [];
         $queryModuleIds = [];
-
-        // 不join查询水平关联自定义字段，直接返回
         if (!$this->joinQueryHorizontalFields && array_key_exists(Module::$moduleDictData['module_index_by_code'][$this->currentModuleCode]['id'], Module::$moduleCustomHorizontalFieldsDict['horizontal'])) {
             $customFieldData = Module::$moduleCustomHorizontalFieldsDict['horizontal'][Module::$moduleDictData['module_index_by_code'][$this->currentModuleCode]['id']];
         }
@@ -2722,9 +2730,7 @@ class RelationModel extends Model
                 // 有order参数
                 $this->order($options["order"]);
             }
-
             $selectData = $this->select();
-
         } else {
             $selectData = [];
         }
