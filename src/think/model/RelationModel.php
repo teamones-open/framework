@@ -2688,8 +2688,8 @@ class RelationModel extends Model
                 // 当单表数据量超过10万时候，不做count查询
                 $total = C("database.database_max_select_rows");
             } else {
-                // total 缓存5秒 防止频繁count
-                $total = $this->where($filter)->cache(5)->count();
+                //  只有第一页才count total
+                $total = $this->where($filter)->count();
             }
         }
 
