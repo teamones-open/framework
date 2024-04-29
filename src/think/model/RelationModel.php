@@ -2135,10 +2135,10 @@ class RelationModel extends Model
             if (!empty($complexFilter)) {
                 if (!empty($filterTemp)) {
                     $filterMid = $complexFilter;
+                    $filterTemp['_logic'] = $logic;
                     $complexFilter = [];
                     $complexFilter[] = $filterMid;
                     $complexFilter[] = $filterTemp;
-                    $complexFilter['_logic'] = $logic;
                 } else {
                     $complexFilter['_logic'] = $logic;
                 }
