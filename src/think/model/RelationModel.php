@@ -77,6 +77,16 @@ class RelationModel extends Model
     }
 
     /**
+     * 设置水平自定义字段是否join关联查询返回
+     * @param bool $mode
+     */
+    public function setJoinQueryHorizontalFields(bool $mode = true)
+    {
+        $this->joinQueryHorizontalFields = $mode;
+    }
+
+
+    /**
      * 动态方法实现
      * @param string $method 方法名称
      * @param array $args 调用参数
@@ -1592,6 +1602,10 @@ class RelationModel extends Model
     {
         $customFieldData = [];
         $queryModuleIds = [];
+        if (!$this->joinQueryHorizontalFields && array_key_exists(Module::$moduleDictData['module_index_by_code'][$this->currentModuleCode]['id'], Module::$moduleCustomHorizontalFieldsDict['horizontal'])) {
+            $customFieldData = Module::$moduleCustomHorizontalFieldsDict['horizontal'][Module::$moduleDictData['module_index_by_code'][$this->currentModuleCode]['id']];
+        }
+
         foreach ($queryModuleList as $moduleCode) {
             $moduleId = Module::$moduleDictData['module_index_by_code'][$moduleCode]['id'];
             if (!in_array($moduleId, $queryModuleIds)) {
@@ -1673,7 +1687,7 @@ class RelationModel extends Model
         $horizontalModuleList = [];
 
         // 当前模块的水平关联自定义字段
-        if (array_key_exists(Module::$moduleDictData['module_index_by_code'][$this->currentModuleCode]['id'], Module::$moduleCustomHorizontalFieldsDict['horizontal'])) {
+        if ($this->joinQueryHorizontalFields && array_key_exists(Module::$moduleDictData['module_index_by_code'][$this->currentModuleCode]['id'], Module::$moduleCustomHorizontalFieldsDict['horizontal'])) {
             foreach (Module::$moduleCustomHorizontalFieldsDict['horizontal'][Module::$moduleDictData['module_index_by_code'][$this->currentModuleCode]['id']] as $horizontalFieldItem) {
 
                 // 当前水平关联自定义字段配置
@@ -2649,31 +2663,38 @@ class RelationModel extends Model
         $this->resetDefault();
 
         // 统计个数
-        $maxId = $this->max('id');
-
         $this->checkIsComplexFilter($options);
-
-        if ($this->isComplexFilter) {
-            $this->alias($this->currentModuleCode);
-        }
 
         $filter = [];
         if (array_key_exists("filter", $options) && !empty($options['filter'])) {
             // 有过滤条件
             $fields = !empty($options["fields"]) ? $options["fields"] : [];
             $filter = $this->buildFilter($options["filter"], $fields);
-            $this->where($filter);
         }
 
-        if ($maxId > 100000) {
-            // 当单表数据量超过10万时候，不做count查询
-            $total = C("database.database_max_select_rows");
+        // 分页第一页获取total，其他页不在获取
+        $isNotFirstPage = false;
+        $total = 0;
+        if (array_key_exists("page", $options) && $options["page"][0] > 1) {
+            $isNotFirstPage = true;
         } else {
-            $total = $this->count();
+            $maxId = $this->max('id');
+
+            if ($this->isComplexFilter) {
+                $this->alias($this->currentModuleCode);
+            }
+
+            if ($maxId > 100000) {
+                // 当单表数据量超过10万时候，不做count查询
+                $total = C("database.database_max_select_rows");
+            } else {
+                //  只有第一页才count total
+                $total = $this->where($filter)->count();
+            }
         }
 
         // 获取数据
-        if ($total >= 0) {
+        if ($total >= 0 || $isNotFirstPage) {
 
             if ($this->isComplexFilter) {
                 $this->alias($this->currentModuleCode);
@@ -2709,9 +2730,7 @@ class RelationModel extends Model
                 // 有order参数
                 $this->order($options["order"]);
             }
-
             $selectData = $this->select();
-
         } else {
             $selectData = [];
         }
