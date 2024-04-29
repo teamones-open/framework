@@ -1592,6 +1592,12 @@ class RelationModel extends Model
     {
         $customFieldData = [];
         $queryModuleIds = [];
+
+        // 不join查询水平关联自定义字段，直接返回
+        if (!$this->joinQueryHorizontalFields && array_key_exists(Module::$moduleDictData['module_index_by_code'][$this->currentModuleCode]['id'], Module::$moduleCustomHorizontalFieldsDict['horizontal'])) {
+            $customFieldData = Module::$moduleCustomHorizontalFieldsDict['horizontal'][Module::$moduleDictData['module_index_by_code'][$this->currentModuleCode]['id']];
+        }
+
         foreach ($queryModuleList as $moduleCode) {
             $moduleId = Module::$moduleDictData['module_index_by_code'][$moduleCode]['id'];
             if (!in_array($moduleId, $queryModuleIds)) {
@@ -1673,7 +1679,7 @@ class RelationModel extends Model
         $horizontalModuleList = [];
 
         // 当前模块的水平关联自定义字段
-        if (array_key_exists(Module::$moduleDictData['module_index_by_code'][$this->currentModuleCode]['id'], Module::$moduleCustomHorizontalFieldsDict['horizontal'])) {
+        if ($this->joinQueryHorizontalFields && array_key_exists(Module::$moduleDictData['module_index_by_code'][$this->currentModuleCode]['id'], Module::$moduleCustomHorizontalFieldsDict['horizontal'])) {
             foreach (Module::$moduleCustomHorizontalFieldsDict['horizontal'][Module::$moduleDictData['module_index_by_code'][$this->currentModuleCode]['id']] as $horizontalFieldItem) {
 
                 // 当前水平关联自定义字段配置

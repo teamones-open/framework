@@ -226,6 +226,9 @@ class Model
     // 是否是复杂过滤条件
     protected $isComplexFilter = false;
 
+    // 默认关联查询水平字段
+    protected $joinQueryHorizontalFields = true;
+
     // 当前模块code
     protected $currentModuleCode = '';
 
