@@ -229,6 +229,9 @@ class Model
     // 默认关联查询水平字段
     protected $joinQueryHorizontalFields = true;
 
+    // select查询是否count数据
+    protected $selectDataWithCount = true;
+
     // 当前模块code
     protected $currentModuleCode = '';
 

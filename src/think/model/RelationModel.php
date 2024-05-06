@@ -85,6 +85,15 @@ class RelationModel extends Model
         $this->joinQueryHorizontalFields = $mode;
     }
 
+    /**
+     * select查询是否count数据
+     * @param bool $mode
+     */
+    public function setSelectDataWithCount(bool $allow = true)
+    {
+        $this->selectDataWithCount = $allow;
+    }
+
 
     /**
      * 动态方法实现
@@ -2673,28 +2682,34 @@ class RelationModel extends Model
         }
 
         // 分页第一页获取total，其他页不在获取
-        $isNotFirstPage = false;
+        $isNotFirstPageOrNotCount = false;
         $total = 0;
-        if (array_key_exists("page", $options) && $options["page"][0] > 1) {
-            $isNotFirstPage = true;
-        } else {
-            $maxId = $this->max('id');
 
-            if ($this->isComplexFilter) {
-                $this->alias($this->currentModuleCode);
-            }
-
-            if ($maxId > 100000) {
-                // 当单表数据量超过10万时候，不做count查询
-                $total = C("database.database_max_select_rows");
+        if ($this->selectDataWithCount) {
+            if (array_key_exists("page", $options) && (int)$options["page"][0] > 1) {
+                $isNotFirstPageOrNotCount = true;
             } else {
-                //  只有第一页才count total
-                $total = $this->where($filter)->count();
+                $maxId = $this->max('id');
+
+                if ($this->isComplexFilter) {
+                    $this->alias($this->currentModuleCode);
+                }
+
+                if ($maxId > 100000) {
+                    // 当单表数据量超过10万时候，不做count查询
+                    $total = C("database.database_max_select_rows");
+                } else {
+                    //  只有第一页才count total
+                    $total = $this->where($filter)->count();
+                }
             }
+        } else {
+            // 不需要count数据
+            $isNotFirstPageOrNotCount = true;
         }
 
         // 获取数据
-        if ($total >= 0 || $isNotFirstPage) {
+        if ($total >= 0 || $isNotFirstPageOrNotCount) {
 
             if ($this->isComplexFilter) {
                 $this->alias($this->currentModuleCode);
