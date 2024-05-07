@@ -2661,6 +2661,52 @@ class RelationModel extends Model
 
 
     /**
+     * 生成多条查询DB对象
+     * @param $options
+     * @return $this
+     * @throws \Exception
+     */
+    public function buildSelectDB($options = [])
+    {
+        $this->resetDefault();
+
+        // 判断是否是复杂查询条件
+        $this->checkIsComplexFilter($options);
+
+        $filter = [];
+        if (array_key_exists("filter", $options) && !empty($options['filter'])) {
+            // 有过滤条件
+            $fields = !empty($options["fields"]) ? $options["fields"] : [];
+            $filter = $this->buildFilter($options["filter"], $fields);
+        }
+
+        if ($this->isComplexFilter) {
+            $this->alias($this->currentModuleCode);
+        }
+
+        if (array_key_exists("fields", $options)) {
+            // 有字段参数
+            $this->field($this->buildFields($options["fields"]));
+        }
+
+        // 处理join查询
+        $this->parseQueryRelationDataJoinSql();
+
+        if (array_key_exists("filter", $options)) {
+            // 有过滤条件
+            $this->where($filter);
+        }
+
+        if (array_key_exists("order", $options)) {
+            // 有order参数
+            $this->order($options["order"]);
+        }
+
+        return $this;
+    }
+
+
+    /**
      * 获取多条数据
      * @param array $options
      * @param bool $needFormat
@@ -2671,7 +2717,7 @@ class RelationModel extends Model
     {
         $this->resetDefault();
 
-        // 统计个数
+        // 判断是否是复杂查询条件
         $this->checkIsComplexFilter($options);
 
         $filter = [];
