@@ -1311,12 +1311,17 @@ class RelationModel extends Model
             $this->complexFilterRelatedModule[] = $fieldsParam[0];
         }
 
-        if (!array_key_exists($fieldsParam[0], $filterItem)) {
-            $filterItem[$fieldsParam[0]] = [
-                $fieldsParam[1] => $this->buildWidgetFilter($fieldsParam[0], $fieldsParam[1], $value)
-            ];
+        $filterOP = $this->buildWidgetFilter($fieldsParam[0], $fieldsParam[1], $value);
+        if ($filterOP === false) {
+            return;
         } else {
-            $filterItem[$fieldsParam[0]][$fieldsParam[1]] = $this->buildWidgetFilter($fieldsParam[0], $fieldsParam[1], $value);
+            if (!array_key_exists($fieldsParam[0], $filterItem)) {
+                $filterItem[$fieldsParam[0]] = [
+                    $fieldsParam[1] => $filterOP
+                ];
+            } else {
+                $filterItem[$fieldsParam[0]][$fieldsParam[1]] = $filterOP;
+            }
         }
     }
 
@@ -1565,7 +1570,10 @@ class RelationModel extends Model
     private function recurrenceFilterModuleRelation(&$filterModuleLinkRelation, $module, $moduleCode, $horizontalModuleList, $moduleDictBySrcModuleId, $moduleDictByDstModuleId, $entityParentChildHierarchyData)
     {
         // 对于实体和任务特殊关系每层实体下面都可以挂任务
-        $moduleData = Module::$moduleDictData['module_index_by_code'][$moduleCode];
+        $moduleData = Module::$moduleDictData['module_index_by_code'][$moduleCode] ?? [];
+        if (empty($moduleData)) {
+            return;
+        }
 
         if (in_array($moduleData['code'], $horizontalModuleList)) {
             // 判断是否是水平自定义关联模块
@@ -1616,8 +1624,8 @@ class RelationModel extends Model
         }
 
         foreach ($queryModuleList as $moduleCode) {
-            $moduleId = Module::$moduleDictData['module_index_by_code'][$moduleCode]['id'];
-            if (!in_array($moduleId, $queryModuleIds)) {
+            $moduleId = Module::$moduleDictData['module_index_by_code'][$moduleCode]['id'] ?? 0;
+            if ($moduleId > 0 && !in_array($moduleId, $queryModuleIds)) {
                 $queryModuleIds[] = $moduleId;
                 if (array_key_exists($moduleId, Module::$moduleCustomHorizontalFieldsDict['other'])) {
                     $customFieldData = array_merge($customFieldData, Module::$moduleCustomHorizontalFieldsDict['other'][$moduleId]);
@@ -2211,7 +2219,12 @@ class RelationModel extends Model
                 $this->parseSimpleFilter($val);
             } else {
                 if (is_array($val) && array_key_exists('0', $val)) {
-                    $val = $this->buildWidgetFilter($this->currentModuleCode, $key, $val);
+                    $filterOP = $this->buildWidgetFilter($this->currentModuleCode, $key, $val);
+                    if ($filterOP === false) {
+                        unset($val);
+                    } else {
+                        $val = $filterOP;
+                    }
                 }
             }
         }
@@ -2287,6 +2300,14 @@ class RelationModel extends Model
         foreach ($fieldsArr as $fieldItem) {
             // 找的可以belong_to的字段
             $moduleArray = explode('.', $fieldItem);
+
+            // 获取模块字段
+            $currentModuleFieldsDict = $this->generateQueryModuleFieldDict($moduleArray[0]);
+
+            // 判断当前字段是否存在
+            if (!array_key_exists($moduleArray[1], $currentModuleFieldsDict)) {
+                continue;
+            }
 
             if (array_key_exists($moduleArray[0], $this->queryModuleRelationFields)) {
                 $this->queryModuleRelationFields[$moduleArray[0]][] = $moduleArray[1];
@@ -2926,13 +2947,18 @@ class RelationModel extends Model
      * @param $moduleCode
      * @param $filed
      * @param $value
-     * @return array
+     * @return array|false
      */
     public function buildWidgetFilter($moduleCode, $filed, $value)
     {
 
         // 获取模块字段
         $currentModuleFieldsDict = $this->generateQueryModuleFieldDict($moduleCode);
+
+        // 判断当前字段是否存在
+        if (!array_key_exists($filed, $currentModuleFieldsDict)) {
+            return false;
+        }
 
         // 判断 value 是否为条件表达式
         if (is_array($value)) {
