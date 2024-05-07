@@ -1570,7 +1570,10 @@ class RelationModel extends Model
     private function recurrenceFilterModuleRelation(&$filterModuleLinkRelation, $module, $moduleCode, $horizontalModuleList, $moduleDictBySrcModuleId, $moduleDictByDstModuleId, $entityParentChildHierarchyData)
     {
         // 对于实体和任务特殊关系每层实体下面都可以挂任务
-        $moduleData = Module::$moduleDictData['module_index_by_code'][$moduleCode];
+        $moduleData = Module::$moduleDictData['module_index_by_code'][$moduleCode] ?? [];
+        if (empty($moduleData)) {
+            return;
+        }
 
         if (in_array($moduleData['code'], $horizontalModuleList)) {
             // 判断是否是水平自定义关联模块
@@ -1621,8 +1624,8 @@ class RelationModel extends Model
         }
 
         foreach ($queryModuleList as $moduleCode) {
-            $moduleId = Module::$moduleDictData['module_index_by_code'][$moduleCode]['id'];
-            if (!in_array($moduleId, $queryModuleIds)) {
+            $moduleId = Module::$moduleDictData['module_index_by_code'][$moduleCode]['id'] ?? 0;
+            if ($moduleId > 0 && !in_array($moduleId, $queryModuleIds)) {
                 $queryModuleIds[] = $moduleId;
                 if (array_key_exists($moduleId, Module::$moduleCustomHorizontalFieldsDict['other'])) {
                     $customFieldData = array_merge($customFieldData, Module::$moduleCustomHorizontalFieldsDict['other'][$moduleId]);
