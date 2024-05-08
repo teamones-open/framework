@@ -2904,6 +2904,14 @@ class RelationModel extends Model
         }
 
         $currentModuleFields = Module::$moduleDictData['field_index_by_code'][$moduleCode];
+        if ($moduleCode === 'entity') {
+            // 如果直接查entity主表，合并所有entity模块的自定义字段
+            foreach (Module::$moduleDictData['module_index_by_code'] as $moduleItem) {
+                if ($moduleItem['type'] === 'entity' && !empty(Module::$moduleDictData['field_index_by_code'][$moduleItem['code']]['custom'])) {
+                    $currentModuleFields['custom'] = array_merge($currentModuleFields['custom'], Module::$moduleDictData['field_index_by_code'][$moduleItem['code']]['custom']);
+                }
+            }
+        }
 
         $this->queryModuleFieldDict[$moduleCode] = array_merge($currentModuleFields['fixed'], $currentModuleFields['custom']);
 
