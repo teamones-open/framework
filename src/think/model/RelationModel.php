@@ -94,6 +94,14 @@ class RelationModel extends Model
         $this->selectDataWithCount = $allow;
     }
 
+    /**
+     * 设置用户自定义查询需要join查询的模块
+     * @param bool $mode
+     */
+    public function setQueryUserCustomLeftJoinRelation(array $joinArr = [])
+    {
+        $this->queryUserCustomLeftJoinRelation = $joinArr;
+    }
 
     /**
      * 动态方法实现
@@ -808,7 +816,7 @@ class RelationModel extends Model
 
         if (
             $fieldArray[0] === $this->currentModuleCode ||
-            (!empty($this->queryModuleLfetJoinRelation[$fieldArray[0]]) && in_array($this->queryModuleLfetJoinRelation[$fieldArray[0]]['relation_type'], ['belong_to', 'has_one']))
+            (!empty($this->queryModuleLeftJoinRelation[$fieldArray[0]]) && in_array($this->queryModuleLeftJoinRelation[$fieldArray[0]]['relation_type'], ['belong_to', 'has_one']))
             || !empty($this->queryModuleHorizontalRelation[$fieldArray[0]])
         ) {
 
@@ -1598,11 +1606,13 @@ class RelationModel extends Model
             } else {
                 if ($moduleData['code'] !== $this->currentModuleCode) {
                     // 不是当前自己模块
-                    foreach ($moduleDictByDstModuleId[$moduleData['id']] as $relationModuleItem) {
-                        // dst_module_id src_module_id 都匹配就保存到关联关系中去
-                        if ($relationModuleItem['dst_module_id'] === $moduleData['id'] && $relationModuleItem['src_module_id'] === Module::$moduleDictData['module_index_by_code'][$this->currentModuleCode]['id']) {
-                            $relationModuleItem['filter_type'] = 'direct';
-                            $filterModuleLinkRelation[$module] = $relationModuleItem;
+                    if (!empty($moduleDictByDstModuleId[$moduleData['id']])) {
+                        foreach ($moduleDictByDstModuleId[$moduleData['id']] as $relationModuleItem) {
+                            // dst_module_id src_module_id 都匹配就保存到关联关系中去
+                            if ($relationModuleItem['dst_module_id'] === $moduleData['id'] && $relationModuleItem['src_module_id'] === Module::$moduleDictData['module_index_by_code'][$this->currentModuleCode]['id']) {
+                                $relationModuleItem['filter_type'] = 'direct';
+                                $filterModuleLinkRelation[$module] = $relationModuleItem;
+                            }
                         }
                     }
                 }
@@ -2327,23 +2337,23 @@ class RelationModel extends Model
                             } else {
                                 $newFields[] = "`{$moduleArray[0]}`.{$moduleArray[1]} AS {$moduleArray[0]}__{$moduleArray[1]}";
                             }
-                            if (!array_key_exists($moduleArray[0], $this->queryModuleLfetJoinRelation)) {
-                                $this->queryModuleLfetJoinRelation[$moduleArray[0]] = $filterModuleLinkRelation[$moduleArray[0]];
+                            if (!array_key_exists($moduleArray[0], $this->queryModuleLeftJoinRelation)) {
+                                $this->queryModuleLeftJoinRelation[$moduleArray[0]] = $filterModuleLinkRelation[$moduleArray[0]];
                             }
                             break;
                         case "has_one":
                             if ($filterModuleLinkRelation[$moduleArray[0]]['type'] === 'horizontal') {
                                 // 水平关联自定义字段
                                 $newFields[] = "`{$moduleArray[0]}`.{$moduleArray[1]} AS {$moduleArray[0]}__{$moduleArray[1]}";
-                                if (!array_key_exists($moduleArray[0], $this->queryModuleLfetJoinRelation)) {
+                                if (!array_key_exists($moduleArray[0], $this->queryModuleLeftJoinRelation)) {
                                     $filterModuleLinkRelation[$moduleArray[0]]['link_id'] = "JSON_UNQUOTE(JSON_EXTRACT(`{$this->currentModuleCode}`.`json`, '$.{$filterModuleLinkRelation[$moduleArray[0]]['link_id']}'))";
-                                    $this->queryModuleLfetJoinRelation[$moduleArray[0]] = $filterModuleLinkRelation[$moduleArray[0]];
+                                    $this->queryModuleLeftJoinRelation[$moduleArray[0]] = $filterModuleLinkRelation[$moduleArray[0]];
                                 }
                             } else if ($filterModuleLinkRelation[$moduleArray[0]]['type'] === 'fixed') {
                                 // 水平关联 固定字段
                                 $newFields[] = "`{$moduleArray[0]}`.{$moduleArray[1]} AS {$moduleArray[0]}__{$moduleArray[1]}";
-                                if (!array_key_exists($moduleArray[0], $this->queryModuleLfetJoinRelation)) {
-                                    $this->queryModuleLfetJoinRelation[$moduleArray[0]] = $filterModuleLinkRelation[$moduleArray[0]];
+                                if (!array_key_exists($moduleArray[0], $this->queryModuleLeftJoinRelation)) {
+                                    $this->queryModuleLeftJoinRelation[$moduleArray[0]] = $filterModuleLinkRelation[$moduleArray[0]];
                                 }
                             }
                             break;
@@ -2376,7 +2386,7 @@ class RelationModel extends Model
                             }
                         }
                     } else {
-                        if (!array_key_exists($moduleArray[1], $this->queryModuleLfetJoinRelation)) {
+                        if (!array_key_exists($moduleArray[1], $this->queryModuleLeftJoinRelation)) {
 
                             // 默认增加id name code 字段
                             $newFields[] = "`{$moduleArray[1]}`.`id` AS {$moduleArray[1]}__id";
@@ -2384,7 +2394,7 @@ class RelationModel extends Model
                             $newFields[] = "`{$moduleArray[1]}`.`code` AS {$moduleArray[1]}__code";
 
                             $filterModuleLinkRelation[$moduleArray[1]]['link_id'] = "JSON_UNQUOTE(JSON_EXTRACT(`{$this->currentModuleCode}`.`json`, '$.{$filterModuleLinkRelation[$moduleArray[1]]['link_id']}'))";
-                            $this->queryModuleLfetJoinRelation[$moduleArray[1]] = $filterModuleLinkRelation[$moduleArray[1]];
+                            $this->queryModuleLeftJoinRelation[$moduleArray[1]] = $filterModuleLinkRelation[$moduleArray[1]];
                         }
                     }
                 } else {
@@ -2556,10 +2566,10 @@ class RelationModel extends Model
      */
     private function parseQueryRelationDataJoinSql()
     {
-        if (!empty($this->queryModuleLfetJoinRelation)) {
+        if (!empty($this->queryModuleLeftJoinRelation)) {
 
             // left join
-            foreach ($this->queryModuleLfetJoinRelation as $joinModuleCode => $joinItem) {
+            foreach ($this->queryModuleLeftJoinRelation as $joinModuleCode => $joinItem) {
 
                 if ($joinItem['type'] === 'horizontal') {
                     $linkIds = [$joinItem['link_id']];
@@ -2621,9 +2631,31 @@ class RelationModel extends Model
                 }
             }
         }
+
+        // 是否存在用户自定义join数据
+        if (!empty($this->queryUserCustomLeftJoinRelation)) {
+            foreach ($this->queryUserCustomLeftJoinRelation as $otherJoin) {
+                $this->join($otherJoin);
+            }
+        }
         return $this;
     }
 
+    /**
+     * 初始化查询配置
+     * @param $settings
+     * @return void
+     */
+    private function initSelectSettings($settings = [])
+    {
+        foreach ($settings as $func => $val) {
+            if (!method_exists($this, $func)) {
+                continue;
+            } else {
+                $this->{$func}($val);
+            }
+        }
+    }
 
     /**
      * 获取一条数据
@@ -2635,6 +2667,11 @@ class RelationModel extends Model
     public function findData($options = [], $needFormat = true)
     {
         $this->resetDefault();
+
+        // 初始化setting
+        if (!empty($options['setting'])) {
+            $this->initSelectSettings($options['setting']);
+        }
 
         $this->checkIsComplexFilter($options);
 
@@ -2739,6 +2776,11 @@ class RelationModel extends Model
     public function selectData($options = [], $needFormat = true)
     {
         $this->resetDefault();
+
+        // 初始化setting
+        if (!empty($options['setting'])) {
+            $this->initSelectSettings($options['setting']);
+        }
 
         // 判断是否是复杂查询条件
         $this->checkIsComplexFilter($options);

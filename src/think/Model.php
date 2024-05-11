@@ -188,7 +188,10 @@ class Model
     protected $queryModuleRelation = [];
 
     // 查询需要join查询的模块
-    protected $queryModuleLfetJoinRelation = [];
+    protected $queryModuleLeftJoinRelation = [];
+
+    // 用户自定义查询需要join查询的模块
+    protected $queryUserCustomLeftJoinRelation = [];
 
     // 查询通过自定义字段水平关联的模块
     protected $queryModuleHorizontalRelation = [];
@@ -780,8 +783,8 @@ class Model
             foreach ($data as $key => $value) {
                 if (false !== strpos($key, '->')) {
                     // json数据更新兼容取值，不精确到具体的值
-                    [$indexKey, $name]  = explode('->', $key, 2);
-                }else{
+                    [$indexKey, $name] = explode('->', $key, 2);
+                } else {
                     $indexKey = $key;
                 }
                 if ($oldData[$indexKey] != $value) {
@@ -1033,7 +1036,7 @@ class Model
 
         // 拼接数据表后缀
         if (!empty($this->suffix)) {
-            $options['table']  .= $this->suffix;
+            $options['table'] .= $this->suffix;
         }
 
         // 数据表别名
@@ -2383,7 +2386,8 @@ class Model
         $this->options = [];
         $this->_resData = [];
         $this->appendCustomField = [];
-        $this->queryModuleLfetJoinRelation = [];
+        $this->queryModuleLeftJoinRelation = [];
+        $this->queryUserCustomLeftJoinRelation = [];
         $this->queryModuleHorizontalRelation = [];
         $this->queryModuleEntityRelation = [];
         $this->queryModuleHasManyRelation = [];
@@ -2398,6 +2402,8 @@ class Model
         $this->queryModuleRelation = [];
         $this->oldUpdateData = [];
         $this->newUpdateData = [];
+        $this->joinQueryHorizontalFields = false;
+        $this->selectDataWithCount = false;
     }
 
     /**
