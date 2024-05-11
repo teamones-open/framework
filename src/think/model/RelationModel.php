@@ -2036,7 +2036,7 @@ class RelationModel extends Model
                         if (array_key_exists($field, $this->queryComplexCustomFieldMapping)) {
                             $this->parserFilterCustomItemCondition($filterData, $field, $condition, $masterModuleCode);
                         } else {
-                            $filterData["{$masterModuleCode}.{$field}"] = $condition;
+                            $filterData["`{$masterModuleCode}`.{$field}"] = $condition;
                         }
                     }
 
@@ -2274,6 +2274,8 @@ class RelationModel extends Model
             if (array_key_exists($fieldArray[1], $this->queryComplexCustomFieldMapping)) {
                 $fieldConfig = $this->queryComplexCustomFieldMapping[$fieldArray[1]];
                 return "JSON_UNQUOTE(JSON_EXTRACT(`{$fieldConfig['query_module_code']}`.`json`, '$.{$fieldConfig['field']}'))";
+            } else {
+                return "`{$fieldArray[0]}`.{$fieldArray[1]}";
             }
         } else {
             if (array_key_exists($field, $this->queryComplexCustomFieldMapping)) {
@@ -2323,7 +2325,7 @@ class RelationModel extends Model
                                 && array_key_exists($moduleArray[1], $this->queryComplexRelationCustomFields[$moduleArray[0]])) {
                                 $newFields[] = "JSON_UNQUOTE(JSON_EXTRACT(`{$moduleArray[0]}`.`json`, '$.{$moduleArray[1]}')) AS {$moduleArray[0]}__{$moduleArray[1]}";
                             } else {
-                                $newFields[] = "{$fieldItem} AS {$moduleArray[0]}__{$moduleArray[1]}";
+                                $newFields[] = "`{$moduleArray[0]}`.{$moduleArray[1]} AS {$moduleArray[0]}__{$moduleArray[1]}";
                             }
                             if (!array_key_exists($moduleArray[0], $this->queryModuleLfetJoinRelation)) {
                                 $this->queryModuleLfetJoinRelation[$moduleArray[0]] = $filterModuleLinkRelation[$moduleArray[0]];
@@ -2332,14 +2334,14 @@ class RelationModel extends Model
                         case "has_one":
                             if ($filterModuleLinkRelation[$moduleArray[0]]['type'] === 'horizontal') {
                                 // 水平关联自定义字段
-                                $newFields[] = "{$fieldItem} AS {$moduleArray[0]}__{$moduleArray[1]}";
+                                $newFields[] = "`{$moduleArray[0]}`.{$moduleArray[1]} AS {$moduleArray[0]}__{$moduleArray[1]}";
                                 if (!array_key_exists($moduleArray[0], $this->queryModuleLfetJoinRelation)) {
                                     $filterModuleLinkRelation[$moduleArray[0]]['link_id'] = "JSON_UNQUOTE(JSON_EXTRACT(`{$this->currentModuleCode}`.`json`, '$.{$filterModuleLinkRelation[$moduleArray[0]]['link_id']}'))";
                                     $this->queryModuleLfetJoinRelation[$moduleArray[0]] = $filterModuleLinkRelation[$moduleArray[0]];
                                 }
                             } else if ($filterModuleLinkRelation[$moduleArray[0]]['type'] === 'fixed') {
                                 // 水平关联 固定字段
-                                $newFields[] = "{$fieldItem} AS {$moduleArray[0]}__{$moduleArray[1]}";
+                                $newFields[] = "`{$moduleArray[0]}`.{$moduleArray[1]} AS {$moduleArray[0]}__{$moduleArray[1]}";
                                 if (!array_key_exists($moduleArray[0], $this->queryModuleLfetJoinRelation)) {
                                     $this->queryModuleLfetJoinRelation[$moduleArray[0]] = $filterModuleLinkRelation[$moduleArray[0]];
                                 }
@@ -2586,7 +2588,7 @@ class RelationModel extends Model
                             }
 
                             if ($joinItem['type'] === 'horizontal') {
-                                $queryJoin['condition'][] = "{$joinModuleCode}.id = {$linkId}";
+                                $queryJoin['condition'][] = "`{$joinModuleCode}`.id = {$linkId}";
                             } else {
                                 // 区分belong_to 和has_one
                                 if ($joinItem['relation_type'] == "has_one") {
@@ -2637,7 +2639,7 @@ class RelationModel extends Model
         $this->checkIsComplexFilter($options);
 
         if ($this->isComplexFilter) {
-            $this->alias($this->currentModuleCode);
+            $this->alias("`{$this->currentModuleCode}`");
         }
 
         if (array_key_exists("fields", $options)) {
@@ -2702,7 +2704,7 @@ class RelationModel extends Model
         }
 
         if ($this->isComplexFilter) {
-            $this->alias($this->currentModuleCode);
+            $this->alias("`{$this->currentModuleCode}`");
         }
 
         if (array_key_exists("fields", $options)) {
@@ -2759,7 +2761,7 @@ class RelationModel extends Model
                 $maxId = $this->max('id');
 
                 if ($this->isComplexFilter) {
-                    $this->alias($this->currentModuleCode);
+                    $this->alias("`{$this->currentModuleCode}`");
                 }
 
                 if ($maxId > 100000) {
@@ -2779,7 +2781,7 @@ class RelationModel extends Model
         if ($total >= 0 || $isNotFirstPageOrNotCount) {
 
             if ($this->isComplexFilter) {
-                $this->alias($this->currentModuleCode);
+                $this->alias("`{$this->currentModuleCode}`");
             }
 
             if (array_key_exists("fields", $options)) {

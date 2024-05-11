@@ -1024,7 +1024,7 @@ class Model
 
         if (!isset($options['table'])) {
             // 自动获取表名
-            $options['table'] = $this->getTableName();
+            $options['table'] = "`{$this->getTableName()}`";
             $fields = $this->fields;
         } else {
             // 指定数据表 则重新获取字段列表 但不支持类型检测
