@@ -2128,6 +2128,9 @@ class RelationModel extends Model
                             "filter_type" => "master"
                         ], $filterItem);
                     } else {
+                        if (!array_key_exists($key, $filterModuleLinkRelation)) {
+                            throw_strack_exception("{$key} module does not exist.", ErrorCode::MODULE_NOT_EXIST);
+                        }
                         $filterTempItem = $this->parserFilterItemValue($this->currentModuleCode, $filterModuleLinkRelation[$key], $filterItem);
                     }
 
