@@ -3022,6 +3022,10 @@ class RelationModel extends Model
 
         // 判断 value 是否为条件表达式
         if (is_array($value)) {
+            // 查询条件为空，返回false
+            if (empty($value)) {
+                return false;
+            }
             list($condition, $filterVal) = $value;
         } else {
             return $value;
