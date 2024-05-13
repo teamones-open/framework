@@ -2730,6 +2730,11 @@ class RelationModel extends Model
     {
         $this->resetDefault();
 
+        // 初始化setting
+        if (!empty($options['setting'])) {
+            $this->initSelectSettings($options['setting']);
+        }
+
         // 判断是否是复杂查询条件
         $this->checkIsComplexFilter($options);
 
