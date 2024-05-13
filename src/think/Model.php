@@ -18,7 +18,6 @@ use think\exception\ErrorCode;
  *
  * @method $this alias(string $alias)
  * @method $this strict(bool $strict)
- * @method $this order(mixed $order)
  * @method $this having(string $having)
  * @method $this group(string $group)
  * @method $this lock(bool $lock)
@@ -2745,6 +2744,27 @@ class Model
         } else {
             $this->options['where'] = $where;
         }
+
+        return $this;
+    }
+
+    /**
+     * 处理排序数据
+     * @param $oder
+     * @return $this
+     */
+    public function order($oder)
+    {
+        // 如果是复杂查询，排序条件一定要排序一定要存在命名空间
+        if ($this->isComplexFilter) {
+            $oderItems = explode(',', $oder);
+            foreach ($oderItems as $item) {
+                if (false === strpos($item, '.')) {
+                    throw_strack_exception('Parameter format error.', ErrorCode::PARAMETER_FORMAT_ERROR);
+                }
+            }
+        }
+        $this->options['order'] = $oder;
 
         return $this;
     }
