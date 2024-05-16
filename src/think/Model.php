@@ -234,6 +234,9 @@ class Model
     // select查询是否count数据
     protected $selectDataWithCount = true;
 
+    // 设置是否必须关联租户id查询
+    protected $queryFilterMustWithTenantId = true;
+
     // 当前模块code
     protected $currentModuleCode = '';
 
@@ -2404,8 +2407,10 @@ class Model
         $this->queryModuleRelation = [];
         $this->oldUpdateData = [];
         $this->newUpdateData = [];
-        $this->joinQueryHorizontalFields = false;
-        $this->selectDataWithCount = false;
+        $this->isComplexFilter = false;
+        $this->joinQueryHorizontalFields = true;
+        $this->selectDataWithCount = true;
+        $this->queryFilterMustWithTenantId = true;
     }
 
     /**

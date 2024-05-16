@@ -87,7 +87,8 @@ class RelationModel extends Model
 
     /**
      * select查询是否count数据
-     * @param bool $mode
+     * @param bool $allow
+     * @return void
      */
     public function setSelectDataWithCount(bool $allow = true)
     {
@@ -95,8 +96,19 @@ class RelationModel extends Model
     }
 
     /**
-     * 设置用户自定义查询需要join查询的模块
+     * 设置是否必须关联租户id查询
      * @param bool $mode
+     * @return void
+     */
+    public function setQueryFilterMustWithTenantId(bool $mode = true)
+    {
+        $this->queryFilterMustWithTenantId = $mode;
+    }
+
+    /**
+     * 设置用户自定义查询需要join查询的模块
+     * @param array $joinArr
+     * @return void
      */
     public function setQueryUserCustomLeftJoinRelation(array $joinArr = [])
     {
@@ -2557,7 +2569,7 @@ class RelationModel extends Model
         }
 
         // 存在租户的模块需要自动增加租户过滤条件
-        if (in_array(strtolower($this->name), Module::$includeTenantIdModules)) {
+        if ($this->queryFilterMustWithTenantId && in_array(strtolower($this->name), Module::$includeTenantIdModules)) {
             $filter = !empty($options['filter']) ? $options['filter'] : [];
             $options['filter'] = $this->autoFillTenantIdFilter($filter);
         }
