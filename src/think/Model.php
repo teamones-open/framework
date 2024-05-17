@@ -18,7 +18,6 @@ use think\exception\ErrorCode;
  *
  * @method $this alias(string $alias)
  * @method $this strict(bool $strict)
- * @method $this order(mixed $order)
  * @method $this having(string $having)
  * @method $this group(string $group)
  * @method $this lock(bool $lock)
@@ -188,7 +187,10 @@ class Model
     protected $queryModuleRelation = [];
 
     // 查询需要join查询的模块
-    protected $queryModuleLfetJoinRelation = [];
+    protected $queryModuleLeftJoinRelation = [];
+
+    // 用户自定义查询需要join查询的模块
+    protected $queryUserCustomLeftJoinRelation = [];
 
     // 查询通过自定义字段水平关联的模块
     protected $queryModuleHorizontalRelation = [];
@@ -231,6 +233,9 @@ class Model
 
     // select查询是否count数据
     protected $selectDataWithCount = true;
+
+    // 设置是否必须关联租户id查询
+    protected $queryFilterMustWithTenantId = true;
 
     // 当前模块code
     protected $currentModuleCode = '';
@@ -780,8 +785,8 @@ class Model
             foreach ($data as $key => $value) {
                 if (false !== strpos($key, '->')) {
                     // json数据更新兼容取值，不精确到具体的值
-                    [$indexKey, $name]  = explode('->', $key, 2);
-                }else{
+                    [$indexKey, $name] = explode('->', $key, 2);
+                } else {
                     $indexKey = $key;
                 }
                 if ($oldData[$indexKey] != $value) {
@@ -1033,8 +1038,11 @@ class Model
 
         // 拼接数据表后缀
         if (!empty($this->suffix)) {
-            $options['table']  .= $this->suffix;
+            $options['table'] .= $this->suffix;
         }
+
+        // 表名转义
+        $options['table'] = "`{$options['table']}`";
 
         // 数据表别名
         if (!empty($options['alias'])) {
@@ -2383,7 +2391,8 @@ class Model
         $this->options = [];
         $this->_resData = [];
         $this->appendCustomField = [];
-        $this->queryModuleLfetJoinRelation = [];
+        $this->queryModuleLeftJoinRelation = [];
+        $this->queryUserCustomLeftJoinRelation = [];
         $this->queryModuleHorizontalRelation = [];
         $this->queryModuleEntityRelation = [];
         $this->queryModuleHasManyRelation = [];
@@ -2398,6 +2407,10 @@ class Model
         $this->queryModuleRelation = [];
         $this->oldUpdateData = [];
         $this->newUpdateData = [];
+        $this->isComplexFilter = false;
+        $this->joinQueryHorizontalFields = true;
+        $this->selectDataWithCount = true;
+        $this->queryFilterMustWithTenantId = true;
     }
 
     /**
@@ -2739,6 +2752,27 @@ class Model
         } else {
             $this->options['where'] = $where;
         }
+
+        return $this;
+    }
+
+    /**
+     * 处理排序数据
+     * @param $oder
+     * @return $this
+     */
+    public function order($oder)
+    {
+        // 如果是复杂查询，排序条件一定要排序一定要存在命名空间
+        if ($this->isComplexFilter) {
+            $oderItems = explode(',', $oder);
+            foreach ($oderItems as $item) {
+                if (false === strpos($item, '.')) {
+                    throw_strack_exception('Parameter format error.', ErrorCode::PARAMETER_FORMAT_ERROR);
+                }
+            }
+        }
+        $this->options['order'] = $oder;
 
         return $this;
     }
