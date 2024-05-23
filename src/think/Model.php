@@ -182,7 +182,6 @@ class Model
     // 字段配置字典数据
     public $fieldConfigDictionary = [];
 
-
     // 查询模块模型关联
     protected $queryModuleRelation = [];
 
@@ -789,13 +788,14 @@ class Model
                 } else {
                     $indexKey = $key;
                 }
-                if ($oldData[$indexKey] != $value) {
+                $oldVal = $oldData[$indexKey] ?? null;
+                if ($oldVal != $value) {
                     //仅记录变化字段
-                    $this->oldUpdateData[$indexKey] = $oldData[$indexKey];
+                    $this->oldUpdateData[$indexKey] = $oldVal;
                     $this->newUpdateData[$indexKey] = $value;
                 }
             }
-            $this->oldUpdateKey = $oldData[$pk];
+            $this->oldUpdateKey = $oldData[$pk] ?? 0;
         }
     }
 
