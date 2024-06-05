@@ -2709,7 +2709,7 @@ class RelationModel extends Model
         // 处理join查询
         $this->parseQueryRelationDataJoinSql();
 
-        if (array_key_exists("order", $options)) {
+        if (!empty($options['order'])) {
             // 有order参数
             $this->order($options["order"]);
         }
@@ -2777,7 +2777,7 @@ class RelationModel extends Model
             $this->where($filter);
         }
 
-        if (array_key_exists("order", $options)) {
+        if (!empty($options['order'])) {
             // 有order参数
             $this->order($options["order"]);
         }
@@ -2872,7 +2872,7 @@ class RelationModel extends Model
                 }
             }
 
-            if (array_key_exists("order", $options)) {
+            if (!empty($options['order'])) {
                 // 有order参数
                 $this->order($options["order"]);
             }
