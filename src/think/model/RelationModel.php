@@ -141,6 +141,11 @@ class RelationModel extends Model
      */
     protected function databaseEventLogHook($param)
     {
+        if (!empty($param['param']['table'])) {
+            // table 可能存在 `` 要去掉
+            $param['param']['table'] = str_replace("`", "", $param['param']['table']);
+        }
+
         Hook::listen('event_log', $param);
     }
 
