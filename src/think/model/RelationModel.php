@@ -2782,9 +2782,27 @@ class RelationModel extends Model
             $this->where($filter);
         }
 
+        if (array_key_exists("page", $options)) {
+            // 有分页参数
+            $pageSize = $options["page"][1] > C("database.database_max_select_rows") ? C("database.database_max_select_rows") : $options["page"][1];
+            $this->page($options["page"][0], $pageSize);
+        } else {
+            if (array_key_exists("limit", $options) && $options["limit"] <= C("database.database_max_select_rows")) {
+                // 有limit参数
+                $this->limit($options["limit"]);
+            } else {
+                $this->limit(C("database.database_max_select_rows"));
+            }
+        }
+
         if (!empty($options['order'])) {
             // 有order参数
             $this->order($options["order"]);
+        }
+
+        if (!empty($options['group'])) {
+            // 有group参数
+            $this->group($options["group"]);
         }
 
         return $this;
@@ -2881,6 +2899,12 @@ class RelationModel extends Model
                 // 有order参数
                 $this->order($options["order"]);
             }
+
+            if (!empty($options['group'])) {
+                // 有group参数
+                $this->group($options["group"]);
+            }
+
             $selectData = $this->select();
         } else {
             $selectData = [];
