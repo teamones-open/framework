@@ -2011,10 +2011,13 @@ class RelationModel extends Model
                     $filterData["_string"] = "JSON_UNQUOTE( JSON_EXTRACT(`json`, '$.{$field}' ) ) {$itemCondition} ({$itemValue})";
                 }
             } else {
+                if (is_array($itemValue)) {
+                    $itemValue = json_encode($itemValue, JSON_UNESCAPED_UNICODE);
+                }
                 if (!empty($moduleCode)) {
-                    $filterData["JSON_UNQUOTE( JSON_EXTRACT(`{$moduleCode}`.`json`, '$.{$field}' ) )"] = $condition;
+                    $filterData["JSON_UNQUOTE( JSON_EXTRACT(`{$moduleCode}`.`json`, '$.{$field}' ) )"] = [$itemCondition, $itemValue];
                 } else {
-                    $filterData["JSON_UNQUOTE( JSON_EXTRACT(`json`, '$.{$field}' ) )"] = $condition;
+                    $filterData["JSON_UNQUOTE( JSON_EXTRACT(`json`, '$.{$field}' ) )"] = [$itemCondition, $itemValue];
                 }
             }
         } else {
