@@ -1985,17 +1985,6 @@ class RelationModel extends Model
                         $filterData['_string'] = "JSON_CONTAINS('[{$itemValueStr}]' , JSON_UNQUOTE(JSON_EXTRACT(`json`, '$.{$field}' )))";
                 }
             }
-        } else {
-//        echo json_encode($field);
-//        echo json_encode($condition);
-//        $class = '\\common\\model\\' . string_initial_letter($mapModule) . 'Model';
-//        $selectData = (new $class())->where($this->formatFilterCondition($filter))->select();
-//        if (!empty($selectData)) {
-//            $ids = array_column($selectData, 'id');
-//            $idsString = join(',', $ids);
-//        } else {
-//            $idsString = 'null';
-//        }
         }
     }
 
@@ -2012,16 +2001,14 @@ class RelationModel extends Model
         if (is_array($condition)) {
             list($itemCondition, $itemValue) = $condition;
             if (in_array(strtolower($itemCondition), ['in', 'not in'])) {
-                if (is_string($itemValue)) {
-                    $inArray = json_encode(explode(',', $itemValue), JSON_UNESCAPED_UNICODE);
-                } else {
-                    $inArray = json_encode($itemValue, JSON_UNESCAPED_UNICODE);
+                if (is_array($itemValue)) {
+                    $itemValue = join(',', $itemValue);
                 }
 
                 if (!empty($moduleCode)) {
-                    $filterData["_string"] = "JSON_CONTAINS('{$inArray}', JSON_EXTRACT(`{$moduleCode}`.`json`,'$.{$field}'))";
+                    $filterData["_string"] = "JSON_UNQUOTE( JSON_EXTRACT(`{$moduleCode}`.`json`, '$.{$field}' ) ) {$itemCondition} ({$itemValue})";
                 } else {
-                    $filterData["_string"] = "JSON_CONTAINS('{$inArray}', JSON_EXTRACT(`json`,'$.{$field}'))";
+                    $filterData["_string"] = "JSON_UNQUOTE( JSON_EXTRACT(`json`, '$.{$field}' ) ) {$itemCondition} ({$itemValue})";
                 }
             } else {
                 if (!empty($moduleCode)) {
@@ -2066,7 +2053,6 @@ class RelationModel extends Model
                             $filterData["`{$masterModuleCode}`.{$field}"] = $condition;
                         }
                     }
-
                 }
                 break;
             case 'direct':
@@ -2782,9 +2768,27 @@ class RelationModel extends Model
             $this->where($filter);
         }
 
+        if (array_key_exists("page", $options)) {
+            // 有分页参数
+            $pageSize = $options["page"][1] > C("database.database_max_select_rows") ? C("database.database_max_select_rows") : $options["page"][1];
+            $this->page($options["page"][0], $pageSize);
+        } else {
+            if (array_key_exists("limit", $options) && $options["limit"] <= C("database.database_max_select_rows")) {
+                // 有limit参数
+                $this->limit($options["limit"]);
+            } else {
+                $this->limit(C("database.database_max_select_rows"));
+            }
+        }
+
         if (!empty($options['order'])) {
             // 有order参数
             $this->order($options["order"]);
+        }
+
+        if (!empty($options['group'])) {
+            // 有group参数
+            $this->group($options["group"]);
         }
 
         return $this;
@@ -2881,6 +2885,12 @@ class RelationModel extends Model
                 // 有order参数
                 $this->order($options["order"]);
             }
+
+            if (!empty($options['group'])) {
+                // 有group参数
+                $this->group($options["group"]);
+            }
+
             $selectData = $this->select();
         } else {
             $selectData = [];
