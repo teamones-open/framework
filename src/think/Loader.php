@@ -515,7 +515,9 @@ class Loader
         $uid = $name . $layer;
 
         if (isset(self::$_instance[$uid])) {
-            return self::$_instance[$uid];
+            $existModel = self::$_instance[$uid];
+            $existModel->resetDefault();
+            return $existModel;
         }
 
         list($module, $class) = self::getModuleAndClass($name, $layer, $appendSuffix);
