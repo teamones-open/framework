@@ -2005,6 +2005,11 @@ class RelationModel extends Model
                     $itemValue = join(',', $itemValue);
                 }
 
+                if (is_string($itemValue) && strpos($itemValue, "'") === false) {
+                    // 字符串要加上 ''
+                    $itemValue = "'{$itemValue}'";
+                }
+
                 if (!empty($moduleCode)) {
                     $filterData["_string"] = "JSON_UNQUOTE( JSON_EXTRACT(`{$moduleCode}`.`json`, '$.{$field}' ) ) {$itemCondition} ({$itemValue})";
                 } else {
