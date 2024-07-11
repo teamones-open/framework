@@ -2001,13 +2001,14 @@ class RelationModel extends Model
         if (is_array($condition)) {
             list($itemCondition, $itemValue) = $condition;
             if (in_array(strtolower($itemCondition), ['in', 'not in'])) {
-                if (is_array($itemValue)) {
-                    $itemValue = join(',', $itemValue);
-                }
 
                 if (is_string($itemValue) && strpos($itemValue, "'") === false) {
                     // 字符串要加上 ''
                     $itemValue = "'{$itemValue}'";
+                }
+
+                if (is_array($itemValue)) {
+                    $itemValue = join(',', $itemValue);
                 }
 
                 if (!empty($moduleCode)) {
