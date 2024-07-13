@@ -950,7 +950,7 @@ class RelationModel extends Model
             $this->unfoldEntityRelationConfig($relationUnfold, $maxDepthRelationConfig);
 
             // 查询关联数据
-            $middleEntityData = $this->getModelObj('entity')->field('id,entity_id')->where(['id' => ['IN', join(',', $this->queryModulePrimaryKeyIds)]])->select();
+            $middleEntityData = $this->getFilterMiddleData('entity', ['id' => ['IN', join(',', $this->queryModulePrimaryKeyIds)]], 'id,entity_id');
 
             $middleRelationIds = array_column($middleEntityData, 'entity_id');
 
@@ -979,10 +979,10 @@ class RelationModel extends Model
 
                         $this->handleQueryModuleCustomFields($fields, $relationUnfold[$i]['belong_module']);
 
-                        $entityData = $this->getModelObj('entity')->field(join(',', $fields))->where([
+                        $entityData = $this->getFilterMiddleData('entity', [
                             'id' => ['IN', join(',', $middleRelationIds)],
                             'module_id' => $relationUnfold[$i]['src_module_id'],
-                        ])->select();
+                        ], join(',', $fields));
 
 
                         if (!empty($entityData)) {
@@ -1661,15 +1661,6 @@ class RelationModel extends Model
         }
         unset($queryModuleIds);
 
-        // 优化，使用全局静态缓存
-//        $customFieldData = $this->getModelObj('field')->field('id,table,module_id,config')
-//            ->where([
-//                'type' => 'custom',
-//                'is_horizontal' => 0,
-//                'module_id' => ['IN', join(',', $queryModuleIds)]
-//            ])
-//            ->select();
-
         if (!empty($customFieldData)) {
             foreach ($customFieldData as $customFieldItem) {
                 $customFieldItemConfig = json_decode($customFieldItem['config'], true);
@@ -1688,7 +1679,6 @@ class RelationModel extends Model
     private function getRelationModuleCustomFields($modules)
     {
         $relationModule = [];
-        //$entityModuleList = $this->getModelObj('module')->field('code')->where(['type' => 'entity'])->select();
 
         foreach ($modules as $moduleKey => $config) {
             if ($config['type'] !== 'horizontal') {
@@ -1889,7 +1879,7 @@ class RelationModel extends Model
      */
     private function parserFilterItemEntityTaskRelated(&$filterData, $masterModuleCode, $itemModule, $filter)
     {
-        $selectData = $this->getModelObj('entity')->where($this->formatFilterCondition($filter))->select();
+        $selectData = $this->getFilterMiddleData('entity', $this->formatFilterCondition($filter), 'id');
         if (!empty($selectData)) {
             $ids = array_column($selectData, 'id');
             $idsString = join(',', $ids);
@@ -2065,7 +2055,7 @@ class RelationModel extends Model
                 }
                 break;
             case 'direct':
-                $selectData = $this->getModelObj(get_module_table_name(Module::$moduleDictData['module_index_by_code'][$itemModule['module_code']]))->where($this->formatFilterCondition($filter))->select();
+                $selectData = $this->getFilterMiddleData(get_module_table_name(Module::$moduleDictData['module_index_by_code'][$itemModule['module_code']]), $this->formatFilterCondition($filter));
                 if (!empty($selectData)) {
                     $ids = array_column($selectData, 'id');
                     $idsString = join(',', $ids);
@@ -2097,7 +2087,7 @@ class RelationModel extends Model
                         "code" => $itemModule['module_code']
                     ]);
 
-                    $selectData = $this->getModelObj($tableName)->where($this->formatFilterCondition($filter))->select();
+                    $selectData = $this->getFilterMiddleData($tableName, $this->formatFilterCondition($filter));
                     if (!empty($selectData)) {
                         $ids = array_column($selectData, 'id');
                         $idsString = join(',', $ids);
@@ -2931,6 +2921,23 @@ class RelationModel extends Model
         }
     }
 
+    /**
+     * 获取查询中间数据，单次关联id数量不能超过2000
+     * @param $modelName
+     * @param $filter
+     * @param $fields
+     * @return array|false|mixed|string
+     * @throws \Exception
+     */
+    private function getFilterMiddleData($modelName, $filter, $fields = 'id')
+    {
+        $count = $this->getModelObj($modelName)->where($filter)->cache(60)->count();
+        if ($count > 2000) {
+            // 2000 条大约占用内存 2mb
+            throw_strack_exception('The associated table data exceeds 2000.', ErrorCode::RELATED_TABLE_DATA_EXCEEDS_2000);
+        }
+        return $this->getModelObj($modelName)->field($fields)->where($filter)->select();
+    }
 
     /**
      * 获取字段数据源映射
