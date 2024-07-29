@@ -84,7 +84,4 @@ class ErrorCode
 
     // 密码强度规则不匹配
     const PASSWORD_STRENGTH_NOT_MATCH = -4001020;
-
-    // 当前参数查询关联表数据超过 2000
-    const RELATED_TABLE_DATA_EXCEEDS_2000 = -4001021;
 }
