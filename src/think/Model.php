@@ -1016,6 +1016,22 @@ class Model
     }
 
     /**
+     * 判断是不是sql字符串
+     * @param $str
+     * @return bool
+     */
+    public function isSql($str)
+    {
+        $pattern = '/\s*(SELECT|INSERT|UPDATE|DELETE|CREATE|DROP)/i';
+
+        if (preg_match_all($pattern, $str)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
      * 分析表达式
      * @access protected
      * @param array $options 表达式参数
@@ -1042,7 +1058,11 @@ class Model
         }
 
         // 表名转义
-        $options['table'] = "`{$options['table']}`";
+        if ($this->isSql($options['table'])) {
+            $options['table'] = "{$options['table']}";
+        } else {
+            $options['table'] = "`{$options['table']}`";
+        }
 
         // 数据表别名
         if (!empty($options['alias'])) {
