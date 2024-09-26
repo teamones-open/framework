@@ -2849,7 +2849,7 @@ class RelationModel extends Model
                     $this->alias("`{$this->currentModuleCode}`");
                 }
 
-                if ($maxId > 100000) {
+                if ($maxId > 1000000) {
                     // 当单表数据量超过10万时候，不做count查询
                     $total = C("database.database_max_select_rows");
                 } else {
