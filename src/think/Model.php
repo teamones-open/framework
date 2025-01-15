@@ -1725,7 +1725,10 @@ class Model
                             $args = isset($auto[4]) ? (array)$auto[4] : [];
                             array_unshift($args, $auto[0]);
                             array_unshift($args, $data);
-                            $data[$auto[0]] = call_user_func_array([&$this, $auto[1]], $args);
+                            $callRes = call_user_func_array([&$this, $auto[1]], $args);
+                            if ($callRes !== false) {
+                                $data[$auto[0]] = $callRes;
+                            }
                             break;
                         case 'function_with_data':
                             // 使用函数进行填充，传入数组值和字段名
