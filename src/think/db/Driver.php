@@ -921,7 +921,7 @@ abstract class Driver
      * @param mixed $order
      * @return string
      */
-    protected function parseOrder($order)
+    protected function parseOrder($order, $trusted = false)
     {
         if (empty($order)) {
             return '';
@@ -930,12 +930,7 @@ abstract class Driver
         if (is_array($order)) {
             foreach ($order as $key => $val) {
                 if (is_numeric($key)) {
-                    if (false === strpos($val, '(')) {
-                        $array[] = $this->parseKey($val);
-                    } else {
-                        // 复杂order条件 包含 () JSON_EXTRACT
-                        $array[] = $val;
-                    }
+                    $array[] = $this->parseOrderItem($val, $trusted);
                 } else {
                     $sort = in_array(strtolower($val), ['asc', 'desc']) ? ' ' . $val : '';
                     $array[] = $this->parseKey($key, true) . $sort;
@@ -946,15 +941,48 @@ abstract class Driver
             $array[] = $this->parseRand();
         } else {
             foreach (explode(',', $order) as $val) {
-                if (preg_match('/\s+(ASC|DESC)$/i', rtrim($val), $match, PREG_OFFSET_CAPTURE)) {
-                    $array[] = $this->parseKey(ltrim(substr($val, 0, $match[0][1]))) . ' ' . $match[1][0];
-                } elseif (false === strpos($val, '(')) {
-                    $array[] = $this->parseKey($val);
-                }
+                $array[] = $this->parseOrderItem($val, $trusted);
             }
         }
         $order = implode(',', $array);
         return !empty($order) ? ' ORDER BY ' . $order : '';
+    }
+
+    /**
+     * 解析单个排序项（字段 + 可选 ASC/DESC）
+     * @param mixed $item
+     * @param bool $trusted
+     * @return string
+     * @throws Exception
+     */
+    protected function parseOrderItem($item, $trusted)
+    {
+        $item = trim((string)$item);
+        $sort = '';
+        if (preg_match('/\s+(ASC|DESC)$/i', $item, $match, PREG_OFFSET_CAPTURE)) {
+            $sort = ' ' . $match[1][0];
+            $item = substr($item, 0, $match[0][1]);
+        }
+        return $this->parseOrderField($item, $trusted) . $sort;
+    }
+
+    /**
+     * 解析单个排序字段：普通字段加反引号；函数表达式仅允许内部可信调用（Model::orderRaw）
+     * @param mixed $field
+     * @param bool $trusted
+     * @return string
+     * @throws Exception
+     */
+    protected function parseOrderField($field, $trusted)
+    {
+        $field = trim((string)$field);
+        if (preg_match('/^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)?$/', $field)) {
+            return $this->parseKey($field);
+        }
+        if ($trusted) {
+            return $field;
+        }
+        StrackE(L('_EXPRESS_ERROR_') . ':' . $field);
     }
 
     /**
@@ -1232,7 +1260,7 @@ abstract class Driver
         $sql .= $this->parseWhere(!empty($options['where']) ? $options['where'] : '');
         if (!strpos($table, ',')) {
             //  单表更新支持order和lmit
-            $sql .= $this->parseOrder(!empty($options['order']) ? $options['order'] : '')
+            $sql .= $this->parseOrder(!empty($options['order']) ? $options['order'] : '', !empty($options['_trusted_order']))
                 . $this->parseLimit(!empty($options['limit']) ? $options['limit'] : '');
         }
         $sql .= $this->parseComment(!empty($options['comment']) ? $options['comment'] : '');
@@ -1266,7 +1294,7 @@ abstract class Driver
         $sql .= $this->parseWhere(!empty($options['where']) ? $options['where'] : '');
         if (!strpos($table, ',')) {
             // 单表删除支持order和limit
-            $sql .= $this->parseOrder(!empty($options['order']) ? $options['order'] : '')
+            $sql .= $this->parseOrder(!empty($options['order']) ? $options['order'] : '', !empty($options['_trusted_order']))
                 . $this->parseLimit(!empty($options['limit']) ? $options['limit'] : '');
         }
         $sql .= $this->parseComment(!empty($options['comment']) ? $options['comment'] : '');
@@ -1349,7 +1377,7 @@ abstract class Driver
                 $this->parseWhere(!empty($options['where']) ? $options['where'] : ''),
                 $this->parseGroup(!empty($options['group']) ? $options['group'] : ''),
                 $this->parseHaving(!empty($options['having']) ? $options['having'] : ''),
-                $this->parseOrder(!empty($options['order']) ? $options['order'] : ''),
+                $this->parseOrder(!empty($options['order']) ? $options['order'] : '', !empty($options['_trusted_order'])),
                 $this->parseLimit(!empty($options['limit']) ? $options['limit'] : ''),
                 $this->parseUnion(!empty($options['union']) ? $options['union'] : ''),
                 $this->parseLock(isset($options['lock']) ? $options['lock'] : false),
