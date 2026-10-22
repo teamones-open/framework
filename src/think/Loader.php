@@ -548,6 +548,11 @@ class Loader
      */
     public static function controller($name, $layer = 'controller', $appendSuffix = false, $empty = '')
     {
+        // 安全加固：控制器名仅允许 [模块/]控制器名，禁止命名空间与特殊字符
+        if (!preg_match('/^[A-Za-z_][A-Za-z0-9_]*(\/[A-Za-z_][A-Za-z0-9_]*)?$/', (string)$name)) {
+            throw new ClassNotFoundException('controller name invalid:' . $name, $name);
+        }
+
         list($module, $class) = self::getModuleAndClass($name, $layer, $appendSuffix);
 
         if (class_exists($class)) {
