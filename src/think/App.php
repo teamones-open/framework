@@ -252,9 +252,17 @@ class App
         // 获取控制器名
         $controller = strip_tags($result[$controllerIndex] ?: $config['DEFAULT_CONTROLLER']);
         $controller = $convert ? strtolower($controller) : $controller;
+        // 安全加固：控制器名仅允许字母、数字、下划线，阻断命名空间与特殊字符注入
+        if (!preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $controller)) {
+            throw new HttpException(ErrorCode::ERROR_404, 'controller not exists:' . $controller);
+        }
 
         // 获取操作名
         $actionName = strip_tags($result[$actionIndex] ?: $config['DEFAULT_ACTION']);
+        // 安全加固：操作名仅允许字母、数字、下划线，防止 is_callable 调度任意方法
+        if (!preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/', $actionName)) {
+            throw new HttpException(ErrorCode::ERROR_404, 'action not exists:' . $actionName);
+        }
 
         // 获取当前操作名
         $action = $actionName . $config['ACTION_SUFFIX'];
