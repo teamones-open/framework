@@ -434,6 +434,19 @@ class Model
     }
 
     /**
+     * 指定排序，允许传入 SQL 函数表达式（仅限内部可信调用，禁止直接透传请求参数）
+     * @access public
+     * @param mixed $order 排序表达式，如 "LENGTH(code) ASC, code ASC"
+     * @return $this
+     */
+    public function orderRaw($order)
+    {
+        $this->options['order'] = $order;
+        $this->options['_trusted_order'] = true;
+        return $this;
+    }
+
+    /**
      * 利用__call方法实现一些特殊的Model方法
      * @access public
      * @param string $method 方法名称
