@@ -563,10 +563,20 @@ class Request extends \Workerman\Protocols\Http\Request
     }
 
     /**
-     * @param $http_post_boundary
+     * 兼容 workerman 4.x（$_data）与 5.x（$data）
+     * @return array
      */
-    protected function parseUploadFiles($http_post_boundary)
+    protected function &getRequestDataRef()
     {
+        if (\property_exists($this, 'data')) {
+            return $this->data;
+        }
+        return $this->_data;
+    }
+
+    protected function parseUploadFiles($http_post_boundary): void
+    {
+        $data = &$this->getRequestDataRef();
         $http_body = $this->rawBody();
         $http_body = \substr($http_body, 0, \strlen($http_body) - (\strlen($http_post_boundary) + 4));
         $boundary_data_array = \explode($http_post_boundary . "\r\n", $http_body);
@@ -615,9 +625,9 @@ class Request extends \Workerman\Protocols\Http\Request
                                 // 处理多层数组
                                 $keys = explode(' ', str_replace('[', ' ', str_replace(']', '', $match[1])));
                                 if (count($keys) > 1) {
-                                    $this->fillArray($this->_data['post'], $keys, $boundary_value);
+                                    $this->fillArray($data['post'], $keys, $boundary_value);
                                 } else {
-                                    $this->_data['post'][$match[1]] = $boundary_value;
+                                    $data['post'][$match[1]] = $boundary_value;
                                 }
                             }
                         }
@@ -634,7 +644,7 @@ class Request extends \Workerman\Protocols\Http\Request
             $key = $file['key'];
             unset($file['key']);
 
-            $this->_data['files'][$key] = $file;
+            $data['files'][$key] = $file;
         }
     }
 
