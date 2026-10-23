@@ -33,7 +33,8 @@ class Mysql extends Driver
         }
         if (!empty($config['charset'])) {
             //为兼容各版本PHP,用两种方式设置编码
-            $this->options[\PDO::MYSQL_ATTR_INIT_COMMAND] = 'SET NAMES ' . $config['charset'];
+            $initCommandAttr = \defined('Pdo\Mysql::ATTR_INIT_COMMAND') ? \constant('Pdo\Mysql::ATTR_INIT_COMMAND') : \PDO::MYSQL_ATTR_INIT_COMMAND;
+            $this->options[$initCommandAttr] = 'SET NAMES ' . $config['charset'];
             $dsn .= ';charset=' . $config['charset'];
         }
         return $dsn;

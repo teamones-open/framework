@@ -182,7 +182,7 @@ class App
     {
         $controllerIndex = 1;
         $actionIndex = 2;
-        if (false !== strpos($result[0], '\\')) {
+        if (false !== strpos((string)$result[0], '\\')) {
             $controllerPath = explode('\\', $result[0]);
             $module = strip_tags($controllerPath[1] ?: $config['DEFAULT_MODULE']);
             $controllerIndex = 0;

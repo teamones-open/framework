@@ -237,6 +237,7 @@ class File extends \SplFileInfo
     /**
      * @return mixed
      */
+    #[\ReturnTypeWillChange]
     public function getExtension()
     {
         return pathinfo($this->saveName, PATHINFO_EXTENSION);

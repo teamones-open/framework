@@ -372,7 +372,7 @@ class Request extends \Workerman\Protocols\Http\Request
      * @access public
      * @return string
      */
-    public function path()
+    public function path(): string
     {
         $path = parent::path();
         $this->path = substr_replace($path, "", 0, 1);
@@ -501,7 +501,7 @@ class Request extends \Workerman\Protocols\Http\Request
      * @param string|array $filter 过滤方法
      * @return mixed
      */
-    public function get($name = '', $default = null, $filter = '')
+    public function get($name = '', $default = null, $filter = ''): mixed
     {
         $getContent = parent::get($name === "" ? null : $name, $default);
 
@@ -544,7 +544,7 @@ class Request extends \Workerman\Protocols\Http\Request
      * @param string|array $filter 过滤方法
      * @return mixed
      */
-    public function post($name = '', $default = null, $filter = '')
+    public function post($name = '', $default = null, $filter = ''): mixed
     {
         $postContent = parent::post();
 
@@ -730,7 +730,7 @@ class Request extends \Workerman\Protocols\Http\Request
      * @param null $name
      * @return null| array | File
      */
-    public function file($name = null)
+    public function file($name = null): mixed
     {
         $files = parent::file($name);
         if (null === $files) {
@@ -956,7 +956,7 @@ class Request extends \Workerman\Protocols\Http\Request
                 break;
             // 布尔
             case 'b':
-                $data = (boolean)$data;
+                $data = (bool)$data;
                 break;
             // 字符串
             case 's':

@@ -28,7 +28,7 @@ class StrackException extends \RuntimeException
      * @param \Exception|null $previous
      * @param array $headers
      */
-    public function __construct($errorCode = 404, $message = null, $data = [], $type = 'json', \Exception $previous = null, array $headers = [])
+    public function __construct($errorCode = 404, $message = null, $data = [], $type = 'json', ?\Exception $previous = null, array $headers = [])
     {
         $this->errorCode = $errorCode;
         $this->headers = $headers;
