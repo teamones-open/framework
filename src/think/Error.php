@@ -24,7 +24,9 @@ class Error
      */
     public static function register()
     {
-        error_reporting(E_ALL);
+        // 项目仅兼容 PHP 8.5，第三方库（illuminate 8.x、laravel-uuid 4.x、guzzlehttp/promises 等）
+        // 在 8.5 下产生的废弃告警既不影响功能也无法在本项目内修复，统一不报告，避免刷屏与误判
+        error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
         set_error_handler([__CLASS__, 'appError']);
         set_exception_handler([__CLASS__, 'appException']);
         register_shutdown_function([__CLASS__, 'appShutdown']);
