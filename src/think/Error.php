@@ -60,6 +60,12 @@ class Error
     public static function appError($errno, $errstr, $errfile = '', $errline = 0, $errcontext = [])
     {
         $exception = new ErrorException($errno, $errstr, $errfile, $errline, $errcontext);
+        // PHP 8.x 起第三方库（illuminate 8.x、php-amqplib 等）会产生大量废弃告警，
+        // 废弃级别只记录日志，不作为致命错误中断请求或 worker 进程
+        if (in_array($errno, [E_DEPRECATED, E_USER_DEPRECATED], true)) {
+            self::getExceptionHandler()->report($exception);
+            return;
+        }
         if (error_reporting() & $errno) {
             // 将错误信息托管至 think\exception\ErrorException
             throw $exception;
