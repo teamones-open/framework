@@ -32,6 +32,11 @@ class Mysql extends Driver
             $dsn .= ';unix_socket=' . $config['socket'];
         }
         if (!empty($config['charset'])) {
+            // charset 白名单：addslashes 在 GBK 等多字节字符集下可被绕过（宽字节注入）
+            $charset = strtolower((string)$config['charset']);
+            if (!in_array($charset, ['utf8', 'utf8mb4'], true)) {
+                throw new \InvalidArgumentException('Unsupported charset: ' . $config['charset']);
+            }
             //为兼容各版本PHP,用两种方式设置编码
             $initCommandAttr = \defined('Pdo\Mysql::ATTR_INIT_COMMAND') ? \constant('Pdo\Mysql::ATTR_INIT_COMMAND') : \PDO::MYSQL_ATTR_INIT_COMMAND;
             $this->options[$initCommandAttr] = 'SET NAMES ' . $config['charset'];
