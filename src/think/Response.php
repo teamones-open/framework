@@ -85,7 +85,7 @@ class Response
         $this->contentType($this->contentType, $this->charset);
 
         $this->code = $code;
-        $this->header = array_merge($this->header, $header);
+        $this->header = array_merge($this->header, $this->sanitizeHeader($header));
     }
 
     /**
@@ -213,6 +213,20 @@ class Response
     }
 
     /**
+     * 过滤响应头中的 CR/LF，防止响应头注入
+     * @param array $header
+     * @return array
+     */
+    protected function sanitizeHeader(array $header)
+    {
+        $result = [];
+        foreach ($header as $key => $value) {
+            $result[$key] = is_string($value) ? str_replace(["\r", "\n"], '', $value) : $value;
+        }
+        return $result;
+    }
+
+    /**
      * 设置响应头
      * @access public
      * @param string|array $name 参数名
@@ -222,9 +236,9 @@ class Response
     public function header($name, $value = null)
     {
         if (is_array($name)) {
-            $this->header = array_merge($this->header, $name);
+            $this->header = array_merge($this->header, $this->sanitizeHeader($name));
         } else {
-            $this->header[$name] = $value;
+            $this->header[$name] = is_string($value) ? str_replace(["\r", "\n"], '', $value) : $value;
         }
 
         return $this;

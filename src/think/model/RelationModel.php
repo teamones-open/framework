@@ -715,7 +715,7 @@ class RelationModel extends Model
                 $value = empty($value) ? new \stdClass() : json_decode($value);
                 break;
             case 'serialize':
-                $value = unserialize($value);
+                $value = unserialize($value, ['allowed_classes' => false]);
                 break;
         }
         return $value;
