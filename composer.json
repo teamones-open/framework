@@ -1,7 +1,7 @@
 {
     "name": "teamones/framework",
     "description": "The Teamones Framework. Extend from Tp3.2 。Based on workerman",
-    "version": "3.0.0",
+    "version": "3.0.2",
     "type": "library",
     "license": "MIT",
     "authors": [
