@@ -2790,6 +2790,61 @@ class Model
     }
 
     /**
+     * 表达式条件（受控原生片段）
+     * 仅允许条件片段，禁止多语句与注释；值通过 %s 占位传入
+     * @param string $sql
+     * @param array $bind
+     * @return Model
+     */
+    public function whereExp($sql, array $bind = [])
+    {
+        if (!is_string($sql) || '' === trim($sql)) {
+            throw new \InvalidArgumentException('whereExp requires a non-empty string');
+        }
+        if (preg_match('/;|--|\/\*|\*\//', $sql)) {
+            throw new \InvalidArgumentException('Invalid expression in whereExp: ' . $sql);
+        }
+        if (empty($bind)) {
+            return $this->where($sql);
+        }
+        return $this->where($sql, ...array_values($bind));
+    }
+
+    /**
+     * JSON 字段条件（结构化，值自动转义）
+     * @param string $field  字段名
+     * @param string $path   JSON path，如 $.task_status
+     * @param string $operator 比较符，支持 = != <> > >= < <= IN NOT IN
+     * @param mixed $value
+     * @return Model
+     */
+    public function whereJson($field, $path, $operator, $value)
+    {
+        if (!is_string($field) || !preg_match('/^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)?$/', $field)) {
+            throw new \InvalidArgumentException('Invalid JSON field: ' . $field);
+        }
+        $fieldParts = explode('.', $field);
+        $fieldExpr = '`' . implode('`.`', $fieldParts) . '`';
+        if (!is_string($path) || !preg_match('/^\$(\.[A-Za-z_][A-Za-z0-9_]*|\.["][A-Za-z_][A-Za-z0-9_]*["])+$/', $path)) {
+            throw new \InvalidArgumentException('Invalid JSON path: ' . $path);
+        }
+        $operator = strtoupper(trim((string)$operator));
+        $allowed = ['=', '!=', '<>', '>', '>=', '<', '<=', 'IN', 'NOT IN'];
+        if (!in_array($operator, $allowed, true)) {
+            throw new \InvalidArgumentException('Invalid JSON operator: ' . $operator);
+        }
+        $expr = "JSON_UNQUOTE(JSON_EXTRACT({$fieldExpr}, '{$path}'))";
+        if (in_array($operator, ['IN', 'NOT IN'], true)) {
+            $values = is_array($value) ? array_values($value) : [$value];
+            if (empty($values)) {
+                return $this->where($operator === 'IN' ? '1 = 0' : '1 = 1');
+            }
+            $placeholders = implode(',', array_fill(0, count($values), '%s'));
+            return $this->where("{$expr} {$operator} ({$placeholders})", ...$values);
+        }
+        return $this->where("{$expr} {$operator} %s", $value);
+    }
+    /**
      * 处理排序数据
      * @param $oder
      * @return $this

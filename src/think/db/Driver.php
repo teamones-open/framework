@@ -738,6 +738,11 @@ abstract class Driver
                     // 多条件支持
                     $multi = is_array($val) && isset($val['_multi']);
                     $key = trim($key);
+                    // 字段名白名单：仅允许 字段 / t.字段 / `字段` / `字段`.字段
+                    if (!preg_match('/^[A-Za-z_][A-Za-z0-9_]*([|&][A-Za-z_][A-Za-z0-9_]*)*(\.[A-Za-z_][A-Za-z0-9_]*)?$/', $key)
+                        && !preg_match('/^`[A-Za-z_][A-Za-z0-9_]*`(\.[A-Za-z_][A-Za-z0-9_]*)?$/', $key)) {
+                        StrackE(L('_EXPRESS_ERROR_') . ':' . $key);
+                    }
                     $str = [];
                     if (strpos($key, '|')) {
                         // 支持 name|title|nickname 方式定义查询字段
