@@ -1312,7 +1312,7 @@ class Request extends \Workerman\Protocols\Http\Request
      */
     public function acceptJson()
     {
-        return false !== strpos($this->header('accept'), 'json');
+        return false !== strpos((string)$this->header('accept'), 'json');
     }
 
     /**

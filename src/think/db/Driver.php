@@ -388,19 +388,32 @@ abstract class Driver
      */
     public function startTrans()
     {
+        $previousTransTimes = $this->transTimes;
         $this->transTimes++;
-        $this->initConnect(true);
+        try {
+            $this->initConnect(true);
+        } catch (\Throwable $e) {
+            // 初始化失败时保留进入本次调用前的事务层级。
+            $this->transTimes = $previousTransTimes;
+            throw $e;
+        }
 
-        if (!$this->_linkID) return false;
+        if (!$this->_linkID) {
+            $this->transTimes = $previousTransTimes;
+            return false;
+        }
 
         try {
             //数据rollback 支持
             if ($this->transTimes == 1) {
-                $this->_linkID->beginTransaction();
+                if (false === $this->_linkID->beginTransaction()) {
+                    $this->transTimes = $previousTransTimes;
+                    return false;
+                }
             }
-        } catch (\Exception $e) {
-            if ($this->isBreak($e)) {
-                --$this->transTimes;
+        } catch (\Throwable $e) {
+            $this->transTimes = $previousTransTimes;
+            if ($e instanceof \Exception && $this->isBreak($e)) {
                 return $this->close()->startTrans();
             }
             throw $e;
@@ -417,6 +430,10 @@ abstract class Driver
      */
     public function commit()
     {
+        if ($this->transTimes <= 0) {
+            $this->transTimes = 0;
+            return true;
+        }
         if ($this->transTimes == 1) {
             $result = $this->_linkID->commit();
             $this->transTimes = 0;
@@ -437,6 +454,10 @@ abstract class Driver
      */
     public function rollback()
     {
+        if ($this->transTimes <= 0) {
+            $this->transTimes = 0;
+            return true;
+        }
         if ($this->transTimes == 1) {
             $result = $this->_linkID->rollback();
             $this->transTimes = 0;

@@ -1613,16 +1613,11 @@ class Route
      */
     private static function getCheckCacheKey(Request $request)
     {
-        static $key;
-
-        if (empty($key)) {
-            if ($callback = C('ROUTE_CHECK_CACHE_KEY')) {
-                $key = call_user_func($callback, $request);
-            } else {
-                $key = "{$request->host(true)}|{$request->method()}|{$request->path()}";
-            }
+        // 常驻进程中必须按当前请求计算，不能复用首个请求的键。
+        if ($callback = C('ROUTE_CHECK_CACHE_KEY')) {
+            return call_user_func($callback, $request);
         }
 
-        return $key;
+        return "{$request->host(true)}|{$request->method()}|{$request->path()}";
     }
 }
