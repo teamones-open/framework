@@ -363,27 +363,34 @@ class App
             $params = $reflect->getParameters();
             foreach ($params as $param) {
                 $name = $param->getName();
-                // PHP 8.0+ 用 getType() 取代已废弃的 getClass()，兼容联合类型
+                // ReflectionParameter::getClass() 自 PHP 8.0 起废弃，此处改用 getType() 复刻其语义：
+                // 1) 收集"解析后"的非内置类名：具名类取自身；iterable 在引擎内部展开为
+                //    Traversable|array，故贡献 Traversable；联合类型逐成员按同一规则展开
+                // 2) 联合类型中出现交集成员（DNF，如 (A&B)|C）时原 API 返回 null
+                // 3) 恰好一个类名才构造 ReflectionClass；0 个或多个均为 null
+                // 4) 不捕获 ReflectionException：类不存在或闭包中 self 无法解析时保持原有抛错行为
                 $class = null;
                 $reflectType = $param->getType();
-                $typeName = null;
-                if ($reflectType instanceof \ReflectionNamedType) {
-                    if (!$reflectType->isBuiltin()) {
-                        $typeName = $reflectType->getName();
-                    }
-                } elseif ($reflectType instanceof \ReflectionUnionType) {
-                    foreach ($reflectType->getTypes() as $unionType) {
-                        if ($unionType instanceof \ReflectionNamedType && !$unionType->isBuiltin()) {
-                            $typeName = $unionType->getName();
-                            break;
+                if ($reflectType instanceof \ReflectionNamedType || $reflectType instanceof \ReflectionUnionType) {
+                    $classNames = [];
+                    $hasIntersection = false;
+                    $members = $reflectType instanceof \ReflectionNamedType
+                        ? [$reflectType]
+                        : $reflectType->getTypes();
+                    foreach ($members as $member) {
+                        if ($member instanceof \ReflectionNamedType) {
+                            if (!$member->isBuiltin()) {
+                                $classNames[] = $member->getName();
+                            } elseif ('iterable' === strtolower($member->getName())) {
+                                // iterable 的内部展开结果，与原 getClass() 一致
+                                $classNames[] = 'Traversable';
+                            }
+                        } elseif ($member instanceof \ReflectionIntersectionType) {
+                            $hasIntersection = true;
                         }
                     }
-                }
-                if ($typeName !== null) {
-                    try {
-                        $class = new \ReflectionClass($typeName);
-                    } catch (\ReflectionException $e) {
-                        $class = null;
+                    if (!$hasIntersection && 1 === count($classNames)) {
+                        $class = new \ReflectionClass($classNames[0]);
                     }
                 }
                 if ($class) {
