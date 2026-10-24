@@ -8,8 +8,10 @@ declare(strict_types=1);
 
 $framework = rtrim($argv[1] ?? dirname(__DIR__, 3), '/');
 $vendor = rtrim($argv[2] ?? '', '/');
-spl_autoload_register(function ($class) use ($framework, $vendor) {
-    foreach (['think\\' => $framework . '/src/think/', 'Workerman\\' => $vendor . '/workerman/workerman/'] as $prefix => $dir) {
+$workerman = $vendor . '/workerman/workerman/';
+if (is_dir($workerman . 'src/')) { $workerman .= 'src/'; }
+spl_autoload_register(function ($class) use ($framework, $workerman) {
+    foreach (['think\\' => $framework . '/src/think/', 'Workerman\\' => $workerman] as $prefix => $dir) {
         if (strncmp($class, $prefix, strlen($prefix)) === 0) {
             $file = $dir . str_replace('\\', '/', substr($class, strlen($prefix))) . '.php';
             if (is_file($file)) { require_once $file; }
