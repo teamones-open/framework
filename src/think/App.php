@@ -363,7 +363,29 @@ class App
             $params = $reflect->getParameters();
             foreach ($params as $param) {
                 $name = $param->getName();
-                $class = $param->getClass();
+                // PHP 8.0+ 用 getType() 取代已废弃的 getClass()，兼容联合类型
+                $class = null;
+                $reflectType = $param->getType();
+                $typeName = null;
+                if ($reflectType instanceof \ReflectionNamedType) {
+                    if (!$reflectType->isBuiltin()) {
+                        $typeName = $reflectType->getName();
+                    }
+                } elseif ($reflectType instanceof \ReflectionUnionType) {
+                    foreach ($reflectType->getTypes() as $unionType) {
+                        if ($unionType instanceof \ReflectionNamedType && !$unionType->isBuiltin()) {
+                            $typeName = $unionType->getName();
+                            break;
+                        }
+                    }
+                }
+                if ($typeName !== null) {
+                    try {
+                        $class = new \ReflectionClass($typeName);
+                    } catch (\ReflectionException $e) {
+                        $class = null;
+                    }
+                }
                 if ($class) {
                     $className = $class->getName();
                     $bind = \request()->name;
