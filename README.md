@@ -17,3 +17,7 @@ composer require teamones/framework
 
 - Workerman 统一为 5.x。
 - Illuminate Redis 兼容 8.x、10.x、11.x、12.x，以便接入 Workerman 5 的 etcd-discovery 3.x。
+
+## 3.0.9 PHP 8.5 E_ALL
+
+Runtime error registration preserves E_ALL, including E_DEPRECATED and E_USER_DEPRECATED. Deprecations use the same exception path as other reported errors. The validator supplies default filter options without passing null; package tests treat unexpected diagnostics as failures. The 3.0.8 reflection/Hook/Log/callback-cache changes are retained.

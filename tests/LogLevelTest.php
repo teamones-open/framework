@@ -23,9 +23,7 @@ class LogLevelTest
      */
     private static function callLevelEnabled(string $level): bool
     {
-        $ref = new \ReflectionMethod(Log::class, 'levelEnabled');
-        $ref->setAccessible(true);
-        return $ref->invoke(null, $level);
+        $ref = new \ReflectionMethod(Log::class, 'levelEnabled');        return $ref->invoke(null, $level);
     }
 
     public static function run(): void
@@ -79,9 +77,7 @@ class LogLevelTest
 
             // 读取缓存字段
             $ref = new \ReflectionClass(Log::class);
-            $mapProp = $ref->getProperty('levelMap');
-            $mapProp->setAccessible(true);
-            $firstMap = $mapProp->getValue();
+            $mapProp = $ref->getProperty('levelMap');            $firstMap = $mapProp->getValue();
 
             self::callLevelEnabled('DEBUG');
             self::callLevelEnabled('ERR');
@@ -94,9 +90,7 @@ class LogLevelTest
             Log::resetLevelCache();
             self::callLevelEnabled('INFO');
             $ref = new \ReflectionClass(Log::class);
-            $mapProp = $ref->getProperty('levelMap');
-            $mapProp->setAccessible(true);
-            TestRunner::assertNotNull($mapProp->getValue(), 'reset 前应有 map');
+            $mapProp = $ref->getProperty('levelMap');            TestRunner::assertNotNull($mapProp->getValue(), 'reset 前应有 map');
 
             Log::resetLevelCache();
             TestRunner::assertNull($mapProp->getValue(), 'reset 后应为 null');
@@ -109,9 +103,7 @@ class LogLevelTest
             $level = 'info';
 
             // 预编译闭包，避免反射开销计入测量
-            $ref = new \ReflectionMethod(Log::class, 'levelEnabled');
-            $ref->setAccessible(true);
-            $call = function (string $lv) use ($ref) {
+            $ref = new \ReflectionMethod(Log::class, 'levelEnabled');            $call = function (string $lv) use ($ref) {
                 return $ref->invoke(null, $lv);
             };
 
@@ -131,9 +123,7 @@ class LogLevelTest
 
             // 反射调用有固定开销，改用核心逻辑直接对比
             Log::resetLevelCache();
-            $mapProp = (new \ReflectionClass(Log::class))->getProperty('levelMap');
-            $mapProp->setAccessible(true);
-            $mapProp->setValue(null, array_flip(explode(',', $defaultConfig)));
+            $mapProp = (new \ReflectionClass(Log::class))->getProperty('levelMap');            $mapProp->setValue(null, array_flip(explode(',', $defaultConfig)));
             $map = $mapProp->getValue();
 
             $t0 = hrtime(true);
@@ -149,9 +139,7 @@ class LogLevelTest
         // ===== record 集成测试 =====
         TestRunner::test('record 方法：未启用级别不写入日志', function () {
             Log::resetLevelCache();
-            $logProp = (new \ReflectionClass(Log::class))->getProperty('log');
-            $logProp->setAccessible(true);
-            $before = count($logProp->getValue());
+            $logProp = (new \ReflectionClass(Log::class))->getProperty('log');            $before = count($logProp->getValue());
 
             Log::record('test message', 'CUSTOM_LEVEL_NOT_CONFIGURED', false);
 
@@ -161,9 +149,7 @@ class LogLevelTest
 
         TestRunner::test('record 方法：force=true 时强制写入', function () {
             Log::resetLevelCache();
-            $logProp = (new \ReflectionClass(Log::class))->getProperty('log');
-            $logProp->setAccessible(true);
-            $before = count($logProp->getValue());
+            $logProp = (new \ReflectionClass(Log::class))->getProperty('log');            $before = count($logProp->getValue());
 
             Log::record('force message', 'CUSTOM_LEVEL_NOT_CONFIGURED', true);
 

@@ -6,6 +6,14 @@
 
 namespace FrameworkTests;
 
+error_reporting(E_ALL);
+set_error_handler(static function ($severity, $message, $file, $line) {
+    if ((error_reporting() & $severity) || in_array($severity, [E_DEPRECATED, E_USER_DEPRECATED], true)) {
+        throw new \ErrorException($message, 0, $severity, $file, $line);
+    }
+    return false;
+});
+
 // 框架源码根目录
 // 优先使用环境变量指定的框架源码路径（便于在容器内用 vendor 中已安装版本验证）
 $frameworkRoot = getenv('FRAMEWORK_SRC_ROOT');

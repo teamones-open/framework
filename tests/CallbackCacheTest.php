@@ -13,32 +13,24 @@ class CallbackCacheTest
     private static function getLimit(): int
     {
         $ref = new \ReflectionClass(App::class);
-        $p = $ref->getProperty('_callbacksLimit');
-        $p->setAccessible(true);
-        return $p->getValue();
+        $p = $ref->getProperty('_callbacksLimit');        return $p->getValue();
     }
 
     private static function getCallbacks(): array
     {
         $ref = new \ReflectionClass(App::class);
-        $p = $ref->getProperty('_callbacks');
-        $p->setAccessible(true);
-        return $p->getValue();
+        $p = $ref->getProperty('_callbacks');        return $p->getValue();
     }
 
     private static function setCallbacks(array $v): void
     {
         $ref = new \ReflectionClass(App::class);
-        $p = $ref->getProperty('_callbacks');
-        $p->setAccessible(true);
-        $p->setValue(null, $v);
+        $p = $ref->getProperty('_callbacks');        $p->setValue(null, $v);
     }
 
     private static function evict(): void
     {
-        $ref = new \ReflectionMethod(App::class, 'evictCallbacks');
-        $ref->setAccessible(true);
-        $ref->invoke(null);
+        $ref = new \ReflectionMethod(App::class, 'evictCallbacks');        $ref->invoke(null);
     }
 
     public static function run(): void

@@ -10,6 +10,7 @@ require_once __DIR__ . '/bootstrap.php';
 require_once __DIR__ . '/HookExecTest.php';
 require_once __DIR__ . '/LogLevelTest.php';
 require_once __DIR__ . '/CallbackCacheTest.php';
+require_once __DIR__ . '/StrictErrorTest.php';
 
 $jsonPath = __DIR__ . '/result.json';
 foreach ($argv ?? [] as $arg) {
@@ -24,6 +25,7 @@ echo str_repeat('=', 60) . "\n";
 HookExecTest::run();
 LogLevelTest::run();
 CallbackCacheTest::run();
+StrictErrorTest::run();
 
 TestRunner::output($jsonPath);
 echo "\n结果已写入: {$jsonPath}\n";
