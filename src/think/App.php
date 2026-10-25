@@ -70,6 +70,12 @@ class App
     protected static $_callbacks = [];
 
     /**
+     * 路由回调缓存条目上限，超出后淘汰最旧的一半
+     * @var int
+     */
+    protected static $_callbacksLimit = 1024;
+
+    /**
      * @var Worker
      */
     protected static $_worker = null;
@@ -525,9 +531,9 @@ class App
                 $data = static::exec($key, $request, $dispatch, $config);
             }
 
-            // 对象超过 1024 回收
-            if (\count(static::$_callbacks) > 1024) {
-                static::clearCache();
+            // 缓存条目超过上限时回收最旧的一半，避免全清导致的整批重建
+            if (\count(static::$_callbacks) > static::$_callbacksLimit) {
+                static::evictCallbacks();
             }
 
         } catch (HttpResponseException $exception) {
@@ -756,6 +762,23 @@ class App
     public static function clearCache()
     {
         static::$_callbacks = [];
+    }
+
+    /**
+     * 淘汰最旧的一半路由回调缓存，保留其余条目
+     * 相比全清，可避免带动态参数路径撑满上限时整批重建
+     * @return void
+     */
+    protected static function evictCallbacks()
+    {
+        $total = \count(static::$_callbacks);
+        if ($total <= 0) {
+            return;
+        }
+
+        // 保留后一半（较新写入的条目）
+        $keep = (int) ceil($total / 2);
+        static::$_callbacks = \array_slice(static::$_callbacks, -$keep, null, true);
     }
 
     /**

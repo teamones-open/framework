@@ -115,6 +115,18 @@ class Hook
     }
 
     /**
+     * 无状态插件实例池，避免同一请求内重复实例化
+     * @var array
+     */
+    protected static $instances = [];
+
+    /**
+     * 无状态判定结果缓存
+     * @var array
+     */
+    protected static $statelessMap = [];
+
+    /**
      * 执行某个插件
      * @param string $name 插件名称
      * @param string $tag 方法名（标签名）
@@ -127,7 +139,74 @@ class Hook
             // 行为扩展必须用run入口方法
             $tag = 'run';
         }
-        $addon = new $name();
+        $addon = self::instance($name);
         return $addon->$tag($params);
+    }
+
+    /**
+     * 获取插件实例
+     * 仅对"无状态"插件复用实例；有状态插件保持每次新建，避免跨请求串数据
+     * @param string $name 插件类名
+     * @return object
+     */
+    protected static function instance($name)
+    {
+        if (isset(self::$instances[$name])) {
+            return self::$instances[$name];
+        }
+
+        // 保持原有语义：类不存在或构造失败时异常照常抛出
+        $object = new $name();
+
+        if (self::isStateless($name)) {
+            self::$instances[$name] = $object;
+        }
+
+        return $object;
+    }
+
+    /**
+     * 判断插件是否为无状态类
+     * 认定条件：无任何非静态属性，且构造函数无必填参数
+     * @param string $name 插件类名
+     * @return bool
+     */
+    protected static function isStateless($name)
+    {
+        if (isset(self::$statelessMap[$name])) {
+            return self::$statelessMap[$name];
+        }
+
+        try {
+            $reflect = new \ReflectionClass($name);
+
+            // 存在非静态属性说明可能携带请求级状态，不可复用
+            foreach ($reflect->getProperties() as $property) {
+                if (!$property->isStatic()) {
+                    return self::$statelessMap[$name] = false;
+                }
+            }
+
+            // 构造函数需要入参时无法安全复用同一实例
+            $constructor = $reflect->getConstructor();
+            if ($constructor && $constructor->getNumberOfRequiredParameters() > 0) {
+                return self::$statelessMap[$name] = false;
+            }
+
+            return self::$statelessMap[$name] = true;
+        } catch (\ReflectionException $e) {
+            return self::$statelessMap[$name] = false;
+        }
+    }
+
+    /**
+     * 清空实例池与判定缓存
+     * 供进程重启、配置热更新或测试隔离时调用
+     * @return void
+     */
+    public static function clearInstances()
+    {
+        self::$instances = [];
+        self::$statelessMap = [];
     }
 }

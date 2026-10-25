@@ -33,6 +33,12 @@ class Log
     // 日志存储
     protected static $storage = null;
 
+    // LOG_LEVEL 预解析结果（级别 => true 的查找表）
+    protected static $levelMap = null;
+
+    // 生成 $levelMap 时对应的原始配置值，用于配置热更新检测
+    protected static $levelMapSource = null;
+
     // 日志初始化
     public static function init($config = [])
     {
@@ -56,7 +62,7 @@ class Log
      */
     public static function record($message, $level = self::ERR, $record = false)
     {
-        if ($record || in_array(strtoupper($level), explode(",", C('LOG_LEVEL')))) {
+        if ($record || self::levelEnabled($level)) {
             self::$log[] = "{$level}: {$message}\r\n";
 
             if(count(self::$log) > 100){
@@ -65,6 +71,38 @@ class Log
                 self::$log = [];
             }
         }
+    }
+
+    /**
+     * 判断日志级别是否在 LOG_LEVEL 配置中
+     * 预解析配置为查找表，避免每次调用都执行 explode；配置变化时自动重建
+     * @param string $level 日志级别
+     * @return bool
+     */
+    protected static function levelEnabled($level)
+    {
+        $source = \C('LOG_LEVEL');
+
+        if (self::$levelMap === null || self::$levelMapSource !== $source) {
+            // 与原实现一致：配置为空或非字符串时不记录任何级别
+            self::$levelMap = is_string($source) && '' !== $source
+                ? array_flip(explode(',', $source))
+                : [];
+            self::$levelMapSource = $source;
+        }
+
+        return isset(self::$levelMap[strtoupper($level)]);
+    }
+
+    /**
+     * 重置 LOG_LEVEL 解析缓存
+     * 供配置热更新或测试隔离时调用
+     * @return void
+     */
+    public static function resetLevelCache()
+    {
+        self::$levelMap = null;
+        self::$levelMapSource = null;
     }
 
     /**
