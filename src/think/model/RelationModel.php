@@ -903,7 +903,7 @@ class RelationModel extends Model
      */
     private function handleQueryModuleCustomFields(&$fields, $moduleCode)
     {
-        if (!empty($fields) && !empty(Module::$moduleDictData['field_index_by_code'])) {
+        if (!empty($fields) && count(Module::$moduleDictData['field_index_by_code'] ?? []) > 0) {
             // 处理查询的自定义字段
             $moduleFields = Module::$moduleDictData['field_index_by_code'][$moduleCode];
             $newFields = [];
@@ -2992,7 +2992,7 @@ class RelationModel extends Model
             $moduleCode = $this->queryComplexHorizontalCustomFieldMapping[$moduleCode];
         }
 
-        if (!array_key_exists($moduleCode, Module::$moduleDictData['field_index_by_code'])) {
+        if (!isset(Module::$moduleDictData['field_index_by_code'][$moduleCode])) {
             throw_strack_exception("{$moduleCode} module does not exist.", ErrorCode::MODULE_NOT_EXIST);
         }
 
