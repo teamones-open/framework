@@ -35,6 +35,18 @@ class Module
     // 刷新缓存锁
     protected static $refreshLock = false;
 
+    /** Optional storage; legacy consumers continue to receive the original array by default. */
+    private static ?FieldDictionaryInterface $fieldDictionary = null;
+
+    public static function useFieldDictionary(?FieldDictionaryInterface $dictionary): void
+    {
+        self::$fieldDictionary = $dictionary;
+        self::$moduleDictData = [];
+        self::$moduleRelationData = [];
+        self::$moduleCustomHorizontalFieldsDict = [];
+        self::$includeTenantIdModules = [];
+    }
+
     /**
      * 初始化数据
      * @return void
@@ -236,7 +248,13 @@ class Module
      */
     protected static function generateModuleFieldCache($moduleIndexById)
     {
+        if (self::$fieldDictionary !== null) {
+            self::$includeTenantIdModules = self::$fieldDictionary->initialize($moduleIndexById);
+            self::$moduleDictData['field_index_by_code'] = self::$fieldDictionary;
+            return;
+        }
         // 获取所有模块字段
+        self::$includeTenantIdModules = [];
         self::$moduleDictData['field_index_by_code'] = Fields::getAllModuleFieldsMapData($moduleIndexById);
     }
 
