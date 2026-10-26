@@ -795,8 +795,12 @@ class Request extends \Workerman\Protocols\Http\Request
             }
         }
 
+        if (is_array($data)) {
+            $this->validateParameterContainer($data);
+        }
+
         // 解析过滤器
-        if (!array_key_exists('parser_filter', $data)) {
+        if (!is_array($data) || !array_key_exists('parser_filter', $data)) {
             $filter = $this->getFilter($filter, $default);
             if (is_array($data)) {
                 array_walk_recursive($data, [$this, 'filterValue'], $filter);
@@ -804,7 +808,9 @@ class Request extends \Workerman\Protocols\Http\Request
             } else {
                 $this->filterValue($data, $name, $filter);
             }
-            $data['parser_filter'] = true;
+            if (is_array($data)) {
+                $data['parser_filter'] = true;
+            }
         }
 
         if (isset($type) && $data !== $default) {
@@ -822,10 +828,28 @@ class Request extends \Workerman\Protocols\Http\Request
      */
     public function parserFilter($data)
     {
+        if (!is_array($data)) {
+            return $data;
+        }
+        $this->validateParameterContainer($data);
         if ((array_key_exists("param", $data) && array_key_exists("filter", $data['param'])) || array_key_exists("filter", $data)) {
             array_walk_recursive($data, [$this, 'parserFilterCondition']);
         }
         return $data;
+    }
+
+    /**
+     * Reject an invalid bulk-request wrapper before filters can coerce its type.
+     */
+    private function validateParameterContainer(array $data): void
+    {
+        if (array_key_exists('param', $data) && !is_array($data['param'])) {
+            throw new \think\exception\HttpResponseException(Response::create([
+                'code' => ErrorCode::PARAMETER_FORMAT_ERROR,
+                'msg' => 'Request parameter "param" must be an array.',
+                'data' => [],
+            ], 'json', 400));
+        }
     }
 
     /**
@@ -852,7 +876,7 @@ class Request extends \Workerman\Protocols\Http\Request
             '-fit' => 'FIND_IN_SET', // 列表里存在
         ];
 
-        if (array_key_exists($val, $map)) {
+        if (is_string($val) && array_key_exists($val, $map)) {
             $val = $map[$val];
         }
     }
@@ -906,6 +930,10 @@ class Request extends \Workerman\Protocols\Http\Request
         $default = array_pop($filters);
         foreach ($filters as $filter) {
             if (is_callable($filter)) {
+                // Explicit null remains available to required/nullable validation.
+                if ($value === null && in_array($filter, ['htmlspecialchars', 'htmlentities'], true)) {
+                    continue;
+                }
                 // 调用函数或者方法过滤
                 $value = call_user_func($filter, $value);
             } elseif (is_scalar($value)) {

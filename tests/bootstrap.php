@@ -62,6 +62,12 @@ if (!\function_exists('C')) {
     'LOG_TYPE' => 'File',
 ]);
 
+// Load declared dependencies, including Workerman's real HTTP request parser.
+$dependencyAutoload = getenv('FRAMEWORK_TEST_VENDOR_AUTOLOAD') ?: FRAMEWORK_ROOT . '/vendor/autoload.php';
+if (is_file($dependencyAutoload)) {
+    require_once $dependencyAutoload;
+}
+
 // 框架类自动加载（仅加载 src/think 下被测类）
 \spl_autoload_register(function ($class) {
     $prefix = 'think\\';
@@ -73,7 +79,7 @@ if (!\function_exists('C')) {
     if (is_file($file)) {
         require_once $file;
     }
-});
+}, true, true);
 
 // 加载测试框架
 require_once __DIR__ . '/TestRunner.php';

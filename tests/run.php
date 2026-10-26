@@ -11,6 +11,7 @@ require_once __DIR__ . '/HookExecTest.php';
 require_once __DIR__ . '/LogLevelTest.php';
 require_once __DIR__ . '/CallbackCacheTest.php';
 require_once __DIR__ . '/StrictErrorTest.php';
+require_once __DIR__ . '/RequestInputTest.php';
 
 $jsonPath = __DIR__ . '/result.json';
 foreach ($argv ?? [] as $arg) {
@@ -26,6 +27,7 @@ HookExecTest::run();
 LogLevelTest::run();
 CallbackCacheTest::run();
 StrictErrorTest::run();
+RequestInputTest::run();
 
 TestRunner::output($jsonPath);
 echo "\n结果已写入: {$jsonPath}\n";
