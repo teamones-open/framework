@@ -2194,7 +2194,8 @@ class Model
         } else {
             $param = null;
         }
-        return false !== filter_var($value, is_int($rule) ? $rule : filter_id($rule), $param);
+        // A missing options value means the native default flags, not null.
+        return false !== filter_var($value, is_int($rule) ? $rule : filter_id($rule), $param ?? 0);
     }
 
     /**

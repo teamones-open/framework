@@ -13,6 +13,7 @@ require_once __DIR__ . '/CallbackCacheTest.php';
 require_once __DIR__ . '/StrictErrorTest.php';
 require_once __DIR__ . '/RequestInputTest.php';
 require_once __DIR__ . '/FieldDictionaryTest.php';
+require_once __DIR__ . '/FilterOptionsTest.php';
 
 $jsonPath = __DIR__ . '/result.json';
 foreach ($argv ?? [] as $arg) {
@@ -30,6 +31,7 @@ CallbackCacheTest::run();
 StrictErrorTest::run();
 RequestInputTest::run();
 FieldDictionaryTest::run();
+FilterOptionsTest::run();
 
 TestRunner::output($jsonPath);
 echo "\n结果已写入: {$jsonPath}\n";
