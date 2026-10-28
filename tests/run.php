@@ -9,6 +9,7 @@ namespace FrameworkTests;
 require_once __DIR__ . '/bootstrap.php';
 require_once __DIR__ . '/HookExecTest.php';
 require_once __DIR__ . '/LogLevelTest.php';
+require_once __DIR__ . '/FileLogConcurrencyTest.php';
 require_once __DIR__ . '/CallbackCacheTest.php';
 require_once __DIR__ . '/StrictErrorTest.php';
 require_once __DIR__ . '/RequestInputTest.php';
@@ -29,6 +30,7 @@ echo str_repeat('=', 60) . "\n";
 
 HookExecTest::run();
 LogLevelTest::run();
+FileLogConcurrencyTest::run();
 CallbackCacheTest::run();
 StrictErrorTest::run();
 RequestInputTest::run();
