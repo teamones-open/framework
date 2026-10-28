@@ -14,6 +14,8 @@ require_once __DIR__ . '/StrictErrorTest.php';
 require_once __DIR__ . '/RequestInputTest.php';
 require_once __DIR__ . '/FieldDictionaryTest.php';
 require_once __DIR__ . '/FilterOptionsTest.php';
+require_once __DIR__ . '/fixtures/LegacyQueryParsing.php';
+require_once __DIR__ . '/QueryCompatibilityTest.php';
 
 $jsonPath = __DIR__ . '/result.json';
 foreach ($argv ?? [] as $arg) {
@@ -32,6 +34,7 @@ StrictErrorTest::run();
 RequestInputTest::run();
 FieldDictionaryTest::run();
 FilterOptionsTest::run();
+QueryCompatibilityTest::run();
 
 TestRunner::output($jsonPath);
 echo "\n结果已写入: {$jsonPath}\n";

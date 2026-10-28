@@ -759,11 +759,7 @@ abstract class Driver
                     // 多条件支持
                     $multi = is_array($val) && isset($val['_multi']);
                     $key = trim($key);
-                    // 字段名白名单：仅允许 字段 / t.字段 / `字段` / `字段`.字段
-                    if (!preg_match('/^[A-Za-z_][A-Za-z0-9_]*([|&][A-Za-z_][A-Za-z0-9_]*)*(\.[A-Za-z_][A-Za-z0-9_]*)?$/', $key)
-                        && !preg_match('/^`[A-Za-z_][A-Za-z0-9_]*`(\.[A-Za-z_][A-Za-z0-9_]*)?$/', $key)) {
-                        StrackE(L('_EXPRESS_ERROR_') . ':' . $key);
-                    }
+                    // 保留历史表达式字段兼容性；值仍由 parseWhereItem/parseValue 处理。
                     $str = [];
                     if (strpos($key, '|')) {
                         // 支持 name|title|nickname 方式定义查询字段
@@ -956,7 +952,14 @@ abstract class Driver
         if (is_array($order)) {
             foreach ($order as $key => $val) {
                 if (is_numeric($key)) {
-                    $array[] = $this->parseOrderItem($val, $trusted);
+                    if ($trusted) {
+                        $array[] = $this->parseOrderItem($val, true);
+                    } elseif (false === strpos($val, '(')) {
+                        $array[] = $this->parseKey($val);
+                    } else {
+                        // 历史数组排序支持 SQL 函数表达式。
+                        $array[] = $val;
+                    }
                 } else {
                     $sort = in_array(strtolower($val), ['asc', 'desc']) ? ' ' . $val : '';
                     $array[] = $this->parseKey($key, true) . $sort;
@@ -967,7 +970,13 @@ abstract class Driver
             $array[] = $this->parseRand();
         } else {
             foreach (explode(',', $order) as $val) {
-                $array[] = $this->parseOrderItem($val, $trusted);
+                if ($trusted) {
+                    $array[] = $this->parseOrderItem($val, true);
+                } elseif (preg_match('/\s+(ASC|DESC)$/i', rtrim($val), $match, PREG_OFFSET_CAPTURE)) {
+                    $array[] = $this->parseKey(ltrim(substr($val, 0, $match[0][1]))) . ' ' . $match[1][0];
+                } elseif (false === strpos($val, '(')) {
+                    $array[] = $this->parseKey($val);
+                }
             }
         }
         $order = implode(',', $array);
@@ -993,7 +1002,7 @@ abstract class Driver
     }
 
     /**
-     * 解析单个排序字段：普通字段加反引号；函数表达式仅允许内部可信调用（Model::orderRaw）
+     * 解析单个排序字段，保留历史表达式兼容及 Model::orderRaw 通道
      * @param mixed $field
      * @param bool $trusted
      * @return string
@@ -1005,10 +1014,7 @@ abstract class Driver
         if (preg_match('/^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)?$/', $field)) {
             return $this->parseKey($field);
         }
-        if ($trusted) {
-            return $field;
-        }
-        StrackE(L('_EXPRESS_ERROR_') . ':' . $field);
+        return $trusted ? $field : $this->parseKey($field);
     }
 
     /**
